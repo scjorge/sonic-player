@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  api:
+    image: dev-sonic-player
+    container_name: dev-sonic-player
+    hostname: dev-sonic-player
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 6789:3000
+    command: "sleep infinity"
+    env_file:
+      - "../.env"
+    volumes:
+      - ..:/app
+      - /var/run/docker.sock:/var/run/docker.sock 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
