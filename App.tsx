@@ -720,22 +720,6 @@ const App: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* SPOTIFY SECTION */}
-                    <div className="animate-fade-in mt-6">
-                        {!isSidebarCollapsed && <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-                             Spotify
-                        </h3>}
-                        <div className="space-y-1">
-                            <button 
-                                onClick={() => setViewMode('spotify_browse')} 
-                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'spotify_browse' ? 'bg-green-500/10 text-green-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
-                            >
-                                <Navigation className="w-4 h-4 flex-shrink-0" /> 
-                                {!isSidebarCollapsed && <span>Navegar</span>}
-                            </button>
-                        </div>
-                    </div>
-
                     {!isSidebarCollapsed && (
                         <div className="animate-fade-in mt-6">
                             <div className="flex items-center justify-between px-3 mb-2 group">
@@ -764,6 +748,22 @@ const App: React.FC = () => {
                             )}
                         </div>
                     )}
+
+                    {/* SPOTIFY SECTION */}
+                    <div className="animate-fade-in mt-6">
+                        {!isSidebarCollapsed && <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
+                             Spotify
+                        </h3>}
+                        <div className="space-y-1">
+                            <button 
+                                onClick={() => setViewMode('spotify_browse')} 
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'spotify_browse' ? 'bg-green-500/10 text-green-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                            >
+                                <Navigation className="w-4 h-4 flex-shrink-0" /> 
+                                {!isSidebarCollapsed && <span>Navegar</span>}
+                            </button>
+                        </div>
+                    </div>
                 </>
             )}
          </div>
