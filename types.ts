@@ -120,6 +120,7 @@ export interface TagGroup {
 export interface SpotifyCredentials {
   clientId: string;
   clientSecret: string;
+  redirectUri: string;
 }
 
 export interface SpotifyTrack {

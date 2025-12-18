@@ -2,21 +2,60 @@
 import React, { useState, useEffect } from 'react';
 import { SpotifyCredentials } from '../types';
 import { saveSpotifyCredentials, getSpotifyCredentials } from '../services/data';
-import { Key, ShieldCheck, Save, CheckCircle2 } from 'lucide-react';
+import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle } from 'lucide-react';
 
 const SpotifySettings: React.FC = () => {
-  const [creds, setCreds] = useState<SpotifyCredentials>({ clientId: '', clientSecret: '' });
+  const [creds, setCreds] = useState<SpotifyCredentials>({ clientId: '', clientSecret: '', redirectUri: '' });
   const [showSaved, setShowSaved] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<keyof SpotifyCredentials, string>>>({});
 
   useEffect(() => {
     const stored = getSpotifyCredentials();
-    setCreds(stored);
+    setCreds({redirectUri: '', ...stored});
   }, []);
 
+  const validate = (): boolean => {
+    const newErrors: Partial<Record<keyof SpotifyCredentials, string>> = {};
+    let isValid = true;
+
+    if (!creds.clientId) {
+      newErrors.clientId = "Client ID é obrigatório.";
+      isValid = false;
+    }
+    if (!creds.clientSecret) {
+      newErrors.clientSecret = "Client Secret é obrigatório.";
+      isValid = false;
+    }
+    if (!creds.redirectUri) {
+      newErrors.redirectUri = "Redirect URI é obrigatória.";
+      isValid = false;
+    } else {
+      try {
+        new URL(creds.redirectUri);
+      } catch (_) {
+        newErrors.redirectUri = "A Redirect URI deve ser uma URL válida.";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSave = () => {
-    saveSpotifyCredentials(creds);
-    setShowSaved(true);
-    setTimeout(() => setShowSaved(false), 3000);
+    if (validate()) {
+      saveSpotifyCredentials(creds);
+      setShowSaved(true);
+      setTimeout(() => setShowSaved(false), 3000);
+    }
+  };
+
+  const handleDelete = () => {
+    // Limpa as credenciais no estado e no armazenamento
+    const emptyCreds = { clientId: '', clientSecret: '', redirectUri: '' };
+    setCreds(emptyCreds);
+    saveSpotifyCredentials(emptyCreds);
+    setErrors({}); // Limpa quaisquer erros de validação
   };
 
   return (
@@ -33,6 +72,7 @@ const SpotifySettings: React.FC = () => {
 
       <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-8 space-y-6">
         <div className="grid grid-cols-1 gap-6">
+            {/* Client ID */}
             <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
                     <Key className="w-4 h-4" />
@@ -43,10 +83,12 @@ const SpotifySettings: React.FC = () => {
                     value={creds.clientId}
                     onChange={(e) => setCreds({ ...creds, clientId: e.target.value })}
                     placeholder="Seu Client ID do Spotify"
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors placeholder-zinc-800 font-mono"
+                    className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.clientId ? 'border-red-500' : 'border-zinc-700 focus:border-green-500'}`}
                 />
+                {errors.clientId && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{errors.clientId}</p>}
             </div>
 
+            {/* Client Secret */}
             <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4" />
@@ -57,8 +99,32 @@ const SpotifySettings: React.FC = () => {
                     value={creds.clientSecret}
                     onChange={(e) => setCreds({ ...creds, clientSecret: e.target.value })}
                     placeholder="Seu Client Secret do Spotify"
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors placeholder-zinc-800 font-mono"
+                    className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.clientSecret ? 'border-red-500' : 'border-zinc-700 focus:border-green-500'}`}
                 />
+                {errors.clientSecret && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{errors.clientSecret}</p>}
+            </div>
+            
+            {/* Redirect URI */}
+            <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                    <Share className="w-4 h-4" />
+                    Redirect URI
+                    <div className="relative group">
+                        <Info className="w-4 h-4 text-zinc-600 cursor-pointer" />
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-zinc-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg border border-zinc-700">
+                            A Redirect URI é necessária para funcionalidades de autenticação, como a criação de playlists. Insira a URL exata que você configurou no seu app do Spotify.
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-[-4px] w-2 h-2 bg-zinc-800 rotate-45"></div>
+                        </div>
+                    </div>
+                </label>
+                <input 
+                    type="text" 
+                    value={creds.redirectUri || ''}
+                    onChange={(e) => setCreds({ ...creds, redirectUri: e.target.value })}
+                    placeholder="Ex: http://localhost:3000/callback"
+                    className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.redirectUri ? 'border-red-500' : 'border-zinc-700 focus:border-green-500'}`}
+                />
+                {errors.redirectUri && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{errors.redirectUri}</p>}
             </div>
         </div>
 
@@ -69,6 +135,14 @@ const SpotifySettings: React.FC = () => {
             >
                 <Save className="w-4 h-4" />
                 Salvar Credenciais
+            </button>
+
+            <button 
+                onClick={handleDelete}
+                className="bg-red-600/80 hover:bg-red-500/80 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-red-500/10 active:scale-95"
+            >
+                <Trash2 className="w-4 h-4" />
+                Apagar
             </button>
 
             {showSaved && (
@@ -87,6 +161,7 @@ const SpotifySettings: React.FC = () => {
               <li>Faça login com sua conta Spotify.</li>
               <li>Clique em "Create app", dê um nome e descrição.</li>
               <li>Vá em "Settings" no seu novo app para visualizar o Client ID e Client Secret.</li>
+              <li>Na mesma página de "Settings", adicione uma "Redirect URI". Para uso local, pode ser <code className="bg-zinc-700/50 text-xs rounded p-1">http://localhost:3000/callback</code>.</li>
           </ol>
       </div>
     </div>
