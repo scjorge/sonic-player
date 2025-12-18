@@ -780,9 +780,9 @@ const App: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 bg-zinc-950 relative">
         <div className="h-16 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between px-6 flex-shrink-0 z-20">
             <h2 className="font-semibold text-lg flex items-center gap-2">
-                {viewMode === 'navi_songs' && "Músicas (Navidrome)"}
-                {viewMode === 'navi_albums' && "Álbuns (Navidrome)"}
-                {viewMode === 'navi_artists' && "Artistas (Navidrome)"}
+                {viewMode === 'navi_songs' && <><ListMusic className="w-5 h-5 text-indigo-500" /> Músicas</>}
+                {viewMode === 'navi_albums' && <><Library className="w-5 h-5 text-indigo-500" /> Álbuns</>}
+                {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
                 {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador Spotify</>}
                 {viewMode === 'settings' && (
                     <>
