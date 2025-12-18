@@ -9,17 +9,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-dom": "18.3.1",
-    "lucide-react": "0.294.0",
-    "react": "18.3.1",
-    "clsx": "2.1.1",
-    "music-metadata": "^11.10.3",
-    "browser-id3-writer": "^6.3.1",
     "@google/genai": "^1.33.0",
-    "crypto": "^1.0.1"
+    "browser-id3-writer": "^6.3.1",
+    "clsx": "2.1.1",
+    "crypto": "^1.0.1",
+    "lucide-react": "0.294.0",
+    "music-metadata": "^11.10.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-jsx-runtime": "^1.0.0-alpha.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
