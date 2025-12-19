@@ -986,7 +986,7 @@ const App: React.FC = () => {
                         <button onClick={handlePrevious} className="text-zinc-400 hover:text-white transition-colors">
                             <SkipBack className="w-5 h-5" />
                         </button>
-                        <button onClick={togglePlayPause} className="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 transition-transform active:scale-95">
+                        <button onClick={togglePlayPause} className={`w-10 h-10 rounded-full ${currentTrack?.sourceType === 'spotify' ? 'bg-green-600 hover:bg-green-500 shadow-lg shadow-green-500/20' : 'bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20'} text-white flex items-center justify-center transition-transform active:scale-95`}>
                             {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
                         </button>
                         <button onClick={handleNext} className="text-zinc-400 hover:text-white transition-colors">
@@ -996,7 +996,7 @@ const App: React.FC = () => {
                     <div className="w-full max-w-md flex items-center gap-2">
                         <span className="text-[10px] text-zinc-500 font-mono w-8 text-right">{formatTime(currentTime)}</span>
                         <div className="flex-1 h-1 bg-zinc-800 rounded-full relative group cursor-pointer">
-                            <div className="absolute top-0 left-0 h-full bg-indigo-500 rounded-full" style={{ width: `${(currentTime / duration) * 100}%` }} />
+                            <div className={`absolute top-0 left-0 h-full ${currentTrack?.sourceType === 'spotify' ? 'bg-green-500' : 'bg-indigo-500'} rounded-full`} style={{ width: `${(currentTime / duration) * 100}%` }} />
                             <input type="range" min={0} max={duration || 100} value={currentTime} onChange={handleSeek} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                         </div>
                         <span className="text-[10px] text-zinc-500 font-mono w-8">{formatTime(duration)}</span>
