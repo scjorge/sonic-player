@@ -1,5 +1,5 @@
 
-import { SpotifyCredentials, SpotifyTrack } from '../types';
+import { SpotifyCredentials, SpotifyTrack, PaginatedSpotifyTracks } from '../types';
 import { getSpotifyCredentials, saveSpotifyCredentials } from './data'; // Importar saveSpotifyCredentials
 
 class SpotifyService {
@@ -261,15 +261,15 @@ class SpotifyService {
       }
   }
 
-  async getLikedSongs(): Promise<SpotifyTrack[]> {
+  async getLikedSongs(offset: number = 0, limit: number = 50): Promise<PaginatedSpotifyTracks> {
     const token = await this.getAccessToken();
     if (!token) {
       console.warn("Não há token de acesso do Spotify disponível para buscar músicas curtidas.");
-      return [];
+      return { items: [], total: 0 };
     }
 
     try {
-      const response = await fetch(`https://api.spotify.com/v1/me/tracks?limit=50`, {
+      const response = await fetch(`https://api.spotify.com/v1/me/tracks?offset=${offset}&limit=${limit}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -280,14 +280,17 @@ class SpotifyService {
         if (response.status === 401) {
             this.logout(); // Força o logout para o usuário reautenticar
         }
-        return [];
+        return { items: [], total: 0 };
       }
 
       const data = await response.json();
-      return data.items.map((item: any) => item.track);
+      return {
+        items: data.items.map((item: any) => item.track),
+        total: data.total
+      };
     } catch (error) {
       console.error("Spotify Get Liked Songs Error:", error);
-      return [];
+      return { items: [], total: 0 };
     }
   }
 }

@@ -9,6 +9,9 @@ const LikedSongs: React.FC = () => {
   const [likedSongs, setLikedSongs] = useState<NaviSong[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0); // 0-indexed page
+  const [pageSize, setPageSize] = useState(50); // Default page size
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     const fetchLikedSongs = async () => {
@@ -21,8 +24,10 @@ const LikedSongs: React.FC = () => {
           return;
         }
 
-        const spotifyTracks = await spotifyService.getLikedSongs();
-        const mappedSongs: NaviSong[] = spotifyTracks.map(track => ({
+        const offset = page * pageSize;
+        const response = await spotifyService.getLikedSongs(offset, pageSize); // Use pagination params
+        
+        const mappedSongs: NaviSong[] = response.items.map(track => ({ // Use response.items
           id: track.id,
           title: track.name,
           artist: track.artists.map(a => a.name).join(', '),
@@ -56,6 +61,7 @@ const LikedSongs: React.FC = () => {
           starred: undefined, // Spotify liked songs are inherently "starred"
         }));
         setLikedSongs(mappedSongs);
+        setTotalItems(response.total); // Set total items
       } catch (err) {
         console.error("Failed to fetch liked songs:", err);
         setError("Não foi possível carregar as músicas curtidas do Spotify. Verifique sua conexão ou autenticação.");
@@ -65,7 +71,7 @@ const LikedSongs: React.FC = () => {
     };
 
     fetchLikedSongs();
-  }, []);
+  }, [page, pageSize]); // Add page and pageSize to dependency array
 
   const handlePlaySpotifySong = (song: NaviSong) => {
     // Implement Spotify specific play logic here
@@ -74,6 +80,15 @@ const LikedSongs: React.FC = () => {
       window.open(song.path, '_blank');
     }
     console.log("Playing Spotify song:", song.title);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(0); // Reset to first page when page size changes
   };
 
   if (loading) {
@@ -101,6 +116,11 @@ const LikedSongs: React.FC = () => {
           songs={likedSongs} 
           onPlay={handlePlaySpotifySong} 
           defaultColumns={SPOTIFY_COLUMN_CONFIG} // Pass the Spotify specific column config
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
           // Other props can be added if needed, e.g., currentTrackId, isPlaying
         />
       ) : (

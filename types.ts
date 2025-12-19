@@ -141,3 +141,9 @@ export interface SpotifyTrack {
   external_urls: { spotify: string };
   track_number: number
 }
+
+export interface PaginatedSpotifyTracks {
+  items: SpotifyTrack[];
+  total: number;
+}
+

@@ -94,11 +94,10 @@ const SongTable: React.FC<SongTableProps> = ({
     onToggleFavorite,
     onInfo,
     onSetRating,
-    onGroupEdit,
-    defaultColumns // Add defaultColumns here
+    onGroupEdit
 }) => {
   // --- STATE ---
-  const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || [
+  const [columns, setColumns] = useState<ColumnConfig[]>([
     { id: 'select', label: '', width: 50, visible: true, minWidth: 50 },
     { id: 'index', label: '#', width: 40, visible: true, minWidth: 30 },
     { id: 'cover', label: 'Capa', width: 80, visible: true, minWidth: 50 },
@@ -785,9 +784,6 @@ const SongTable: React.FC<SongTableProps> = ({
                         className="bg-zinc-800 text-zinc-300 text-xs rounded-lg px-2 py-1.5 border border-zinc-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
                     >
                         <option value="50">50</option>
-                        <option value="100">100</option>
-                        <option value="200">200</option>
-                        <option value="300">300</option>
                     </select>
                 )}
 
