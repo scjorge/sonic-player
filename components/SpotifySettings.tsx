@@ -5,44 +5,27 @@ import { saveSpotifyCredentials, getSpotifyCredentials } from '../services/data'
 import { spotifyService } from '../services/spotifyService'; // Importar spotifyService
 import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle, LogIn, LogOut } from 'lucide-react';
 
-const SpotifySettings: React.FC = () => {
+interface SpotifySettingsProps {
+    isAuthenticated: boolean;
+    authMessage: string;
+    setIsAuthenticated: (auth: boolean) => void;
+    setAuthMessage: (msg: string) => void;
+}
+
+const SpotifySettings: React.FC<SpotifySettingsProps> = ({ 
+    isAuthenticated, 
+    authMessage, 
+    setIsAuthenticated, 
+    setAuthMessage 
+}) => {
   const [creds, setCreds] = useState<SpotifyCredentials>({ clientId: '', clientSecret: '', redirectUri: '' });
   const [showSaved, setShowSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof SpotifyCredentials, string>>>({});
-  const [isAuthenticated, setIsAuthenticated] = useState(spotifyService.isAuthenticated());
-  const [authMessage, setAuthMessage] = useState('');
 
   useEffect(() => {
     const stored = getSpotifyCredentials();
     setCreds(stored); // Carrega todas as credenciais, incluindo tokens se existirem
-    setIsAuthenticated(spotifyService.isAuthenticated()); // Atualiza o estado de autenticação
-
-    // Lida com o callback de autenticação do Spotify
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-
-    if (code) {
-      // Limpa o 'code' da URL para evitar reprocessamento ou compartilhamento de URL com código
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      console.log("Código de autorização recebido:", code);
-      spotifyService.exchangeCodeForTokens(code)
-        .then(success => {
-          if (success) {
-            setIsAuthenticated(true);
-            setAuthMessage("Autenticação com Spotify bem-sucedida!");
-            setTimeout(() => setAuthMessage(''), 5000);
-          } else {
-            setAuthMessage("Falha na autenticação com Spotify.");
-            setTimeout(() => setAuthMessage(''), 5000);
-          }
-        })
-        .catch(error => {
-          console.error("Erro no exchangeCodeForTokens:", error);
-          setAuthMessage("Erro durante a autenticação com Spotify.");
-          setTimeout(() => setAuthMessage(''), 5000);
-        });
-    }
+    // A autenticação agora é gerenciada pelo App.tsx e passada via prop
   }, []);
 
   const validate = (): boolean => {
@@ -258,7 +241,7 @@ const SpotifySettings: React.FC = () => {
               <li>Faça login com sua conta Spotify.</li>
               <li>Clique em "Create app", dê um nome e descrição.</li>
               <li>Vá em "Settings" no seu novo app para visualizar o Client ID e Client Secret.</li>
-              <li>Na mesma página de "Settings", adicione uma "Redirect URI". Para uso local, pode ser <code className="bg-zinc-700/50 text-xs rounded p-1">http://localhost:5173/callback</code>.</li>
+              <li>Na mesma página de "Settings", adicione uma "Redirect URI". Para uso local, pode ser <code className="bg-zinc-700/50 text-xs rounded p-1">http://127.0.0.1:6789/callback</code>.</li>
           </ol>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, SpotifyTrack } from './types';
 import { navidromeService } from './services/navidromeService';
+import { spotifyService } from './services/spotifyService';
 import { getStoredGroups } from './services/data';
 import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation } from 'lucide-react';
 import SongTable from './components/SongTable';
@@ -93,6 +94,10 @@ const App: React.FC = () => {
   const [volume, setVolume] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // --- SPOTIFY AUTH STATE ---
+  const [isAuthenticated, setIsAuthenticated] = useState(spotifyService.isAuthenticated());
+  const [authMessage, setAuthMessage] = useState('');
+
   // --- EFFECTS ---
 
   useEffect(() => {
@@ -103,6 +108,31 @@ const App: React.FC = () => {
   useEffect(() => {
     const init = async () => {
         try {
+            // Check for Spotify callback
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const path = window.location.pathname;
+
+            if (path === '/callback' && code) {
+                console.log("Código de autorização recebido em App.tsx:", code);
+                const success = await spotifyService.exchangeCodeForTokens(code);
+                if (success) {
+                    setIsAuthenticated(true);
+                    setAuthMessage("Autenticação com Spotify bem-sucedida!");
+                } else {
+                    setAuthMessage("Falha na autenticação com Spotify.");
+                }
+                setTimeout(() => setAuthMessage(''), 5000);
+
+                // Set view to spotify settings
+                setViewMode('settings');
+                setActiveSettingsTab('spotify');
+                
+                // Clear the code from URL after processing
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return; // Do not proceed with normal data loading if it's a callback
+            }
+            
             // Load filters options
             const genres = await navidromeService.getGenres();
             setAvailableGenres(genres);
@@ -121,6 +151,8 @@ const App: React.FC = () => {
             }
         } catch (e) {
             console.error("Init failed", e);
+            setAuthMessage("Erro durante a inicialização da aplicação.");
+            setTimeout(() => setAuthMessage(''), 5000);
         }
     };
     init();
@@ -559,7 +591,12 @@ const App: React.FC = () => {
         if (activeSettingsTab === 'spotify') {
             return (
                 <div className="h-full overflow-y-auto custom-scrollbar bg-zinc-950">
-                    <SpotifySettings />
+                    <SpotifySettings 
+                        isAuthenticated={isAuthenticated}
+                        authMessage={authMessage}
+                        setIsAuthenticated={setIsAuthenticated}
+                        setAuthMessage={setAuthMessage}
+                    />
                 </div>
             );
         }
