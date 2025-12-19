@@ -121,6 +121,10 @@ export interface SpotifyCredentials {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
+  // New fields for user authentication
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number; // Unix timestamp in milliseconds when the token expires
 }
 
 export interface SpotifyTrack {

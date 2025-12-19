@@ -2,16 +2,47 @@
 import React, { useState, useEffect } from 'react';
 import { SpotifyCredentials } from '../types';
 import { saveSpotifyCredentials, getSpotifyCredentials } from '../services/data';
-import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle } from 'lucide-react';
+import { spotifyService } from '../services/spotifyService'; // Importar spotifyService
+import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle, LogIn, LogOut } from 'lucide-react';
 
 const SpotifySettings: React.FC = () => {
   const [creds, setCreds] = useState<SpotifyCredentials>({ clientId: '', clientSecret: '', redirectUri: '' });
   const [showSaved, setShowSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof SpotifyCredentials, string>>>({});
+  const [isAuthenticated, setIsAuthenticated] = useState(spotifyService.isAuthenticated());
+  const [authMessage, setAuthMessage] = useState('');
 
   useEffect(() => {
     const stored = getSpotifyCredentials();
-    setCreds({redirectUri: '', ...stored});
+    setCreds(stored); // Carrega todas as credenciais, incluindo tokens se existirem
+    setIsAuthenticated(spotifyService.isAuthenticated()); // Atualiza o estado de autenticação
+
+    // Lida com o callback de autenticação do Spotify
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (code) {
+      // Limpa o 'code' da URL para evitar reprocessamento ou compartilhamento de URL com código
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      console.log("Código de autorização recebido:", code);
+      spotifyService.exchangeCodeForTokens(code)
+        .then(success => {
+          if (success) {
+            setIsAuthenticated(true);
+            setAuthMessage("Autenticação com Spotify bem-sucedida!");
+            setTimeout(() => setAuthMessage(''), 5000);
+          } else {
+            setAuthMessage("Falha na autenticação com Spotify.");
+            setTimeout(() => setAuthMessage(''), 5000);
+          }
+        })
+        .catch(error => {
+          console.error("Erro no exchangeCodeForTokens:", error);
+          setAuthMessage("Erro durante a autenticação com Spotify.");
+          setTimeout(() => setAuthMessage(''), 5000);
+        });
+    }
   }, []);
 
   const validate = (): boolean => {
@@ -44,18 +75,53 @@ const SpotifySettings: React.FC = () => {
 
   const handleSave = () => {
     if (validate()) {
-      saveSpotifyCredentials(creds);
+      // Ao salvar credenciais básicas, limpamos os tokens de usuário antigos
+      // para garantir que uma nova autenticação seja necessária se as credenciais mudarem.
+      const credsToSave = {
+        ...creds,
+        accessToken: undefined,
+        refreshToken: undefined,
+        expiresAt: undefined,
+      };
+      saveSpotifyCredentials(credsToSave);
+      setCreds(credsToSave); // Atualiza o estado local para refletir a limpeza dos tokens
+      setIsAuthenticated(false); // Garante que o estado de autenticação seja redefinido
+      spotifyService.logout(); // Limpa os tokens também no serviço
       setShowSaved(true);
       setTimeout(() => setShowSaved(false), 3000);
     }
   };
 
   const handleDelete = () => {
-    // Limpa as credenciais no estado e no armazenamento
-    const emptyCreds = { clientId: '', clientSecret: '', redirectUri: '' };
+    // Limpa todas as credenciais, incluindo tokens
+    const emptyCreds = { clientId: '', clientSecret: '', redirectUri: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined };
     setCreds(emptyCreds);
     saveSpotifyCredentials(emptyCreds);
     setErrors({}); // Limpa quaisquer erros de validação
+    setIsAuthenticated(false); // Reseta o estado de autenticação
+    spotifyService.logout(); // Garante que o serviço também limpe os tokens
+  };
+
+  const handleAuthenticate = () => {
+    if (!creds.clientId || !creds.redirectUri) {
+      setAuthMessage("Preencha o Client ID e a Redirect URI antes de autenticar.");
+      setTimeout(() => setAuthMessage(''), 5000);
+      return;
+    }
+    const authUrl = spotifyService.getAuthorizationUrl();
+    if (authUrl) {
+      window.location.href = authUrl;
+    } else {
+      setAuthMessage("Não foi possível gerar a URL de autenticação. Verifique as credenciais.");
+      setTimeout(() => setAuthMessage(''), 5000);
+    }
+  };
+
+  const handleLogout = () => {
+    spotifyService.logout();
+    setIsAuthenticated(false);
+    setAuthMessage("Desconectado do Spotify.");
+    setTimeout(() => setAuthMessage(''), 5000);
   };
 
   return (
@@ -66,7 +132,7 @@ const SpotifySettings: React.FC = () => {
             Spotify API
         </h2>
         <p className="text-zinc-400 text-base max-w-2xl">
-            Configure suas credenciais da API do Spotify para habilitar recursos como busca automática de capas em alta resolução e sincronização de metadados.
+            Configure suas credenciais da API do Spotify para habilitar recursos como busca automática de capas em alta resolução e sincronização de metadados. Para funcionalidades que exigem acesso à sua conta (e.g., criação de playlists), uma autenticação adicional é necessária.
         </p>
       </div>
 
@@ -128,7 +194,7 @@ const SpotifySettings: React.FC = () => {
             </div>
         </div>
 
-        <div className="pt-4 flex items-center gap-4">
+        <div className="pt-4 flex flex-wrap items-center gap-4">
             <button 
                 onClick={handleSave}
                 className="bg-green-600 hover:bg-green-500 text-black px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-green-500/10 active:scale-95"
@@ -137,18 +203,49 @@ const SpotifySettings: React.FC = () => {
                 Salvar Credenciais
             </button>
 
+            {!isAuthenticated ? (
+              <button 
+                  onClick={handleAuthenticate}
+                  className="bg-spotify-green-500 hover:bg-spotify-green-600 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-spotify-green-500/20 active:scale-95"
+              >
+                  <LogIn className="w-4 h-4" />
+                  Autenticar com Spotify
+              </button>
+            ) : (
+              <button 
+                  onClick={handleLogout}
+                  className="bg-red-600/80 hover:bg-red-500/80 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-red-500/10 active:scale-95"
+              >
+                  <LogOut className="w-4 h-4" />
+                  Desconectar do Spotify
+              </button>
+            )}
+
             <button 
                 onClick={handleDelete}
-                className="bg-red-600/80 hover:bg-red-500/80 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-red-500/10 active:scale-95"
+                className="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-zinc-500/10 active:scale-95"
             >
                 <Trash2 className="w-4 h-4" />
-                Apagar
+                Apagar Tudo
             </button>
+
 
             {showSaved && (
                 <div className="flex items-center gap-2 text-green-400 text-sm font-medium animate-fade-in">
                     <CheckCircle2 className="w-4 h-4" />
-                    Configurações salvas com sucesso!
+                    Credenciais salvas!
+                </div>
+            )}
+            {authMessage && (
+                <div className={`flex items-center gap-2 text-sm font-medium animate-fade-in ${authMessage.includes('sucesso') ? 'text-green-400' : 'text-red-400'}`}>
+                    {authMessage.includes('sucesso') ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                    {authMessage}
+                </div>
+            )}
+            {isAuthenticated && (
+                <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Autenticado com Spotify
                 </div>
             )}
         </div>
@@ -161,7 +258,7 @@ const SpotifySettings: React.FC = () => {
               <li>Faça login com sua conta Spotify.</li>
               <li>Clique em "Create app", dê um nome e descrição.</li>
               <li>Vá em "Settings" no seu novo app para visualizar o Client ID e Client Secret.</li>
-              <li>Na mesma página de "Settings", adicione uma "Redirect URI". Para uso local, pode ser <code className="bg-zinc-700/50 text-xs rounded p-1">http://localhost:3000/callback</code>.</li>
+              <li>Na mesma página de "Settings", adicione uma "Redirect URI". Para uso local, pode ser <code className="bg-zinc-700/50 text-xs rounded p-1">http://localhost:5173/callback</code>.</li>
           </ol>
       </div>
     </div>

@@ -51,10 +51,10 @@ export const deleteStoredGroup = (id: string) => {
 export const getSpotifyCredentials = (): SpotifyCredentials => {
   try {
     const data = localStorage.getItem(SPOTIFY_KEY);
-    return data ? JSON.parse(data) : { clientId: '', clientSecret: '', redirectUri: '' };
+    return data ? JSON.parse(data) : { clientId: '', clientSecret: '', redirectUri: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined };
   } catch (e) {
     console.error("Erro ao carregar Spotify do LocalStorage", e);
-    return { clientId: '', clientSecret: '', redirectUri: '' };
+    return { clientId: '', clientSecret: '', redirectUri: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined };
   }
 };
 
