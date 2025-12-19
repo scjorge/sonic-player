@@ -32,7 +32,7 @@ class SpotifyService {
       return null;
     }
 
-    const scopes = 'user-read-private user-read-email playlist-read-private playlist-modify-private playlist-modify-public';
+    const scopes = 'user-read-private user-read-email playlist-read-private playlist-modify-private playlist-modify-public user-library-read';
     const authUrl = new URL('https://accounts.spotify.com/authorize');
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('client_id', creds.clientId);
