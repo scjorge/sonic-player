@@ -476,6 +476,23 @@ const App: React.FC = () => {
     loadAndPlay(track);
   };
 
+  const playSpotifySong = (song: NaviSong) => {
+    if (song.uri) {
+      spotifyService.playTrack(song.uri);
+      const playerTrack: PlayerTrack = {
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        coverUrl: song.coverArt || null,
+        src: song.path, // Not used for playback, but good for consistency
+        duration: song.duration,
+        sourceType: 'spotify',
+      };
+      setCurrentTrack(playerTrack);
+      setIsPlaying(true); // Assume playback starts immediately
+    }
+  };
+
   const playSpotifyTrack = (track: SpotifyTrack) => {
       if (!track.preview_url) return;
       if (currentTrack?.id === track.id) {
@@ -608,7 +625,7 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_liked') {
-        return <LikedSongs />;
+        return <LikedSongs onPlay={playSpotifySong} />;
     }
 
     if (viewMode === 'navi_songs' || viewMode === 'navi_playlist' || viewMode === 'navi_favorites') {

@@ -32,7 +32,7 @@ class SpotifyService {
       return null;
     }
 
-    const scopes = 'user-read-private user-read-email playlist-read-private playlist-modify-private playlist-modify-public user-library-read';
+    const scopes = 'user-read-private user-read-email playlist-read-private playlist-modify-private playlist-modify-public user-library-read user-read-playback-state user-modify-playback-state';
     const authUrl = new URL('https://accounts.spotify.com/authorize');
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('client_id', creds.clientId);
@@ -291,6 +291,53 @@ class SpotifyService {
     } catch (error) {
       console.error("Spotify Get Liked Songs Error:", error);
       return { items: [], total: 0 };
+    }
+  }
+
+  private async getActiveDevice(): Promise<string | null> {
+    const token = await this.getAccessToken();
+    if (!token) return null;
+
+    try {
+      const response = await fetch('https://api.spotify.com/v1/me/player/devices', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) return null;
+
+      const { devices } = await response.json();
+      if (devices && devices.length > 0) {
+        const activeDevice = devices.find((d: any) => d.is_active);
+        return activeDevice ? activeDevice.id : devices[0].id;
+      }
+      return null;
+    } catch (error) {
+      console.error("Spotify Get Devices Error:", error);
+      return null;
+    }
+  }
+
+  async playTrack(trackUri: string) {
+    const token = await this.getAccessToken();
+    if (!token) return;
+
+    const deviceId = await this.getActiveDevice();
+    if (!deviceId) {
+      console.warn("Nenhum dispositivo Spotify ativo encontrado.");
+      return;
+    }
+
+    try {
+      await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ uris: [trackUri] })
+      });
+    } catch (error) {
+      console.error("Spotify Play Track Error:", error);
     }
   }
 }

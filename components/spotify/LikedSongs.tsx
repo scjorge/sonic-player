@@ -5,7 +5,11 @@ import SongTable from '../library/SongTable';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { SPOTIFY_COLUMN_CONFIG } from './spotifyConstants'; // Import the Spotify specific column config
 
-const LikedSongs: React.FC = () => {
+interface LikedSongsProps {
+  onPlay: (song: NaviSong) => void;
+}
+
+const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay }) => {
   const [likedSongs, setLikedSongs] = useState<NaviSong[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,11 +79,7 @@ const LikedSongs: React.FC = () => {
   }, [page, pageSize]); // Add page and pageSize to dependency array
 
   const handlePlaySpotifySong = (song: NaviSong) => {
-    // Implement Spotify specific play logic here
-    // For now, let's just open the spotify link
-    if (song.path) {
-      window.open(song.uri, '_blank');
-    }
+    onPlay(song);
     console.log("Playing Spotify song:", song.title);
   };
 
