@@ -699,7 +699,7 @@ const App: React.FC = () => {
                 <>
                     {/* NAVI SECTION */}
                     <div className="animate-fade-in">
-                        {!isSidebarCollapsed && <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2">Navidrome</h3>}
+                        {!isSidebarCollapsed && <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2">Biblioteca</h3>}
                         <div className="space-y-1">
                             <button onClick={handleLibrarySongsClick} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'navi_songs' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>
                                 <ListMusic className="w-4 h-4 flex-shrink-0" /> 
