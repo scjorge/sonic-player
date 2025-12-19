@@ -1,6 +1,6 @@
 import React from 'react';
-import { X, List, Check, Plus, Trash2 } from 'lucide-react';
-import { NaviPlaylist } from '../types';
+import { X, List, Plus, Trash2 } from 'lucide-react';
+import { NaviPlaylist } from '../../types';
 
 interface PlaylistSelectorModalProps {
   playlists: NaviPlaylist[];

@@ -1,7 +1,7 @@
 import React from 'react';
-import { NaviSong } from '../types';
+import { NaviSong } from '../../types';
 import { X, Music, Disc, User, Calendar, FileAudio, Tag, Folder, Hash, Clock, Zap, Activity, Heart, BarChart3, Database, HardDrive, FileType, CalendarPlus, History, Gauge, Layers, Smile, Star, Fingerprint, Film, AlignLeft } from 'lucide-react';
-import { navidromeService } from '../services/navidromeService';
+import { navidromeService } from '../../services/navidromeService';
 
 interface SongInfoModalProps {
   song: NaviSong;

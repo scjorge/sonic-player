@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { TagGroup } from '../types';
+import { TagGroup } from '../../types';
 import { Plus, Trash2, X, FolderPlus } from 'lucide-react';
-import ConfirmationModal from './ConfirmationModal';
-import { addStoredGroup, deleteStoredGroup, updateStoredGroup } from '../services/data';
+import ConfirmationModal from '../library/ConfirmationModal';
+import { addStoredGroup, deleteStoredGroup, updateStoredGroup } from '../../services/data';
 
 interface GroupSettingsProps {
   groups: TagGroup[];

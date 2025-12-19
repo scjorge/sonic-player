@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { MusicMetadata, AISuggestion, TagGroup } from '../types';
-import { GENRES } from '../constants';
-import { Sparkles, Save, Loader2, Music2, User, Disc, Calendar, Hash, Tag, MessageSquare, ChevronDown } from 'lucide-react';
-import { suggestMetadata } from '../services/geminiService';
+import React from 'react';
+import { MusicMetadata, TagGroup } from '../../types';
+import { GENRES } from '../../constants';
+import { Sparkles, Save, Music2, User, Disc, Calendar, Hash, Tag, MessageSquare, ChevronDown } from 'lucide-react';
+
 
 interface TagFormProps {
   metadata: MusicMetadata;
@@ -13,28 +13,6 @@ interface TagFormProps {
 }
 
 const TagForm: React.FC<TagFormProps> = ({ metadata, fileName, onChange, onSave, groups }) => {
-  const [isSuggesting, setIsSuggesting] = useState(false);
-
-  const handleAutoFill = async () => {
-    setIsSuggesting(true);
-    try {
-      const suggestion = await suggestMetadata(fileName, metadata.artist);
-      if (suggestion) {
-        if (suggestion.title) onChange('title', suggestion.title);
-        if (suggestion.artist) onChange('artist', suggestion.artist);
-        if (suggestion.album) onChange('album', suggestion.album);
-        if (suggestion.year) onChange('year', suggestion.year);
-        if (suggestion.genre) onChange('genre', suggestion.genre);
-      } else {
-          alert("Não foi possível identificar metadados automaticamente.");
-      }
-    } catch (e) {
-        console.error(e);
-    } finally {
-      setIsSuggesting(false);
-    }
-  };
-
   const handleGroupSelection = (group: TagGroup, item: string) => {
     const currentComments = metadata.comments || '';
     
@@ -114,18 +92,6 @@ const TagForm: React.FC<TagFormProps> = ({ metadata, fileName, onChange, onSave,
 
   return (
     <div className="space-y-6 pb-10">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">Editar Detalhes</h2>
-        <button
-          onClick={handleAutoFill}
-          disabled={isSuggesting}
-          className="text-xs flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-3 py-1.5 rounded-full hover:bg-indigo-500/20 transition-colors disabled:opacity-50"
-        >
-          {isSuggesting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-          Auto-Preencher
-        </button>
-      </div>
-
       <div className="grid grid-cols-1 gap-5">
         <InputField icon={Music2} label="Título" value={metadata.title} field="title" />
         <InputField icon={User} label="Artista" value={metadata.artist} field="artist" />

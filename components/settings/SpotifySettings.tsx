@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { SpotifyCredentials } from '../types';
-import { saveSpotifyCredentials, getSpotifyCredentials } from '../services/data';
-import { spotifyService } from '../services/spotifyService'; // Importar spotifyService
+import { SpotifyCredentials } from '../../types';
+import { saveSpotifyCredentials, getSpotifyCredentials } from '../../services/data';
+import { spotifyService } from '../../services/spotifyService'; // Importar spotifyService
 import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle, LogIn, LogOut } from 'lucide-react';
 
 interface SpotifySettingsProps {

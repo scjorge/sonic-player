@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { spotifyService } from '../services/spotifyService';
-import { SpotifyTrack, NaviSong } from '../types';
-import SongTable from './SongTable';
+import { spotifyService } from '../../services/spotifyService';
+import { SpotifyTrack, NaviSong } from '../../types';
+import SongTable from '../library/SongTable';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
 const LikedSongs: React.FC = () => {
