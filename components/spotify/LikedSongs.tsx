@@ -30,13 +30,13 @@ const LikedSongs: React.FC = () => {
           coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
           duration: Math.floor(track.duration_ms / 1000), // Convert ms to seconds
           path: track.external_urls.spotify, // Use Spotify URL as path for distinction
+          track: track.track_number,
           // Defaulting other NaviSong properties
           genre: undefined,
           comment: undefined,
-          suffix: 'spotify', 
+          suffix: undefined, 
           bitRate: undefined,
           samplingRate: undefined,
-          track: undefined,
           discNumber: undefined,
           contentType: 'audio/spotify',
           size: undefined,

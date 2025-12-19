@@ -139,4 +139,5 @@ export interface SpotifyTrack {
   duration_ms: number;
   preview_url: string | null;
   external_urls: { spotify: string };
+  track_number: number
 }

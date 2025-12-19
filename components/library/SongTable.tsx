@@ -97,9 +97,8 @@ const SongTable: React.FC<SongTableProps> = ({
 }) => {
   // --- STATE ---
   const [columns, setColumns] = useState<ColumnConfig[]>([
-    { id: 'select', label: '', width: 40, visible: true, minWidth: 40 },
+    { id: 'select', label: '', width: 50, visible: true, minWidth: 50 },
     { id: 'index', label: '#', width: 40, visible: true, minWidth: 30 },
-    // Coluna 'play' removida
     { id: 'cover', label: 'Capa', width: 80, visible: true, minWidth: 50 },
     { id: 'title', label: 'Título', width: 200, visible: true, minWidth: 100 },
     { id: 'artist', label: 'Artista', width: 150, visible: true, minWidth: 100 },
