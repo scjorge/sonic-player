@@ -3,6 +3,7 @@ import { spotifyService } from '../../services/spotifyService';
 import { SpotifyTrack, NaviSong } from '../../types';
 import SongTable from '../library/SongTable';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { SPOTIFY_COLUMN_CONFIG } from './spotifyConstants'; // Import the Spotify specific column config
 
 const LikedSongs: React.FC = () => {
   const [likedSongs, setLikedSongs] = useState<NaviSong[]>([]);
@@ -100,6 +101,7 @@ const LikedSongs: React.FC = () => {
         <SongTable 
           songs={likedSongs} 
           onPlay={handlePlaySpotifySong} 
+          defaultColumns={SPOTIFY_COLUMN_CONFIG} // Pass the Spotify specific column config
           // Other props can be added if needed, e.g., currentTrackId, isPlaying
         />
       ) : (

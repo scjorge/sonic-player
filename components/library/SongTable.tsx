@@ -38,6 +38,7 @@ interface SongTableProps {
   onInfo?: (song: NaviSong) => void;
   onSetRating?: (id: string, rating: number) => void;
   onGroupEdit?: (song: NaviSong) => void; // Nova prop
+  defaultColumns?: ColumnConfig[];
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
@@ -93,10 +94,11 @@ const SongTable: React.FC<SongTableProps> = ({
     onToggleFavorite,
     onInfo,
     onSetRating,
-    onGroupEdit
+    onGroupEdit,
+    defaultColumns // Add defaultColumns here
 }) => {
   // --- STATE ---
-  const [columns, setColumns] = useState<ColumnConfig[]>([
+  const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || [
     { id: 'select', label: '', width: 50, visible: true, minWidth: 50 },
     { id: 'index', label: '#', width: 40, visible: true, minWidth: 30 },
     { id: 'cover', label: 'Capa', width: 80, visible: true, minWidth: 50 },
