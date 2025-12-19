@@ -317,7 +317,7 @@ const SongTable: React.FC<SongTableProps> = ({
                 {/* Imagem de Fundo */}
                 {song.coverArt ? (
                     <img 
-                        src={navidromeService.getCoverArtUrl(song.coverArt)} 
+                        src={song.contentType === 'audio/spotify' ? song.coverArt : navidromeService.getCoverArtUrl(song.coverArt)} 
                         alt="" 
                         className={`w-full h-full object-cover transition-opacity duration-200 ${isCurrentSong ? 'opacity-50' : 'group-hover/cover:opacity-50'}`} 
                         loading="lazy"
