@@ -234,31 +234,34 @@ class SpotifyService {
     }
   }
 
-  async getNewReleases(): Promise<SpotifyTrack[]> {
-      const token = await this.getAccessToken();
-      if (!token) return [];
+  async getLikedSongs(): Promise<SpotifyTrack[]> {
+    const token = await this.getAccessToken();
+    if (!token) {
+      console.warn("Não há token de acesso do Spotify disponível para buscar músicas curtidas.");
+      return [];
+    }
 
-      try {
-        // Buscando lançamentos de álbuns e pegando algumas faixas representativas
-        const response = await fetch(`https://api.spotify.com/v1/browse/new-releases?limit=10`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Falha ao buscar novos lançamentos do Spotify:', errorData);
-          return [];
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/me/tracks?limit=50`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Falha ao buscar músicas curtidas do Spotify:', errorData);
+        // Se for um erro de autenticação, o token pode estar inválido/expirado
+        if (response.status === 401) {
+            this.logout(); // Força o logout para o usuário reautenticar
         }
-        const data = await response.json();
-        
-        // Simplificação: apenas retornando os itens transformados ou buscando faixas
-        // Para o "Browse" inicial, vamos buscar algo genérico ou top tracks se tivéssemos ID de artista
-        // Por agora, vamos buscar "Top Hits" globais via search para popular a tela
-        return this.searchTracks("top 2024");
-      } catch (e) {
-        console.error("Spotify Get New Releases Error:", e);
         return [];
       }
+
+      const data = await response.json();
+      return data.items.map((item: any) => item.track);
+    } catch (error) {
+      console.error("Spotify Get Liked Songs Error:", error);
+      return [];
+    }
   }
 }
 

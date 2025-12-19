@@ -12,8 +12,9 @@ import GroupSettings from './components/GroupSettings';
 import GroupTagModal from './components/GroupTagModal';
 import SpotifySettings from './components/SpotifySettings';
 import SpotifyBrowse from './components/SpotifyBrowse';
+import LikedSongs from './components/LikedSongs';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked';
 type SettingsTab = 'groups' | 'spotify' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
@@ -569,6 +570,10 @@ const App: React.FC = () => {
         return <SpotifyBrowse onPreview={playSpotifyTrack} />;
     }
 
+    if (viewMode === 'spotify_liked') {
+        return <LikedSongs />;
+    }
+
     if (viewMode === 'navi_songs' || viewMode === 'navi_playlist' || viewMode === 'navi_favorites') {
         const isPlaylistOrFav = viewMode === 'navi_playlist' || viewMode === 'navi_favorites';
         return (
@@ -762,6 +767,13 @@ const App: React.FC = () => {
                                 <Navigation className="w-4 h-4 flex-shrink-0" /> 
                                 {!isSidebarCollapsed && <span>Navegar</span>}
                             </button>
+                            <button 
+                                onClick={() => setViewMode('spotify_liked')} 
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'spotify_liked' ? 'bg-green-500/10 text-green-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                            >
+                                <Heart className="w-4 h-4 flex-shrink-0" /> 
+                                {!isSidebarCollapsed && <span>Curtidas</span>}
+                            </button>
                         </div>
                     </div>
                 </>
@@ -784,6 +796,7 @@ const App: React.FC = () => {
                 {viewMode === 'navi_albums' && <><Library className="w-5 h-5 text-indigo-500" /> Álbuns</>}
                 {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
                 {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador Spotify</>}
+                {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
                 {viewMode === 'settings' && (
                     <>
                         <Settings className="w-5 h-5 text-indigo-500" />
