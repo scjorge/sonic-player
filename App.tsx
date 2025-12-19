@@ -504,6 +504,9 @@ const App: React.FC = () => {
   };
 
   const playNaviSong = (song: NaviSong) => {
+    // Stop any active Spotify playback
+    spotifyService.stop();
+
     if (currentTrack?.id === song.id) {
         togglePlayPause();
         return;
@@ -522,6 +525,11 @@ const App: React.FC = () => {
   };
 
   const playSpotifySong = (song: NaviSong) => {
+    // Pause any active Navidrome playback
+    if (audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
+    }
+
     if (song.uri) {
       spotifyService.playTrack(song.uri);
       const playerTrack: PlayerTrack = {
@@ -535,6 +543,8 @@ const App: React.FC = () => {
       };
       setCurrentTrack(playerTrack);
       setIsPlaying(true); // Assume playback starts immediately
+      setCurrentTime(0); // Reset local time for new Spotify track
+      setDuration(song.duration); // Set duration based on Spotify track
     }
   };
 

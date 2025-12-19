@@ -454,6 +454,25 @@ class SpotifyService {
       console.error("Spotify Skip To Previous Error:", error);
     }
   }
+  async stop() {
+    const token = await this.getAccessToken();
+    if (!token) return;
+
+    const deviceId = await this.getActiveDevice();
+    if (!deviceId) {
+      console.warn("Nenhum dispositivo Spotify ativo encontrado para parar.");
+      return;
+    }
+
+    try {
+      await fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Spotify Stop Error:", error);
+    }
+  }
 }
 
 export const spotifyService = new SpotifyService();
