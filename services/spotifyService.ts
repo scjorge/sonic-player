@@ -32,7 +32,7 @@ class SpotifyService {
       return null;
     }
 
-    const scopes = 'user-read-private user-read-email playlist-read-private playlist-modify-private playlist-modify-public user-library-read user-read-playback-state user-modify-playback-state';
+    const scopes = 'user-read-private user-read-email playlist-read-private playlist-modify-private playlist-modify-public user-library-read user-modify-playback-state user-read-playback-state user-read-currently-playing';
     const authUrl = new URL('https://accounts.spotify.com/authorize');
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('client_id', creds.clientId);
@@ -338,6 +338,120 @@ class SpotifyService {
       });
     } catch (error) {
       console.error("Spotify Play Track Error:", error);
+    }
+  }
+  async getPlaybackState(): Promise<any | null> {
+    const token = await this.getAccessToken();
+    if (!token) return null;
+
+    try {
+      const response = await fetch('https://api.spotify.com/v1/me/player', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.status === 204) { // No content, means no active playback
+        return null;
+      }
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to get Spotify playback state:', errorData);
+        return null;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Spotify Get Playback State Error:", error);
+      return null;
+    }
+  }
+
+  async seek(position_ms: number) {
+    const token = await this.getAccessToken();
+    if (!token) return;
+
+    try {
+      await fetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${position_ms}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Spotify Seek Error:", error);
+    }
+  }
+  async togglePlayPause() {
+    const playbackState = await this.getPlaybackState();
+    if (playbackState && playbackState.is_playing) {
+      await this.pause();
+    } else {
+      await this.play();
+    }
+  }
+
+  async play() {
+    const token = await this.getAccessToken();
+    if (!token) return;
+
+    const deviceId = await this.getActiveDevice();
+    if (!deviceId) {
+      console.warn("Nenhum dispositivo Spotify ativo encontrado para iniciar a reprodução.");
+      return;
+    }
+
+    try {
+      await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Spotify Play Error:", error);
+    }
+  }
+
+  async pause() {
+    const token = await this.getAccessToken();
+    if (!token) return;
+
+    const deviceId = await this.getActiveDevice();
+    if (!deviceId) {
+      console.warn("Nenhum dispositivo Spotify ativo encontrado para pausar.");
+      return;
+    }
+
+    try {
+      await fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Spotify Pause Error:", error);
+    }
+  }
+  async skipToNext() {
+    const token = await this.getAccessToken();
+    if (!token) return;
+
+    try {
+      await fetch('https://api.spotify.com/v1/me/player/next', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Spotify Skip To Next Error:", error);
+    }
+  }
+
+  async skipToPrevious() {
+    const token = await this.getAccessToken();
+    if (!token) return;
+
+    try {
+      await fetch('https://api.spotify.com/v1/me/player/previous', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Spotify Skip To Previous Error:", error);
     }
   }
 }

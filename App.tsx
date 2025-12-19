@@ -98,6 +98,51 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(spotifyService.isAuthenticated());
   const [authMessage, setAuthMessage] = useState('');
 
+  // --- SPOTIFY PLAYBACK SYNC ---
+  useEffect(() => {
+    let spotifyPlaybackInterval: NodeJS.Timeout;
+
+    const syncSpotifyPlayback = async () => {
+      if (currentTrack?.sourceType === 'spotify' && isPlaying) {
+        const playbackState = await spotifyService.getPlaybackState();
+        if (playbackState && playbackState.item) {
+          setCurrentTime(playbackState.progress_ms / 1000);
+          setDuration(playbackState.item.duration_ms / 1000);
+          setIsPlaying(playbackState.is_playing);
+          // If track changes on spotify side
+          if (playbackState.item.uri !== currentTrack.src) {
+              setCurrentTrack({
+                  id: playbackState.item.id,
+                  title: playbackState.item.name,
+                  artist: playbackState.item.artists[0]?.name || '',
+                  coverUrl: playbackState.item.album.images[0]?.url || null,
+                  src: playbackState.item.uri,
+                  duration: playbackState.item.duration_ms / 1000,
+                  sourceType: 'spotify',
+              });
+          }
+        } else if (playbackState === null && isPlaying) {
+          // Playback stopped on Spotify side
+          setCurrentTrack(null);
+          setIsPlaying(false);
+          setCurrentTime(0);
+          setDuration(0);
+          if (audioRef.current) audioRef.current.pause();
+        }
+      }
+    };
+
+    if (currentTrack?.sourceType === 'spotify' && isPlaying) {
+      spotifyPlaybackInterval = setInterval(syncSpotifyPlayback, 1000); // Poll every second
+    }
+
+    return () => {
+      if (spotifyPlaybackInterval) {
+        clearInterval(spotifyPlaybackInterval);
+      }
+    };
+  }, [currentTrack, isPlaying]);
+
   // --- EFFECTS ---
 
   useEffect(() => {
@@ -521,7 +566,11 @@ const App: React.FC = () => {
   };
 
   const togglePlayPause = () => {
-    if (audioRef.current) {
+    if (!currentTrack) return;
+
+    if (currentTrack.sourceType === 'spotify') {
+      spotifyService.togglePlayPause();
+    } else if (audioRef.current) {
         if (isPlaying) {
             audioRef.current.pause();
         } else {
@@ -540,7 +589,9 @@ const App: React.FC = () => {
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = parseFloat(e.target.value);
-    if (audioRef.current) {
+    if (currentTrack?.sourceType === 'spotify') {
+      spotifyService.seek(time * 1000);
+    } else if (audioRef.current) {
         audioRef.current.currentTime = time;
         setCurrentTime(time);
     }
@@ -548,7 +599,10 @@ const App: React.FC = () => {
 
   const handleNext = () => {
       if (!currentTrack) return;
-      if (currentTrack.sourceType === 'navidrome' && naviSongs.length > 0) {
+
+      if (currentTrack.sourceType === 'spotify') {
+        spotifyService.skipToNext();
+      } else if (currentTrack.sourceType === 'navidrome' && naviSongs.length > 0) {
         const currentIndex = naviSongs.findIndex(s => s.id === currentTrack.id);
         if (currentIndex === -1 || currentIndex >= naviSongs.length - 1) return;
         playNaviSong(naviSongs[currentIndex + 1]);
@@ -557,11 +611,14 @@ const App: React.FC = () => {
 
   const handlePrevious = () => {
       if (!currentTrack) return;
-      if (audioRef.current && audioRef.current.currentTime > 3) {
-          audioRef.current.currentTime = 0;
-          return;
-      }
-      if (currentTrack.sourceType === 'navidrome' && naviSongs.length > 0) {
+
+      if (currentTrack.sourceType === 'spotify') {
+        spotifyService.skipToPrevious();
+      } else if (currentTrack.sourceType === 'navidrome' && naviSongs.length > 0) {
+        if (audioRef.current && audioRef.current.currentTime > 3) {
+            audioRef.current.currentTime = 0;
+            return;
+        }
         const currentIndex = naviSongs.findIndex(s => s.id === currentTrack.id);
         if (currentIndex > 0) {
             playNaviSong(naviSongs[currentIndex - 1]);
