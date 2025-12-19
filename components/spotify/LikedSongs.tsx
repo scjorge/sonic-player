@@ -96,7 +96,6 @@ const LikedSongs: React.FC = () => {
 
   return (
     <div className="p-4 h-full">
-      <h2 className="text-2xl font-bold text-white mb-4">Minhas Músicas Curtidas do Spotify</h2>
       {likedSongs.length > 0 ? (
         <SongTable 
           songs={likedSongs} 
