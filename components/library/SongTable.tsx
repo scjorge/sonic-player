@@ -39,6 +39,7 @@ interface SongTableProps {
   onSetRating?: (id: string, rating: number) => void;
   onGroupEdit?: (song: NaviSong) => void; // Nova prop
   defaultColumns?: ColumnConfig[];
+  isSpotifyTable?: boolean;
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
@@ -94,7 +95,8 @@ const SongTable: React.FC<SongTableProps> = ({
     onToggleFavorite,
     onInfo,
     onSetRating,
-    onGroupEdit
+    onGroupEdit,
+    isSpotifyTable
 }) => {
   // --- STATE ---
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -816,7 +818,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     )}
 
                     <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-600 text-white text-xs font-bold shadow-lg shadow-indigo-500/20 pointer-events-none"
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg ${isSpotifyTable ? 'bg-green-600 shadow-lg shadow-green-500/20' : 'bg-indigo-600 shadow-lg shadow-indigo-500/20'} text-white text-xs font-bold pointer-events-none`}
                     >
                         {page + 1}
                     </button>

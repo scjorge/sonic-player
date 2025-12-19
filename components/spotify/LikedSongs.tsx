@@ -122,6 +122,7 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay }) => {
           totalItems={totalItems}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
+          isSpotifyTable={true}
           // Other props can be added if needed, e.g., currentTrackId, isPlaying
         />
       ) : (
