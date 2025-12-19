@@ -37,6 +37,7 @@ const LikedSongs: React.FC = () => {
           duration: Math.floor(track.duration_ms / 1000), // Convert ms to seconds
           path: track.external_urls.spotify, // Use Spotify URL as path for distinction
           track: track.track_number,
+          uri: track.uri,
           // Defaulting other NaviSong properties
           genre: undefined,
           comment: undefined,
@@ -77,7 +78,7 @@ const LikedSongs: React.FC = () => {
     // Implement Spotify specific play logic here
     // For now, let's just open the spotify link
     if (song.path) {
-      window.open(song.path, '_blank');
+      window.open(song.uri, '_blank');
     }
     console.log("Playing Spotify song:", song.title);
   };

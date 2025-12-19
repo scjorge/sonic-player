@@ -19,6 +19,7 @@ export interface NaviSong {
   coverArt?: string;
   duration?: number; // seconds
   path?: string;
+  uri?: string;  
   // Novos campos para a tabela e modal detalhado
   genre?: string;
   comment?: string;
@@ -139,7 +140,8 @@ export interface SpotifyTrack {
   duration_ms: number;
   preview_url: string | null;
   external_urls: { spotify: string };
-  track_number: number
+  track_number: number;
+  uri: string;
 }
 
 export interface PaginatedSpotifyTracks {
