@@ -42,11 +42,11 @@ interface SongTableProps {
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
-type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate';
+export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate';
 
 type RowDensity = 'compact' | 'normal' | 'relaxed';
 
-interface ColumnConfig {
+export interface ColumnConfig {
   id: ColumnId;
   label: string;
   width: number;
