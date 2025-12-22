@@ -4,9 +4,11 @@ import { getNavidromeCredentials, saveNavidromeCredentials } from '../../service
 import { Save, Link, Key, User, CheckCircle2, AlertCircle } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 
-interface NavidromeSettingsProps {}
+interface NavidromeSettingsProps {
+  onCredsChange?: () => void;
+}
 
-const NavidromeSettings: React.FC<NavidromeSettingsProps> = () => {
+const NavidromeSettings: React.FC<NavidromeSettingsProps> = ({ onCredsChange }) => {
   const [creds, setCreds] = useState<NavidromeCredentials>({ baseUrl: '', user: '', password: '' });
   const [errors, setErrors] = useState<Partial<Record<keyof NavidromeCredentials, string>>>({});
   const [saved, setSaved] = useState(false);
@@ -38,6 +40,7 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
     setTestResult(null);
+    if (onCredsChange) onCredsChange();
   };
 
   const handleDelete = () => {
@@ -48,6 +51,7 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = () => {
     setSaved(false);
     setTestResult('Credenciais apagadas');
     setTimeout(() => setTestResult(null), 3000);
+    if (onCredsChange) onCredsChange();
   };
 
   const handleTest = async () => {

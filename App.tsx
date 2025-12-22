@@ -51,6 +51,8 @@ const App: React.FC = () => {
   // --- STATE: VIEW & MODALS ---
   const [viewMode, setViewMode] = useState<ViewMode>('navi_songs');
     const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('navidrome');
+    const [navidromeConnected, setNavidromeConnected] = useState<boolean | null>(null);
+    const [navidromeStatusMessage, setNavidromeStatusMessage] = useState<string | null>(null);
   
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isPlaylistsExpanded, setIsPlaylistsExpanded] = useState(true);
@@ -73,7 +75,19 @@ const App: React.FC = () => {
 
   useEffect(() => {
       loadGroupsFromStorage();
+            checkNavidromeConnection();
   }, []);
+
+    const checkNavidromeConnection = async () => {
+        try {
+            const res = await navidromeService.ping();
+            setNavidromeConnected(res.ok);
+            setNavidromeStatusMessage(res.ok ? null : (res.message || 'Falha na conexão'));
+        } catch (e) {
+            setNavidromeConnected(false);
+            setNavidromeStatusMessage(e?.message || String(e));
+        }
+    };
   
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -228,14 +242,24 @@ const App: React.FC = () => {
     const loadData = async () => {
         if (viewMode === 'navi_albums' && naviAlbums.length === 0) {
             setLoadingNavi(true);
-            const albums = await navidromeService.getAlbums('newest', 50);
-            setNaviAlbums(albums);
-            setLoadingNavi(false);
+            try {
+                const albums = await navidromeService.getAlbums('newest', 50);
+                setNaviAlbums(albums);
+            } catch (e) {
+                console.error('Failed loading albums', e);
+            } finally {
+                setLoadingNavi(false);
+            }
         } else if (viewMode === 'navi_artists' && naviArtists.length === 0) {
             setLoadingNavi(true);
-            const artists = await navidromeService.getArtists();
-            setNaviArtists(artists);
-            setLoadingNavi(false);
+            try {
+                const artists = await navidromeService.getArtists();
+                setNaviArtists(artists);
+            } catch (e) {
+                console.error('Failed loading artists', e);
+            } finally {
+                setLoadingNavi(false);
+            }
         }
     };
     loadData();
@@ -980,7 +1004,7 @@ const App: React.FC = () => {
         if (activeSettingsTab === 'navidrome') {
             return (
                 <div className="h-full overflow-y-auto custom-scrollbar bg-zinc-950">
-                    <NavidromeSettings />
+                    <NavidromeSettings onCredsChange={checkNavidromeConnection} />
                 </div>
             );
         }
@@ -1079,6 +1103,20 @@ const App: React.FC = () => {
     
     if (viewMode === 'navi_songs' || viewMode === 'navi_playlist' || viewMode === 'navi_favorites') {
         const isPlaylistOrFav = viewMode === 'navi_playlist' || viewMode === 'navi_favorites';
+        // If we explicitly know Navidrome is not connected, show a friendly prompt
+        if (navidromeConnected === false) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Não foi possível conectar ao Navidrome.</div>
+                    <div className="text-zinc-400 mb-6">Configure suas credenciais do Navidrome nas configurações para acessar a biblioteca local.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                        <button onClick={checkNavidromeConnection} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded">Tentar Novamente</button>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="h-full">
                 <SongTable 
@@ -1109,11 +1147,26 @@ const App: React.FC = () => {
                     onToggleFavorite={handleToggleFavorite}
                     onInfo={handleOpenInfo}
                     onGroupEdit={handleOpenGroupTagEditor}
+                    navidromeConnected={navidromeConnected}
+                    onOpenNavidromeSettings={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }}
                 />
             </div>
         );
     }
     if (viewMode === 'navi_albums') {
+        if (navidromeConnected === false) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Não foi possível conectar ao Navidrome.</div>
+                    <div className="text-zinc-400 mb-6">Configure suas credenciais do Navidrome nas configurações para acessar álbuns.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                        <button onClick={checkNavidromeConnection} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded">Tentar Novamente</button>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="h-full overflow-y-auto custom-scrollbar p-6">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -1131,6 +1184,19 @@ const App: React.FC = () => {
         );
     }
     if (viewMode === 'navi_artists') {
+        if (navidromeConnected === false) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Não foi possível conectar ao Navidrome.</div>
+                    <div className="text-zinc-400 mb-6">Configure suas credenciais do Navidrome nas configurações para acessar artistas.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                        <button onClick={checkNavidromeConnection} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded">Tentar Novamente</button>
+                    </div>
+                </div>
+            );
+        }
+
         return (
              <div className="h-full overflow-y-auto custom-scrollbar p-6">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">

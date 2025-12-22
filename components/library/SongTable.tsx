@@ -42,6 +42,8 @@ interface SongTableProps {
   isSpotifyTable?: boolean;
   navidromeExistenceMap?: Map<string, boolean>;
     onNavigateToLibraryQuery?: (query: string) => void;
+    navidromeConnected?: boolean | null;
+    onOpenNavidromeSettings?: () => void;
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
@@ -100,8 +102,10 @@ const SongTable: React.FC<SongTableProps> = ({
     onGroupEdit,
     defaultColumns,
     isSpotifyTable,
-    navidromeExistenceMap
-        ,onNavigateToLibraryQuery
+    navidromeExistenceMap,
+    onNavigateToLibraryQuery,
+    navidromeConnected = null,
+    onOpenNavidromeSettings
 }) => {
     const sanitizeQuery = (text?: string) => {
         return (text || '').replace(/[<>:\"/\\|?*-]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -785,6 +789,7 @@ const SongTable: React.FC<SongTableProps> = ({
             <div className="bg-zinc-950 pb-20">
                 {songs.map((song, index) => {
                     const isSelected = selectedIds.includes(song.id);
+                    const showLoginPrompt = navidromeConnected === false && !isSpotifyTable;
                     return (
                         <div 
                             key={song.id} 
@@ -796,6 +801,16 @@ const SongTable: React.FC<SongTableProps> = ({
                                 ${currentTrackId === song.id ? (isSpotifyTable ? 'bg-green-600/20' : 'bg-indigo-500/5') : ''}
                             `}
                         >
+                            {showLoginPrompt && (
+                                <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 text-sm text-yellow-200">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div>Conecte-se ao Navidrome nas configurações para acessar sua biblioteca local.</div>
+                                        {onOpenNavidromeSettings && (
+                                            <button onClick={(e) => { e.stopPropagation(); onOpenNavidromeSettings(); }} className="mt-2 px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs">Ir para Configurações</button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                             {visibleColumns.map(col => (
                                 <div 
                                     key={col.id}
