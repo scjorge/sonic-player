@@ -1048,7 +1048,7 @@ const App: React.FC = () => {
                 </div>
             );
         }
-        if (navidromeConnected === false) {
+        if (!isAuthenticated) {
             return (
                 <div className="h-full flex flex-col items-center justify-center p-8 text-center">
                     <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
@@ -1084,7 +1084,7 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_liked') {
-        if (navidromeConnected === false) {
+        if (!isAuthenticated) {
             return (
                 <div className="h-full flex flex-col items-center justify-center p-8 text-center">
                     <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
@@ -1099,7 +1099,7 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_playlists') {
-        if (navidromeConnected === false) {
+        if (!isAuthenticated) {
             return (
                 <div className="h-full flex flex-col items-center justify-center p-8 text-center">
                     <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
@@ -1115,7 +1115,7 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_playlist_tracks') {
-        if (navidromeConnected === false) {
+        if (!isAuthenticated) {
             return (
                 <div className="h-full flex flex-col items-center justify-center p-8 text-center">
                     <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
