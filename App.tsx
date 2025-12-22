@@ -1343,13 +1343,11 @@ const App: React.FC = () => {
                                 <Heart className="w-4 h-4 flex-shrink-0" /> 
                                 {!isSidebarCollapsed && <span>Favoritos</span>}
                             </button>
-                        </div>
-                    </div>
 
                     {!isSidebarCollapsed && (
-                        <div className="animate-fade-in mt-6">
+                        <div className="animate-fade-in mt-2">
                             <div className="flex items-center justify-between px-3 mb-2 group">
-                                <button onClick={() => setIsPlaylistsExpanded(!isPlaylistsExpanded)} className="flex items-center gap-1 text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-300 transition-colors">
+                                <button onClick={() => setIsPlaylistsExpanded(!isPlaylistsExpanded)} className={`flex items-center gap-3 text-sm font-medium ${viewMode === 'navi_playlist' ? 'text-indigo-400' : 'text-zinc-500'} tracking-wider hover:text-zinc-300 transition-colors`}>
                                     {isPlaylistsExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                                     <span>Playlists</span>
                                 </button>
@@ -1374,6 +1372,8 @@ const App: React.FC = () => {
                             )}
                         </div>
                     )}
+                    </div>
+                </div>
 
                     {/* SPOTIFY SECTION */}
                     <div className="animate-fade-in mt-6">
