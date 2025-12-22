@@ -11,8 +11,14 @@ class SpotifyService {
   private userRefreshToken: string | null = null;
   private userTokenExpiresAt: number = 0; // Unix timestamp in milliseconds
 
+  private onAuthenticationRequiredCallback: (() => void) | null = null;
+
   constructor() {
     this.loadUserTokensFromStorage();
+  }
+
+  public setOnAuthenticationRequiredCallback(callback: () => void): void {
+      this.onAuthenticationRequiredCallback = callback;
   }
 
   private loadUserTokensFromStorage() {
@@ -208,6 +214,10 @@ class SpotifyService {
       expiresAt: undefined,
     });
     console.log("Logout do Spotify realizado.");
+
+    if (this.onAuthenticationRequiredCallback) {
+        this.onAuthenticationRequiredCallback();
+    }
   }
   
 

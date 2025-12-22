@@ -162,6 +162,13 @@ const App: React.FC = () => {
   // Initial Load (Filters + Initial Data + Playlists)
   useEffect(() => {
     const init = async () => {
+        // Register Spotify re-authentication callback
+        spotifyService.setOnAuthenticationRequiredCallback(() => {
+            setAuthMessage("Sua sessão do Spotify expirou. Por favor, autentique-se novamente.");
+            setViewMode('settings');
+            setActiveSettingsTab('spotify');
+            setTimeout(() => setAuthMessage(''), 5000);
+        });
         try {
             // Check for Spotify callback
             const urlParams = new URLSearchParams(window.location.search);
