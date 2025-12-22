@@ -1191,16 +1191,8 @@ const App: React.FC = () => {
                         onClick={() => setActiveSettingsTab('navidrome')}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'navidrome' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
                     >
-                        <img src="/icons/server.svg" className="w-4 h-4 flex-shrink-0 object-contain" alt="" />
+                        <img src="https://raw.githubusercontent.com/navidrome/navidrome/master/ui/public/favicon-32x32.png" className="w-4 h-4 flex-shrink-0 object-contain" alt="Navidrome" />
                         {!isSidebarCollapsed && "Navidrome"}
-                    </button>
-
-                    <button
-                        onClick={() => setActiveSettingsTab('groups')}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'groups' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
-                    >
-                        <Tag className="w-4 h-4 flex-shrink-0" />
-                        {!isSidebarCollapsed && "Grupos de Tags"}
                     </button>
 
                     <button
@@ -1209,6 +1201,14 @@ const App: React.FC = () => {
                     >
                         <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-4 h-4 flex-shrink-0 object-contain" alt="" />
                         {!isSidebarCollapsed && "Spotify API"}
+                    </button>
+
+                    <button
+                        onClick={() => setActiveSettingsTab('groups')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'groups' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                    >
+                        <Tag className="w-4 h-4 flex-shrink-0" />
+                        {!isSidebarCollapsed && "Grupos de Tags"}
                     </button>
                 </div>
             ) : (
