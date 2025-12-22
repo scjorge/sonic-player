@@ -454,6 +454,21 @@ class SpotifyService {
       console.error("Spotify Skip To Previous Error:", error);
     }
   }
+
+  async setVolume(volume_percent: number) {
+    const token = await this.getAccessToken();
+    if (!token) return;
+
+    try {
+      await fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${volume_percent}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Spotify Set Volume Error:", error);
+    }
+  }
+
   async stop() {
     const token = await this.getAccessToken();
     if (!token) return;

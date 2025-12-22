@@ -109,6 +109,9 @@ const App: React.FC = () => {
           setCurrentTime(playbackState.progress_ms / 1000);
           setDuration(playbackState.item.duration_ms / 1000);
           setIsPlaying(playbackState.is_playing);
+          if (playbackState.device) {
+            setVolume(playbackState.device.volume_percent / 100);
+          }
           // If track changes on spotify side
           if (playbackState.item.uri !== currentTrack.src) {
               setCurrentTrack({
@@ -638,6 +641,13 @@ const App: React.FC = () => {
       }
   };
 
+  const handleVolumeChange = (newVolume: number) => {
+    setVolume(newVolume);
+    if (currentTrack?.sourceType === 'spotify' || currentTrack?.sourceType === 'spotify_preview') {
+      spotifyService.setVolume(Math.round(newVolume * 100));
+    }
+  };
+
   const handleSongEnd = () => {
       handleNext();
   };
@@ -1007,7 +1017,7 @@ const App: React.FC = () => {
                     <Volume2 className="w-4 h-4 text-zinc-400" />
                     <div className="w-24 h-1 bg-zinc-800 rounded-full relative group">
                         <div className={`absolute top-0 left-0 h-full rounded-full transition-colors ${currentTrack?.sourceType === 'spotify' || currentTrack?.sourceType === 'spotify_preview' ? 'bg-green-500 group-hover:bg-green-400' : 'bg-zinc-500 group-hover:bg-indigo-500'}`} style={{ width: `${volume * 100}%` }} />
-                        <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                        <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     </div>
                 </div>
             </div>
