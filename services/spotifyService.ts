@@ -294,6 +294,66 @@ class SpotifyService {
     }
   }
 
+  async getUserPlaylists(): Promise<any[]> { // Should create a type for this
+    const token = await this.getAccessToken();
+    if (!token) {
+      console.warn("No access token available for fetching user playlists.");
+      return [];
+    }
+
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/me/playlists`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to fetch user playlists:', errorData);
+        if (response.status === 401) {
+            this.logout();
+        }
+        return [];
+      }
+
+      const data = await response.json();
+      return data.items; // items is an array of SimplifiedPlaylistObject
+    } catch (error) {
+      console.error("Spotify Get User Playlists Error:", error);
+      return [];
+    }
+  }
+
+  async getPlaylistTracks(playlistId: string): Promise<any[]> { // Should create a type for this
+    const token = await this.getAccessToken();
+    if (!token) {
+      console.warn("No access token available for fetching playlist tracks.");
+      return [];
+    }
+
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to fetch playlist tracks:', errorData);
+        if (response.status === 401) {
+            this.logout();
+        }
+        return [];
+      }
+
+      const data = await response.json();
+      return data.items.map((item: any) => item.track); // The track object is nested in `item`.
+    } catch (error) {
+      console.error("Spotify Get Playlist Tracks Error:", error);
+      return [];
+    }
+  }
+
+
+
   private async getActiveDevice(): Promise<string | null> {
     const token = await this.getAccessToken();
     if (!token) return null;

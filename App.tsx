@@ -14,8 +14,10 @@ import GroupTagModal from './components/library/GroupTagModal';
 import SpotifySettings from './components/settings/SpotifySettings';
 import SpotifyBrowse from './components/spotify/SpotifyBrowse';
 import LikedSongs from './components/spotify/LikedSongs';
+import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
+import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks';
 type SettingsTab = 'groups' | 'spotify' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
@@ -51,6 +53,7 @@ const App: React.FC = () => {
   const [isPlaylistsExpanded, setIsPlaylistsExpanded] = useState(true);
   
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
+  const [selectedSpotifyPlaylistName, setSelectedSpotifyPlaylistName] = useState<string | null>(null);
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
   const [showAddToPlaylistModal, setShowAddToPlaylistModal] = useState(false);
   const [showRemoveFromPlaylistModal, setShowRemoveFromPlaylistModal] = useState(false);
@@ -257,6 +260,58 @@ const App: React.FC = () => {
         setPageSize(Math.max(songs.length, 10)); 
     } catch (e) {
         console.error("Fetch playlist failed", e);
+    } finally {
+        setLoadingNavi(false);
+    }
+  };
+
+  const handleSpotifyPlaylistClick = async (playlist: NaviPlaylist) => {
+    setLoadingNavi(true);
+    setViewMode('spotify_playlist_tracks');
+    setSelectedPlaylistId(playlist.id);
+    setSelectedSpotifyPlaylistName(playlist.name);
+    setActiveSearchQuery('');
+    setPage(0);
+    try {
+        const tracks = await spotifyService.getPlaylistTracks(playlist.id);
+        const mappedSongs: NaviSong[] = tracks.map((track: any) => ({ // Should use a proper type here
+          id: track.id,
+          title: track.name,
+          artist: track.artists.map((a: any) => a.name).join(', '),
+          album: track.album.name,
+          year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
+          coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
+          duration: Math.floor(track.duration_ms / 1000),
+          path: track.external_urls.spotify,
+          track: track.track_number,
+          uri: track.uri,
+          genre: undefined,
+          comment: undefined,
+          suffix: undefined,
+          bitRate: undefined,
+          samplingRate: undefined,
+          discNumber: undefined,
+          contentType: 'audio/spotify',
+          size: undefined,
+          created: undefined,
+          albumId: undefined,
+          artistId: undefined,
+          type: 'music',
+          isVideo: false,
+          bpm: undefined,
+          playCount: undefined,
+          lastPlayed: undefined,
+          userRating: undefined,
+          averageRating: undefined,
+          moods: undefined,
+          group: undefined,
+          starred: undefined,
+        }));
+        setNaviSongs(mappedSongs);
+        setTotalSongs(mappedSongs.length);
+        setPageSize(Math.max(mappedSongs.length, 10));
+    } catch (e) {
+        console.error("Fetch spotify playlist failed", e);
     } finally {
         setLoadingNavi(false);
     }
@@ -705,6 +760,30 @@ const App: React.FC = () => {
         return <LikedSongs onPlay={playSpotifySong} />;
     }
 
+    if (viewMode === 'spotify_playlists') {
+        return <SpotifyPlaylists onPlaylistClick={handleSpotifyPlaylistClick} />;
+    }
+
+    if (viewMode === 'spotify_playlist_tracks') {
+        return (
+            <div className="h-full">
+                <SongTable 
+                    songs={naviSongs} 
+                    onPlay={playSpotifySong} 
+                    currentTrackId={currentTrack?.id}
+                    isPlaying={isPlaying}
+                    page={page}
+                    pageSize={pageSize}
+                    totalItems={totalSongs}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    isSpotifyTable={true}
+                    defaultColumns={SPOTIFY_COLUMN_CONFIG}
+                />
+            </div>
+        );
+    }
+    
     if (viewMode === 'navi_songs' || viewMode === 'navi_playlist' || viewMode === 'navi_favorites') {
         const isPlaylistOrFav = viewMode === 'navi_playlist' || viewMode === 'navi_favorites';
         return (
@@ -905,6 +984,13 @@ const App: React.FC = () => {
                                 <Heart className="w-4 h-4 flex-shrink-0" /> 
                                 {!isSidebarCollapsed && <span>Curtidas</span>}
                             </button>
+                            <button 
+                                onClick={() => setViewMode('spotify_playlists')} 
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'spotify_playlists' ? 'bg-green-500/10 text-green-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                            >
+                                <List className="w-4 h-4 flex-shrink-0" /> 
+                                {!isSidebarCollapsed && <span>Playlists</span>}
+                            </button>
                         </div>
                     </div>
                 </>
@@ -928,6 +1014,7 @@ const App: React.FC = () => {
                 {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
                 {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador Spotify</>}
                 {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
+                {viewMode === 'spotify_playlists' && <><List className="w-5 h-5 text-green-500" /> Playlists do Spotify</>}
                 {viewMode === 'settings' && (
                     <>
                         <Settings className="w-5 h-5 text-indigo-500" />
@@ -936,6 +1023,7 @@ const App: React.FC = () => {
                 )}
                 {viewMode === 'navi_favorites' && <><Heart className="w-5 h-5 text-indigo-500 fill-indigo-500" /> Favoritos</>}
                 {viewMode === 'navi_playlist' && <><List className="w-5 h-5 text-indigo-500" /> {naviPlaylists.find(p => p.id === selectedPlaylistId)?.name || 'Playlist'}</>}
+                {viewMode === 'spotify_playlist_tracks' && <><List className="w-5 h-5 text-green-500" /> {selectedSpotifyPlaylistName || 'Playlist'}</>}
             </h2>
             <div className="flex items-center gap-2">
                 <Radio className="w-4 h-4 text-green-500 animate-pulse" />
