@@ -1018,7 +1018,7 @@ const App: React.FC = () => {
             <div className="h-full">
                 <SongTable
                     songs={spotifyBrowseTracks}
-                    onPlay={playSpotifyTrack}
+                    onPlay={playSpotifySong}
                     currentTrackId={currentTrack?.id}
                     isPlaying={isPlaying}
                     isSpotifyTable={true}
