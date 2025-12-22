@@ -603,21 +603,22 @@ const SongTable: React.FC<SongTableProps> = ({
                         <span className="hidden sm:inline">Adicionadas</span>
                     </button>
 
-                    {/* Search Input */}
-                    {onSearch && (
-                        <div className="relative group ml-2">
-                            <input
-                                type="text"
-                                value={searchInputValue}
-                                onChange={(e) => setSearchInputValue(e.target.value)}
-                                onKeyDown={handleSearchKeyDown}
-                                placeholder="Buscar..."
-                                className="w-40 sm:w-64 bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs rounded-lg px-3 py-1.5 pl-8 focus:outline-none focus:border-indigo-500 transition-all placeholder-zinc-600"
-                            />
-                            <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 transform -translate-y-1/2 group-focus-within:text-indigo-500 transition-colors" />
-                        </div>
-                    )}
+
                 </>
+            )}
+            {/* Search Input */}
+            {onSearch && (
+                <div className="relative group ml-2">
+                    <input
+                        type="text"
+                        value={searchInputValue}
+                        onChange={(e) => setSearchInputValue(e.target.value)}
+                        onKeyDown={handleSearchKeyDown}
+                        placeholder="Buscar..."
+                        className="w-40 sm:w-64 bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs rounded-lg px-3 py-1.5 pl-8 focus:outline-none focus:border-indigo-500 transition-all placeholder-zinc-600"
+                    />
+                    <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 transform -translate-y-1/2 group-focus-within:text-indigo-500 transition-colors" />
+                </div>
             )}
         </div>
 

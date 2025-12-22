@@ -12,7 +12,6 @@ import ConfirmationModal from './components/library/ConfirmationModal';
 import GroupSettings from './components/settings/GroupSettings';
 import GroupTagModal from './components/library/GroupTagModal';
 import SpotifySettings from './components/settings/SpotifySettings';
-import SpotifyBrowse from './components/spotify/SpotifyBrowse';
 import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
@@ -60,6 +59,7 @@ const App: React.FC = () => {
   
   // Tag Groups State (Carregado do LocalStorage)
   const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
+  const [spotifyBrowseTracks, setSpotifyBrowseTracks] = useState<NaviSong[]>([]);
 
   const loadGroupsFromStorage = () => {
       const groups = getStoredGroups();
@@ -199,6 +199,8 @@ const App: React.FC = () => {
             // Initial Songs Load
             if (viewMode === 'navi_songs') {
                 fetchSongs(0, 100, '', '', '', undefined);
+            } else if (viewMode === 'spotify_browse') {
+                handleSpotifyBrowseClick();
             }
         } catch (e) {
             console.error("Init failed", e);
@@ -470,6 +472,58 @@ const App: React.FC = () => {
       }
   };
 
+  const handleSpotifyBrowseSearch = async (query: string) => {
+      setActiveSearchQuery(query);
+      if (!query.trim()) {
+          // If query is empty, load new releases instead
+          handleSpotifyBrowseClick();
+          return;
+      }
+      setLoadingNavi(true);
+      try {
+          const results = await spotifyService.searchTracks(query);
+          const mappedSongs: NaviSong[] = results.map(track => ({
+              id: track.id,
+              title: track.name,
+              artist: track.artists.map((a: any) => a.name).join(', '),
+              album: track.album.name,
+              year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
+              coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
+              duration: Math.floor(track.duration_ms / 1000),
+              path: track.external_urls.spotify,
+              track: track.track_number,
+              uri: track.uri,
+              genre: undefined,
+              comment: undefined,
+              suffix: undefined,
+              bitRate: undefined,
+              samplingRate: undefined,
+              discNumber: undefined,
+              contentType: 'audio/spotify',
+              size: undefined,
+              created: undefined,
+              albumId: undefined,
+              artistId: undefined,
+              type: 'music',
+              isVideo: false,
+              bpm: undefined,
+              playCount: undefined,
+              lastPlayed: undefined,
+              userRating: undefined,
+              averageRating: undefined,
+              moods: undefined,
+              group: undefined,
+              starred: undefined,
+          }));
+          setSpotifyBrowseTracks(mappedSongs);
+      } catch (e) {
+          console.error("Failed to search Spotify tracks", e);
+          setSpotifyBrowseTracks([]);
+      } finally {
+          setLoadingNavi(false);
+      }
+  };
+
   const handlePageChange = async (newPage: number) => {
     setPage(newPage);
     if (viewMode === 'navi_songs') {
@@ -597,6 +651,59 @@ const App: React.FC = () => {
     setPageSize(defaultPageSize);
     setPage(0);
     fetchSongs(0, defaultPageSize, activeArtist, activeGenre, activeYear, activeQuickList);
+  };
+
+
+
+  const handleSpotifyBrowseClick = async () => {
+    setLoadingNavi(true);
+    setViewMode('spotify_browse');
+    setSelectedPlaylistId(null);
+    setActiveSearchQuery(''); // Clear search query for browse
+    setPage(0);
+    setPageSize(100); // Reset page size if needed for browse
+    try {
+        const results = await spotifyService.getNewReleases();
+        const mappedSongs: NaviSong[] = results.map(track => ({
+            id: track.id,
+            title: track.name,
+            artist: track.artists.map((a: any) => a.name).join(', '),
+            album: track.album.name,
+            year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
+            coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
+            duration: Math.floor(track.duration_ms / 1000),
+            path: track.external_urls.spotify,
+            track: track.track_number,
+            uri: track.uri,
+            genre: undefined,
+            comment: undefined,
+            suffix: undefined,
+            bitRate: undefined,
+            samplingRate: undefined,
+            discNumber: undefined,
+            contentType: 'audio/spotify',
+            size: undefined,
+            created: undefined,
+            albumId: undefined,
+            artistId: undefined,
+            type: 'music',
+            isVideo: false,
+            bpm: undefined,
+            playCount: undefined,
+            lastPlayed: undefined,
+            userRating: undefined,
+            averageRating: undefined,
+            moods: undefined,
+            group: undefined,
+            starred: undefined,
+        }));
+        setSpotifyBrowseTracks(mappedSongs);
+    } catch (e) {
+        console.error("Failed to fetch Spotify new releases", e);
+        setSpotifyBrowseTracks([]);
+    } finally {
+        setLoadingNavi(false);
+    }
   };
 
   const handleToggleFavorite = async (song: NaviSong) => {
@@ -850,7 +957,20 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_browse') {
-        return <SpotifyBrowse onPreview={playSpotifyTrack} />;
+        return (
+            <div className="h-full">
+                <SongTable
+                    songs={spotifyBrowseTracks}
+                    onPlay={playSpotifyTrack}
+                    currentTrackId={currentTrack?.id}
+                    isPlaying={isPlaying}
+                    isSpotifyTable={true}
+                    defaultColumns={SPOTIFY_COLUMN_CONFIG}
+                    onSearch={handleSpotifyBrowseSearch} // New search handler for Spotify browse
+                    activeSearchQuery={activeSearchQuery}
+                />
+            </div>
+        );
     }
 
     if (viewMode === 'spotify_liked') {
@@ -1067,11 +1187,10 @@ const App: React.FC = () => {
                              Spotify
                         </h3>}
                         <div className="space-y-1">
-                            <button 
-                                onClick={() => setViewMode('spotify_browse')} 
-                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'spotify_browse' ? 'bg-green-500/10 text-green-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
-                            >
-                                <Navigation className="w-4 h-4 flex-shrink-0" /> 
+                                                        <button
+                                                            onClick={handleSpotifyBrowseClick}
+                                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'spotify_browse' ? 'bg-green-500/10 text-green-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                                                        >                                <Navigation className="w-4 h-4 flex-shrink-0" /> 
                                 {!isSidebarCollapsed && <span>Navegar</span>}
                             </button>
                             <button 
