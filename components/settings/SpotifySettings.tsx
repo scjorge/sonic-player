@@ -3,7 +3,26 @@ import React, { useState, useEffect } from 'react';
 import { SpotifyCredentials } from '../../types';
 import { saveSpotifyCredentials, getSpotifyCredentials } from '../../services/data';
 import { spotifyService } from '../../services/spotifyService'; // Importar spotifyService
-import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle, LogIn, LogOut } from 'lucide-react';
+import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle, LogIn, LogOut, Copy } from 'lucide-react';
+
+const CopyButton: React.FC = () => {
+  const [copied, setCopied] = useState(false);
+  const redirect = `${window.location.origin}/callback`;
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(redirect);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error('Copy failed', e);
+    }
+  };
+  return (
+    <button onClick={handleCopy} className="bg-zinc-700 hover:bg-zinc-600 text-white px-2 py-1 rounded text-xs flex items-center gap-2">
+      {copied ? <span className="text-green-400">Copiado!</span> : <><Copy className="w-4 h-4" /> Copiar</>}
+    </button>
+  );
+};
 
 interface SpotifySettingsProps {
     isAuthenticated: boolean;
@@ -241,7 +260,12 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
               <li>Faça login com sua conta Spotify.</li>
               <li>Clique em "Create app", dê um nome e descrição.</li>
               <li>Vá em "Settings" no seu novo app para visualizar o Client ID e Client Secret.</li>
-              <li>Na mesma página de "Settings", adicione uma "Redirect URI". Para uso local, pode ser <code className="bg-zinc-700/50 text-xs rounded p-1">http://127.0.0.1:6789/callback</code>.</li>
+              <li className="flex items-center gap-3">Na mesma página de "Settings", adicione uma "Redirect URI":
+                <div className="ml-2 flex items-center gap-2">
+                  <code className="bg-zinc-700/50 text-xs rounded p-1">{window.location.origin}/callback</code>
+                  <CopyButton />
+                </div>
+              </li>
           </ol>
       </div>
     </div>
