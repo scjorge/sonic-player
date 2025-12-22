@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavidromeCredentials } from '../../types';
 import { getNavidromeCredentials, saveNavidromeCredentials } from '../../services/data';
-import { Save, Link, Key, User, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Save, Link, Key, User, CheckCircle2, AlertCircle, Server, Trash2 } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 
 interface NavidromeSettingsProps {
@@ -111,8 +111,8 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = ({ onCredsChange }) 
 
         <div className="pt-4 flex flex-wrap items-center gap-4">
             <button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-indigo-500/10 active:scale-95"><Save className="w-4 h-4" /> Salvar</button>
-            <button onClick={handleTest} className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all">Testar Conexão</button>
-            <button onClick={handleDelete} className="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all">Apagar</button>
+            <button onClick={handleTest} className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all"><Server className="w-4 h-4" /> Testar Conexão</button>
+            <button onClick={handleDelete} className="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all"><Trash2 className="w-4 h-4" /> Apagar</button>
 
             {saved && (
               <div className="flex items-center gap-2 text-green-400 text-sm font-medium animate-fade-in"><CheckCircle2 className="w-4 h-4" /> Credenciais salvas!</div>
