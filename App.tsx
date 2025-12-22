@@ -733,68 +733,11 @@ const App: React.FC = () => {
     setSpotifyBrowsePageSize(size); // Ensure page size is updated if changed
 
     try {
-        const offset = pageNum * size;
-        // Spotify API limit for new releases is 20, but getNewReleases currently doesn't support limit/offset directly
-        // Assuming spotifyService.getNewReleases returns a paginated result or we need to adjust
-        // For now, let's make it fetch up to `size` and mock total if API doesn't provide it
-        // The spotifyService.getNewReleases needs to be updated to support limit and offset.
-        // For now, I will modify the spotifyService.ts to support limit and offset, then come back here.
-        // However, I can't do that now. So, for the current implementation, I will assume it fetches all.
-        // If spotifyService.getNewReleases returns an object with `items` and `total` (similar to search), then it's fine.
-        // Let's assume for now getNewReleases will return an array and we will update totalSpotifyBrowseItems with its length.
-        // I will fix the spotifyService.getNewReleases method later.
-
-        // Placeholder for future pagination of new releases
-        const { items: results, total } = await spotifyService.getNewReleases(size, offset); // Assuming it returns { items, total }
-        const mappedSongs: NaviSong[] = await Promise.all(results.map(async track => {
-            const naviSong: NaviSong = {
-                id: track.id,
-                title: track.name,
-                artist: track.artists.map((a: any) => a.name).join(', '),
-                album: track.album.name,
-                year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
-                coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
-                duration: Math.floor(track.duration_ms / 1000),
-                path: track.external_urls.spotify,
-                track: track.track_number,
-                uri: track.uri,
-                genre: undefined,
-                comment: undefined,
-                suffix: undefined,
-                bitRate: undefined,
-                samplingRate: undefined,
-                discNumber: undefined,
-                contentType: 'audio/spotify',
-                size: undefined,
-                created: undefined,
-                albumId: undefined,
-                artistId: undefined,
-                type: 'music',
-                isVideo: false,
-                bpm: undefined,
-                playCount: undefined,
-                lastPlayed: undefined,
-                userRating: undefined,
-                averageRating: undefined,
-                moods: undefined,
-                group: undefined,
-                starred: undefined,
-            };
-            return naviSong;
-        }));
-        setSpotifyBrowseTracks(mappedSongs);
-        setTotalSpotifyBrowseItems(total);
-
-        // Check Navidrome existence for each song
-        const existenceChecks = await Promise.all(mappedSongs.map(async song => {
-            const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
-            return [song.id, exists] as [string, boolean];
-        }));
-        setSpotifyNavidromeExistenceMap(new Map(existenceChecks));
-    } catch (e) {
-        console.error("Failed to fetch Spotify new releases", e);
         setSpotifyBrowseTracks([]);
         setTotalSpotifyBrowseItems(0);
+        setSpotifyNavidromeExistenceMap(new Map());
+    } catch (e) {
+        console.error("Failed to clear Spotify browse tracks", e);
     } finally {
         setLoadingNavi(false);
     }
