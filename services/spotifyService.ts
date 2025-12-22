@@ -301,22 +301,29 @@ class SpotifyService {
       return [];
     }
 
+    let allPlaylists: any[] = [];
+    let nextUrl: string | null = 'https://api.spotify.com/v1/me/playlists?limit=50';
+
     try {
-      const response = await fetch(`https://api.spotify.com/v1/me/playlists`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      while (nextUrl) {
+        const response = await fetch(nextUrl, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Failed to fetch user playlists:', errorData);
-        if (response.status === 401) {
-            this.logout();
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Failed to fetch user playlists:', errorData);
+          if (response.status === 401) {
+              this.logout();
+          }
+          break;
         }
-        return [];
-      }
 
-      const data = await response.json();
-      return data.items; // items is an array of SimplifiedPlaylistObject
+        const data = await response.json();
+        allPlaylists = [...allPlaylists, ...data.items];
+        nextUrl = data.next;
+      }
+      return allPlaylists;
     } catch (error) {
       console.error("Spotify Get User Playlists Error:", error);
       return [];
@@ -551,4 +558,3 @@ class SpotifyService {
 }
 
 export const spotifyService = new SpotifyService();
-
