@@ -1006,7 +1006,7 @@ const App: React.FC = () => {
                 <div className="flex items-center justify-end gap-3 w-1/3">
                     <Volume2 className="w-4 h-4 text-zinc-400" />
                     <div className="w-24 h-1 bg-zinc-800 rounded-full relative group">
-                        <div className="absolute top-0 left-0 h-full bg-zinc-500 group-hover:bg-indigo-500 rounded-full transition-colors" style={{ width: `${volume * 100}%` }} />
+                        <div className={`absolute top-0 left-0 h-full rounded-full transition-colors ${currentTrack?.sourceType === 'spotify' || currentTrack?.sourceType === 'spotify_preview' ? 'bg-green-500 group-hover:bg-green-400' : 'bg-zinc-500 group-hover:bg-indigo-500'}`} style={{ width: `${volume * 100}%` }} />
                         <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     </div>
                 </div>
