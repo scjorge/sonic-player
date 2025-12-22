@@ -41,6 +41,7 @@ interface SongTableProps {
   defaultColumns?: ColumnConfig[];
   isSpotifyTable?: boolean;
   navidromeExistenceMap?: Map<string, boolean>;
+    onNavigateToLibraryQuery?: (query: string) => void;
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
@@ -100,7 +101,11 @@ const SongTable: React.FC<SongTableProps> = ({
     defaultColumns,
     isSpotifyTable,
     navidromeExistenceMap
+        ,onNavigateToLibraryQuery
 }) => {
+    const sanitizeQuery = (text?: string) => {
+        return (text || '').replace(/[<>:\"/\\|?*-]/g, ' ').trim();
+    };
   // --- STATE ---
   const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || [
     { id: 'select', label: '', width: 50, visible: true, minWidth: 50 },
@@ -386,16 +391,39 @@ const SongTable: React.FC<SongTableProps> = ({
       case 'format': return <span className="text-xs uppercase bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400">{song.suffix || 'MP3'}</span>;
       case 'filename': return <span className="text-zinc-500 text-xs font-mono truncate" title={song.path}>{getFileName(song.path)}</span>;
       case 'download': {
-          const existsInNavidrome = navidromeExistenceMap?.get(song.id);
-          return (
-              <div className="flex items-center justify-center">
-                  {existsInNavidrome ? (
-                      <Check className="w-4 h-4 text-green-500" title="Disponível Localmente" />
-                  ) : (
-                      <X className="w-4 h-4 text-red-500" title="Não Disponível Localmente" />
-                  )}
-              </div>
-          );
+                    const existsInNavidrome = navidromeExistenceMap?.get(song.id);
+                    const handleNavigate = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        if (!onNavigateToLibraryQuery) return;
+                        const artistPart = sanitizeQuery(song.artist).split(',')[0] || '';
+                        const titlePart = sanitizeQuery(song.title) || '';
+                        const q = `${artistPart} ${titlePart}`.trim();
+                        if (q) onNavigateToLibraryQuery(q);
+                    };
+
+                    return (
+                            <div className="flex items-center justify-center">
+                                    {existsInNavidrome ? (
+                                            onNavigateToLibraryQuery ? (
+                                                <button
+                                                    onClick={handleNavigate}
+                                                    title="Abrir Biblioteca com esta busca"
+                                                    className="p-1 rounded hover:bg-zinc-800"
+                                                >
+                                                    <Check className="w-4 h-4 text-green-500" />
+                                                </button>
+                                            ) : (
+                                                <div title="Disponível Localmente">
+                                                    <Check className="w-4 h-4 text-green-500" />
+                                                </div>
+                                            )
+                                    ) : (
+                                            <div title="Não Disponível Localmente">
+                                                <X className="w-4 h-4 text-red-500" />
+                                            </div>
+                                    )}
+                            </div>
+                    );
       }
       default: return '-';
     }

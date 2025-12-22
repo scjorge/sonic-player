@@ -10,9 +10,10 @@ interface LikedSongsProps {
   onPlay: (song: NaviSong) => void;
   currentTrackId?: string | null;
   isPlaying?: boolean;
+  onNavigateToLibraryQuery?: (query: string) => void;
 }
 
-const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlaying }) => {
+const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlaying, onNavigateToLibraryQuery }) => {
   const [likedSongs, setLikedSongs] = useState<NaviSong[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,6 +138,7 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
           currentTrackId={currentTrackId}
           isPlaying={isPlaying}
           navidromeExistenceMap={navidromeExistenceMap}
+          onNavigateToLibraryQuery={onNavigateToLibraryQuery}
         />
       ) : (
         <div className="flex justify-center items-center h-full text-zinc-400">

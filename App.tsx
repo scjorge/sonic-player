@@ -1032,6 +1032,7 @@ const App: React.FC = () => {
                     totalItems={totalSpotifyBrowseItems}
                     onPageChange={handleSpotifyBrowsePageChange}
                     onPageSizeChange={handleSpotifyBrowsePageSizeChange}
+                    onNavigateToLibraryQuery={handleSearch}
                     navidromeExistenceMap={spotifyNavidromeExistenceMap}
                 />
             </div>
@@ -1039,7 +1040,7 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_liked') {
-        return <LikedSongs onPlay={playSpotifySong} currentTrackId={currentTrack?.id} isPlaying={isPlaying} />;
+        return <LikedSongs onPlay={playSpotifySong} currentTrackId={currentTrack?.id} isPlaying={isPlaying} onNavigateToLibraryQuery={handleSearch} />;
     }
 
     if (viewMode === 'spotify_playlists') {
@@ -1062,6 +1063,7 @@ const App: React.FC = () => {
                     isSpotifyTable={true}
                     defaultColumns={SPOTIFY_COLUMN_CONFIG}
                     navidromeExistenceMap={spotifyNavidromeExistenceMap}
+                    onNavigateToLibraryQuery={handleSearch}
                 />
             </div>
         );
