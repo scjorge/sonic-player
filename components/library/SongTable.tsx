@@ -786,7 +786,12 @@ const SongTable: React.FC<SongTableProps> = ({
                         onChange={(e) => onPageSizeChange(Number(e.target.value))}
                         className="bg-zinc-800 text-zinc-300 text-xs rounded-lg px-2 py-1.5 border border-zinc-700 focus:outline-none focus:border-indigo-500 cursor-pointer"
                     >
+                        <option value="10">10</option>
+                        <option value="25">25</option>
                         <option value="50">50</option>
+                        {!isSpotifyTable && <option value="100">100</option>}
+                        {!isSpotifyTable && <option value="200">200</option>}
+                        {!isSpotifyTable && <option value="500">500</option>}
                     </select>
                 )}
 
