@@ -96,10 +96,11 @@ const SongTable: React.FC<SongTableProps> = ({
     onInfo,
     onSetRating,
     onGroupEdit,
+    defaultColumns,
     isSpotifyTable
 }) => {
   // --- STATE ---
-  const [columns, setColumns] = useState<ColumnConfig[]>([
+  const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || [
     { id: 'select', label: '', width: 50, visible: true, minWidth: 50 },
     { id: 'index', label: '#', width: 40, visible: true, minWidth: 30 },
     { id: 'cover', label: 'Capa', width: 80, visible: true, minWidth: 50 },
