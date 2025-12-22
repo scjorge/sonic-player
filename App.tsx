@@ -1111,7 +1111,6 @@ const App: React.FC = () => {
                     <div className="text-zinc-400 mb-6">Configure suas credenciais do Navidrome nas configurações para acessar a biblioteca local.</div>
                     <div className="flex gap-3">
                         <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
-                        <button onClick={checkNavidromeConnection} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded">Tentar Novamente</button>
                     </div>
                 </div>
             );
@@ -1161,7 +1160,6 @@ const App: React.FC = () => {
                     <div className="text-zinc-400 mb-6">Configure suas credenciais do Navidrome nas configurações para acessar álbuns.</div>
                     <div className="flex gap-3">
                         <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
-                        <button onClick={checkNavidromeConnection} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded">Tentar Novamente</button>
                     </div>
                 </div>
             );
@@ -1191,7 +1189,6 @@ const App: React.FC = () => {
                     <div className="text-zinc-400 mb-6">Configure suas credenciais do Navidrome nas configurações para acessar artistas.</div>
                     <div className="flex gap-3">
                         <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
-                        <button onClick={checkNavidromeConnection} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded">Tentar Novamente</button>
                     </div>
                 </div>
             );
