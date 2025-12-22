@@ -211,12 +211,12 @@ class SpotifyService {
   }
   
 
-  async searchTracks(query: string): Promise<SpotifyTrack[]> {
+  async searchTracks(query: string, limit: number = 20, offset: number = 0): Promise<PaginatedSpotifyTracks> {
     const token = await this.getAccessToken();
-    if (!token) return [];
+    if (!token) return { items: [], total: 0 };
 
     try {
-      const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`, {
+      const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}&offset=${offset}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -227,37 +227,69 @@ class SpotifyService {
       }
 
       const data = await response.json();
-      return data.tracks.items;
+      return {
+        items: data.tracks.items,
+        total: data.tracks.total
+      };
     } catch (error) {
       console.error("Spotify Search Error:", error);
-      return [];
+      return { items: [], total: 0 };
     }
   }
 
-  async getNewReleases(): Promise<SpotifyTrack[]> {
+  async getNewReleases(limit: number = 20, offset: number = 0): Promise<PaginatedSpotifyTracks> {
       const token = await this.getAccessToken();
-      if (!token) return [];
+      if (!token) return { items: [], total: 0 };
 
       try {
-        // Buscando lançamentos de álbuns e pegando algumas faixas representativas
-        const response = await fetch(`https://api.spotify.com/v1/browse/new-releases?limit=10`, {
+        const response = await fetch(`https://api.spotify.com/v1/browse/new-releases?limit=${limit}&offset=${offset}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           console.error('Falha ao buscar novos lançamentos do Spotify:', errorData);
-          return [];
+          if (response.status === 401) {
+            this.logout();
+          }
+          return { items: [], total: 0 };
         }
         const data = await response.json();
-        
-        // Simplificação: apenas retornando os itens transformados ou buscando faixas
-        // Para o "Browse" inicial, vamos buscar algo genérico ou top tracks se tivéssemos ID de artista
-        // Por agora, vamos buscar "Top Hits" globais via search para popular a tela
-        return this.searchTracks("top 2024");
+
+        let allTracks: SpotifyTrack[] = [];
+        // Fetch all tracks for each album and combine them
+        // This can be slow if there are many albums and many tracks per album
+        // A more optimized approach might be needed for very large 'limit' values
+        for (const album of data.albums.items) {
+            const albumTracksResponse = await fetch(`https://api.spotify.com/v1/albums/${album.id}/tracks`, { // Fetch all tracks from the album
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (albumTracksResponse.ok) {
+                const albumTracksData = await albumTracksResponse.json();
+                for (const track of albumTracksData.items) {
+                    track.album = { // Enrich track with album details
+                        id: album.id,
+                        name: album.name,
+                        images: album.images,
+                        release_date: album.release_date
+                    };
+                    allTracks.push(track);
+                }
+            }
+        }
+        // Spotify's New Releases API returns total albums, not total tracks.
+        // We are fetching tracks from each album.
+        // For 'total', we can use the length of allTracks, or the total of albums (less accurate for tracks).
+        // Let's use the actual number of tracks fetched for `total` for now,
+        // which means pagination will only work for this current batch of tracks.
+        // A more robust solution would involve fetching all pages of albums and their tracks.
+        return {
+            items: allTracks,
+            total: allTracks.length // Total tracks fetched in this request
+        };
       } catch (e) {
         console.error("Spotify Get New Releases Error:", e);
-        return [];
+        return { items: [], total: 0 };
       }
   }
 

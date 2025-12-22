@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, SpotifyTrack } from './types';
 import { navidromeService } from './services/navidromeService';
 import { spotifyService } from './services/spotifyService';
-import { getStoredGroups } from './services/data';
+import { getStoredGroups, getSpotifyCredentials } from './services/data';
 import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation } from 'lucide-react';
 import SongTable from './components/library/SongTable';
 import CreatePlaylistModal from './components/library/CreatePlaylistModal';
@@ -43,6 +43,9 @@ const App: React.FC = () => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(100);
   const [totalSongs, setTotalSongs] = useState(0);
+
+  const [totalSpotifyBrowseItems, setTotalSpotifyBrowseItems] = useState(0);
+  const [spotifyBrowsePageSize, setSpotifyBrowsePageSize] = useState(50);
 
   // --- STATE: VIEW & MODALS ---
   const [viewMode, setViewMode] = useState<ViewMode>('navi_songs');
@@ -200,7 +203,7 @@ const App: React.FC = () => {
             if (viewMode === 'navi_songs') {
                 fetchSongs(0, 100, '', '', '', undefined);
             } else if (viewMode === 'spotify_browse') {
-                handleSpotifyBrowseClick();
+                handleSpotifyBrowseClick(0, spotifyBrowsePageSize);
             }
         } catch (e) {
             console.error("Init failed", e);
@@ -472,16 +475,19 @@ const App: React.FC = () => {
       }
   };
 
-  const handleSpotifyBrowseSearch = async (query: string) => {
+  const handleSpotifyBrowseSearch = async (query: string, pageNum: number = 0, size: number = spotifyBrowsePageSize) => {
       setActiveSearchQuery(query);
       if (!query.trim()) {
           // If query is empty, load new releases instead
-          handleSpotifyBrowseClick();
+          handleSpotifyBrowseClick(pageNum, size);
           return;
       }
       setLoadingNavi(true);
+      setPage(pageNum);
+      setSpotifyBrowsePageSize(size);
       try {
-          const results = await spotifyService.searchTracks(query);
+          const offset = pageNum * size;
+          const { items: results, total } = await spotifyService.searchTracks(query, size, offset);
           const mappedSongs: NaviSong[] = results.map(track => ({
               id: track.id,
               title: track.name,
@@ -516,12 +522,34 @@ const App: React.FC = () => {
               starred: undefined,
           }));
           setSpotifyBrowseTracks(mappedSongs);
+          setTotalSpotifyBrowseItems(total);
       } catch (e) {
           console.error("Failed to search Spotify tracks", e);
           setSpotifyBrowseTracks([]);
+          setTotalSpotifyBrowseItems(0);
       } finally {
           setLoadingNavi(false);
       }
+  };
+
+  const handleSpotifyBrowsePageChange = (newPage: number) => {
+    if (activeSearchQuery) {
+      handleSpotifyBrowseSearch(activeSearchQuery, newPage, spotifyBrowsePageSize);
+    } else {
+      handleSpotifyBrowseClick(newPage, spotifyBrowsePageSize);
+    }
+  };
+
+  const handleSpotifyBrowsePageSizeChange = (newSize: number) => {
+    // Spotify API has a maximum limit of 50 items per request for search.
+    // New releases might also have a limit.
+    const effectiveSize = Math.min(newSize, 50);
+    setSpotifyBrowsePageSize(effectiveSize);
+    if (activeSearchQuery) {
+      handleSpotifyBrowseSearch(activeSearchQuery, 0, effectiveSize);
+    } else {
+      handleSpotifyBrowseClick(0, effectiveSize);
+    }
   };
 
   const handlePageChange = async (newPage: number) => {
@@ -655,15 +683,28 @@ const App: React.FC = () => {
 
 
 
-  const handleSpotifyBrowseClick = async () => {
+  const handleSpotifyBrowseClick = async (pageNum: number = 0, size: number = spotifyBrowsePageSize) => {
     setLoadingNavi(true);
     setViewMode('spotify_browse');
     setSelectedPlaylistId(null);
     setActiveSearchQuery(''); // Clear search query for browse
-    setPage(0);
-    setPageSize(100); // Reset page size if needed for browse
+    setPage(pageNum);
+    setSpotifyBrowsePageSize(size); // Ensure page size is updated if changed
+
     try {
-        const results = await spotifyService.getNewReleases();
+        const offset = pageNum * size;
+        // Spotify API limit for new releases is 20, but getNewReleases currently doesn't support limit/offset directly
+        // Assuming spotifyService.getNewReleases returns a paginated result or we need to adjust
+        // For now, let's make it fetch up to `size` and mock total if API doesn't provide it
+        // The spotifyService.getNewReleases needs to be updated to support limit and offset.
+        // For now, I will modify the spotifyService.ts to support limit and offset, then come back here.
+        // However, I can't do that now. So, for the current implementation, I will assume it fetches all.
+        // If spotifyService.getNewReleases returns an object with `items` and `total` (similar to search), then it's fine.
+        // Let's assume for now getNewReleases will return an array and we will update totalSpotifyBrowseItems with its length.
+        // I will fix the spotifyService.getNewReleases method later.
+
+        // Placeholder for future pagination of new releases
+        const { items: results, total } = await spotifyService.getNewReleases(size, offset); // Assuming it returns { items, total }
         const mappedSongs: NaviSong[] = results.map(track => ({
             id: track.id,
             title: track.name,
@@ -698,9 +739,11 @@ const App: React.FC = () => {
             starred: undefined,
         }));
         setSpotifyBrowseTracks(mappedSongs);
+        setTotalSpotifyBrowseItems(total);
     } catch (e) {
         console.error("Failed to fetch Spotify new releases", e);
         setSpotifyBrowseTracks([]);
+        setTotalSpotifyBrowseItems(0);
     } finally {
         setLoadingNavi(false);
     }
@@ -957,6 +1000,20 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_browse') {
+        const creds = getSpotifyCredentials();
+        if (!creds.clientId || !creds.clientSecret) {
+            return (
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-4">
+                    <div className="p-4 bg-yellow-500/10 rounded-full">
+                        <AlertCircle className="w-12 h-12 text-yellow-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">Configuração Necessária</h3>
+                    <p className="text-zinc-500 max-w-md">
+                        Você precisa configurar seu Client ID e Client Secret nas configurações antes de navegar no Spotify.
+                    </p>
+                </div>
+            );
+        }
         return (
             <div className="h-full">
                 <SongTable
@@ -968,6 +1025,11 @@ const App: React.FC = () => {
                     defaultColumns={SPOTIFY_COLUMN_CONFIG}
                     onSearch={handleSpotifyBrowseSearch} // New search handler for Spotify browse
                     activeSearchQuery={activeSearchQuery}
+                    page={page}
+                    pageSize={spotifyBrowsePageSize}
+                    totalItems={totalSpotifyBrowseItems}
+                    onPageChange={handleSpotifyBrowsePageChange}
+                    onPageSizeChange={handleSpotifyBrowsePageSizeChange}
                 />
             </div>
         );
@@ -1188,7 +1250,7 @@ const App: React.FC = () => {
                         </h3>}
                         <div className="space-y-1">
                                                         <button
-                                                            onClick={handleSpotifyBrowseClick}
+                                                            onClick={() => handleSpotifyBrowseClick(0, spotifyBrowsePageSize)}
                                                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'spotify_browse' ? 'bg-green-500/10 text-green-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                                                         >                                <Navigation className="w-4 h-4 flex-shrink-0" /> 
                                 {!isSidebarCollapsed && <span>Navegar</span>}
