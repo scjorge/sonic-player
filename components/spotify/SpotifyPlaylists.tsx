@@ -51,23 +51,23 @@ const PlaylistNodeComponent: React.FC<{ name: string; node: PlaylistNode; onPlay
   return (
     <div>
       <div 
-        className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-4 bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer"
-        style={{ paddingLeft: `${1 + level * 1.5}rem` }}
+        className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-3 bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer"
+        style={{ paddingLeft: `${0.6 + level * 1.2}rem` }}
         onClick={handleRowClick}
       >
         <button onClick={handleChevronClick} className="p-1 -ml-1 rounded-full hover:bg-zinc-700">
           {hasChildren ? (
-            isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
+            isOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />
           ) : (
-            <div className="w-4 h-4" /> // Placeholder for alignment
+            <div className="w-3.5 h-3.5" />
           )}
         </button>
 
-        <div className="w-12 h-12 bg-zinc-800 rounded-md flex items-center justify-center flex-shrink-0">
-          <List className="w-6 h-6 text-zinc-500" />
+        <div className="w-10 h-10 bg-zinc-800 rounded-md flex items-center justify-center flex-shrink-0">
+          <List className="w-5 h-5 text-zinc-500" />
         </div>
         <div className="flex-1 overflow-hidden">
-          <p className="text-white font-medium truncate">{name}</p>
+          <p className="text-white text-sm truncate">{name}</p>
         </div>
       </div>
 
