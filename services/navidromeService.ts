@@ -51,13 +51,17 @@ class NavidromeService {
     return this.getUrl('getCoverArt') + `&id=${id}&size=300`;
   }
 
-  async ping(): Promise<boolean> {
+  async ping(): Promise<{ ok: boolean; message?: string }> {
     try {
       const data: SubsonicResponse<any> = await this.fetchData('ping.view');
-      return data['subsonic-response'].status === 'ok';
-    } catch (e) {
+      const status = data['subsonic-response'].status === 'ok';
+      const msg = status ? undefined : (data['subsonic-response'].error?.message || 'Unknown error');
+      return { ok: status, message: msg };
+    } catch (e: any) {
       console.error("Ping failed:", e);
-      return false;
+      // Try to extract message from error response if available
+      const message = e?.message || String(e);
+      return { ok: false, message };
     }
   }
 

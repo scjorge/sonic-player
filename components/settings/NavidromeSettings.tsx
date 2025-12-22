@@ -45,10 +45,14 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = () => {
     // Save temporarily so service can pick up
     saveNavidromeCredentials({ baseUrl: creds.baseUrl, user: creds.user, password: creds.password });
     try {
-      const ok = await navidromeService.ping();
-      setTestResult(ok ? 'Conexão bem-sucedida' : 'Falha na conexão');
+      const res = await navidromeService.ping();
+      if (res.ok) {
+        setTestResult('Conexão bem-sucedida');
+      } else {
+        setTestResult(`Falha na conexão: ${res.message || 'sem detalhes'}`);
+      }
     } catch (e) {
-      setTestResult('Falha na conexão');
+      setTestResult(`Falha na conexão: ${e?.message || String(e)}`);
     }
   };
 
