@@ -104,7 +104,7 @@ const SongTable: React.FC<SongTableProps> = ({
         ,onNavigateToLibraryQuery
 }) => {
     const sanitizeQuery = (text?: string) => {
-        return (text || '').replace(/[<>:\"/\\|?*-]/g, ' ').trim();
+        return (text || '').replace(/[<>:\"/\\|?*-]/g, ' ').replace(/\s+/g, ' ').trim();
     };
   // --- STATE ---
   const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || [

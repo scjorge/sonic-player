@@ -128,6 +128,12 @@ export interface SpotifyCredentials {
   expiresAt?: number; // Unix timestamp in milliseconds when the token expires
 }
 
+export interface NavidromeCredentials {
+  baseUrl: string;
+  user: string;
+  password: string;
+}
+
 export interface SpotifyTrack {
   id: string;
   name: string;

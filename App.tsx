@@ -3,7 +3,7 @@ import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, S
 import { navidromeService } from './services/navidromeService';
 import { spotifyService } from './services/spotifyService';
 import { getStoredGroups, getSpotifyCredentials } from './services/data';
-import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation } from 'lucide-react';
+import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation, AlertCircle } from 'lucide-react';
 import SongTable from './components/library/SongTable';
 import CreatePlaylistModal from './components/library/CreatePlaylistModal';
 import PlaylistSelectorModal from './components/library/PlaylistSelectorModal';
@@ -12,12 +12,13 @@ import ConfirmationModal from './components/library/ConfirmationModal';
 import GroupSettings from './components/settings/GroupSettings';
 import GroupTagModal from './components/library/GroupTagModal';
 import SpotifySettings from './components/settings/SpotifySettings';
+import NavidromeSettings from './components/settings/NavidromeSettings';
 import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
 
 type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks';
-type SettingsTab = 'groups' | 'spotify' | 'general'; 
+type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
 const App: React.FC = () => {
@@ -49,7 +50,7 @@ const App: React.FC = () => {
 
   // --- STATE: VIEW & MODALS ---
   const [viewMode, setViewMode] = useState<ViewMode>('navi_songs');
-  const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('groups');
+    const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('navidrome');
   
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isPlaylistsExpanded, setIsPlaylistsExpanded] = useState(true);
@@ -976,6 +977,13 @@ const App: React.FC = () => {
     if (loadingNavi) return <div className="flex justify-center items-center h-full"><div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${isSpotifyView ? 'border-green-500' : 'border-indigo-500'}`}></div></div>;
 
     if (viewMode === 'settings') {
+        if (activeSettingsTab === 'navidrome') {
+            return (
+                <div className="h-full overflow-y-auto custom-scrollbar bg-zinc-950">
+                    <NavidromeSettings />
+                </div>
+            );
+        }
         if (activeSettingsTab === 'groups') {
             return (
                 <div className="h-full overflow-y-auto custom-scrollbar bg-zinc-950">
@@ -1179,7 +1187,15 @@ const App: React.FC = () => {
                         {!isSidebarCollapsed && "Voltar à Biblioteca"}
                     </button>
 
-                     <button
+                    <button
+                        onClick={() => setActiveSettingsTab('navidrome')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'navidrome' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                    >
+                        <img src="/icons/server.svg" className="w-4 h-4 flex-shrink-0 object-contain" alt="" />
+                        {!isSidebarCollapsed && "Navidrome"}
+                    </button>
+
+                    <button
                         onClick={() => setActiveSettingsTab('groups')}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'groups' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
                     >
@@ -1302,7 +1318,7 @@ const App: React.FC = () => {
                 {viewMode === 'settings' && (
                     <>
                         <Settings className="w-5 h-5 text-indigo-500" />
-                        {activeSettingsTab === 'groups' ? 'Gerenciar Grupos' : activeSettingsTab === 'spotify' ? 'Configurar Spotify' : 'Configurações'}
+                        {activeSettingsTab === 'navidrome' ? 'Configurar Navidrome' : activeSettingsTab === 'groups' ? 'Gerenciar Grupos' : activeSettingsTab === 'spotify' ? 'Configurar Spotify' : 'Configurações'}
                     </>
                 )}
                 {viewMode === 'navi_favorites' && <><Heart className="w-5 h-5 text-indigo-500 fill-indigo-500" /> Favoritos</>}

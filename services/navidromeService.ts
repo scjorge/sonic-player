@@ -1,18 +1,18 @@
 import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, SubsonicResponse } from '../types';
 import { MD5 } from './tools.ts';
+import { getNavidromeCredentials } from './data';
 
-const BASE_URL = (window as any).process.env.REACT_APP_NAVIDROME_URL;
-const USER = (window as any).process.env.REACT_APP_NAVIDROME_USER;
-const PASS = (window as any).process.env.REACT_APP_NAVIDROME_PASS;
 const CLIENT = 'SonicTagPlayer';
 const VERSION = '1.16.1';
 
 
 class NavidromeService {
   private getAuthParams() {
+    const creds = getNavidromeCredentials();
     const salt = Math.random().toString(36).substring(2);
-    const token = MD5(PASS + salt);
-    return `u=${USER}&t=${token}&s=${salt}&v=${VERSION}&c=${CLIENT}&f=json`;
+    const token = MD5((creds.password || '') + salt);
+    const user = creds.user || '';
+    return `u=${encodeURIComponent(user)}&t=${token}&s=${salt}&v=${VERSION}&c=${CLIENT}&f=json`;
   }
 
   private sanitizeQuery(text: string): string {
@@ -21,7 +21,9 @@ class NavidromeService {
 
 
   private getUrl(endpoint: string) {
-    return `${BASE_URL}/rest/${endpoint}?${this.getAuthParams()}`;
+    const creds = getNavidromeCredentials();
+    const base = (creds.baseUrl || '').replace(/\/$/, '');
+    return `${base}/rest/${endpoint}?${this.getAuthParams()}`;
   }
 
   // Método auxiliar para realizar fetch via proxy (Backend Execution)

@@ -4,6 +4,7 @@ import { TagGroup, SpotifyCredentials } from '../types';
 const STORAGE_KEY = 'sonictag_groups';
 const SPOTIFY_KEY = 'sonictag_spotify';
 const SPOTIFY_AUTH_KEY = 'sonictag_spotify_auth';
+const NAVIDROME_KEY = 'sonictag_navidrome';
 
 
 // Group Tags storage functions
@@ -86,5 +87,29 @@ export const saveSpotifyCredentials = (creds: SpotifyCredentials) => {
     }
   } catch (e) {
     console.error("Erro ao salvar Spotify no LocalStorage", e);
+  }
+};
+
+// Navidrome storage functions
+export const getNavidromeCredentials = () => {
+  try {
+    const data = localStorage.getItem(NAVIDROME_KEY);
+    const creds = data ? JSON.parse(data) : {};
+    return {
+      baseUrl: creds.baseUrl || '',
+      user: creds.user || '',
+      password: creds.password || ''
+    };
+  } catch (e) {
+    console.error('Erro ao carregar Navidrome do LocalStorage', e);
+    return { baseUrl: '', user: '', password: '' };
+  }
+};
+
+export const saveNavidromeCredentials = (creds: { baseUrl: string; user: string; password: string }) => {
+  try {
+    localStorage.setItem(NAVIDROME_KEY, JSON.stringify({ baseUrl: creds.baseUrl, user: creds.user, password: creds.password }));
+  } catch (e) {
+    console.error('Erro ao salvar Navidrome no LocalStorage', e);
   }
 };
