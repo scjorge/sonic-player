@@ -1345,7 +1345,7 @@ const App: React.FC = () => {
                             </button>
 
                     {!isSidebarCollapsed && (
-                        <div className="animate-fade-in mt-2">
+                        <div className="animate-fade-in mt-3">
                             <div className="flex items-center justify-between px-3 mb-2 group">
                                 <button onClick={() => setIsPlaylistsExpanded(!isPlaylistsExpanded)} className={`flex items-center gap-3 text-sm font-medium ${viewMode === 'navi_playlist' ? 'text-indigo-400' : 'text-zinc-500'} tracking-wider hover:text-zinc-300 transition-colors`}>
                                     {isPlaylistsExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
@@ -1359,7 +1359,7 @@ const App: React.FC = () => {
                                 <div className="space-y-1">
                                     {naviPlaylists.map(playlist => (
                                         <div key={playlist.id} className="group flex items-center gap-1 pr-1 rounded-lg hover:bg-zinc-800 transition-colors">
-                                            <button onClick={() => handlePlaylistClick(playlist)} className={`flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left overflow-hidden ${selectedPlaylistId === playlist.id ? 'text-indigo-400' : 'text-zinc-400 hover:text-white'}`}>
+                                            <button onClick={() => handlePlaylistClick(playlist)} className={`flex-1 flex items-center gap-3 ${isSidebarCollapsed ? 'justify-center px-3' : 'pl-10 pr-3'} py-2 rounded-lg text-sm font-medium transition-colors text-left overflow-hidden ${selectedPlaylistId === playlist.id ? 'text-indigo-400' : 'text-zinc-400 hover:text-white'}`}>
                                                 <List className="w-4 h-4 flex-shrink-0" /> 
                                                 <span className="truncate">{playlist.name}</span>
                                             </button>
