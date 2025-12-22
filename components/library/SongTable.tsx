@@ -341,7 +341,7 @@ const SongTable: React.FC<SongTableProps> = ({
             </div>
         );
       }
-      case 'title': return <span className={`font-medium ${currentTrackId === song.id ? 'text-indigo-400' : 'text-zinc-100'}`}>{song.title}</span>;
+      case 'title': return <span className={`font-medium ${currentTrackId === song.id ? (isSpotifyTable ? 'text-green-400' : 'text-indigo-400') : 'text-zinc-100'}`}>{song.title}</span>;
       case 'artist': return song.artist;
       case 'album': return song.album;
       case 'userRating': {
@@ -751,7 +751,7 @@ const SongTable: React.FC<SongTableProps> = ({
                                 flex border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-colors group
                                 ${index % 2 === 0 ? 'bg-zinc-950' : 'bg-zinc-950/50'}
                                 ${isSelected ? 'bg-indigo-500/10 hover:bg-indigo-500/15' : ''}
-                                ${currentTrackId === song.id ? 'bg-indigo-500/5' : ''}
+                                ${currentTrackId === song.id ? (isSpotifyTable ? 'bg-green-600/20' : 'bg-indigo-500/5') : ''}
                             `}
                         >
                             {visibleColumns.map(col => (

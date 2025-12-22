@@ -757,7 +757,7 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_liked') {
-        return <LikedSongs onPlay={playSpotifySong} />;
+        return <LikedSongs onPlay={playSpotifySong} currentTrackId={currentTrack?.id} isPlaying={isPlaying} />;
     }
 
     if (viewMode === 'spotify_playlists') {

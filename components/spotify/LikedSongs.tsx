@@ -7,9 +7,11 @@ import { SPOTIFY_COLUMN_CONFIG } from './spotifyConstants'; // Import the Spotif
 
 interface LikedSongsProps {
   onPlay: (song: NaviSong) => void;
+  currentTrackId?: string | null;
+  isPlaying?: boolean;
 }
 
-const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay }) => {
+const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlaying }) => {
   const [likedSongs, setLikedSongs] = useState<NaviSong[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,7 +125,8 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay }) => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
           isSpotifyTable={true}
-          // Other props can be added if needed, e.g., currentTrackId, isPlaying
+          currentTrackId={currentTrackId}
+          isPlaying={isPlaying}
         />
       ) : (
         <div className="flex justify-center items-center h-full text-zinc-400">
