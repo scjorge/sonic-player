@@ -463,7 +463,20 @@ const SongTable: React.FC<SongTableProps> = ({
 
       {/* Toolbar */}
       <div className="flex justify-end items-center p-2 border-b border-zinc-800 bg-zinc-900/50 gap-2 flex-shrink-0">
-        
+        {/* Search Input */}
+        {onSearch && (
+            <div className="relative group ml-2">
+                <input
+                    type="text"
+                    value={searchInputValue}
+                    onChange={(e) => setSearchInputValue(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    placeholder="Buscar..."
+                    className={`w-40 sm:w-64 bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs rounded-lg px-3 py-1.5 pl-8 focus:outline-none ${isSpotifyTable ? 'focus:border-green-500' : 'focus:border-indigo-500'} transition-all placeholder-zinc-600`}
+                />
+                <Search className={`w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 transform -translate-y-1/2 ${isSpotifyTable ? 'group-focus-within:text-green-500' : 'group-focus-within:text-indigo-500'} transition-colors`} />
+            </div>
+        )}
         {/* QUICK LIST BUTTONS & FILTER */}
         <div className="flex items-center gap-2 mr-auto">
             {onQuickListChange && (
@@ -619,20 +632,6 @@ const SongTable: React.FC<SongTableProps> = ({
 
 
                 </>
-            )}
-            {/* Search Input */}
-            {onSearch && (
-                <div className="relative group ml-2">
-                    <input
-                        type="text"
-                        value={searchInputValue}
-                        onChange={(e) => setSearchInputValue(e.target.value)}
-                        onKeyDown={handleSearchKeyDown}
-                        placeholder="Buscar..."
-                        className={`w-40 sm:w-64 bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs rounded-lg px-3 py-1.5 pl-8 focus:outline-none ${isSpotifyTable ? 'focus:border-green-500' : 'focus:border-indigo-500'} transition-all placeholder-zinc-600`}
-                    />
-                    <Search className={`w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 transform -translate-y-1/2 ${isSpotifyTable ? 'group-focus-within:text-green-500' : 'group-focus-within:text-indigo-500'} transition-colors`} />
-                </div>
             )}
         </div>
 
