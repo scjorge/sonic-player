@@ -202,7 +202,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
                 className="bg-green-600 hover:bg-green-500 text-black px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-green-500/10 active:scale-95"
             >
                 <Save className="w-4 h-4" />
-                Salvar Credenciais
+                Salvar
             </button>
 
             {!isAuthenticated ? (
@@ -211,7 +211,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
                   className="bg-spotify-green-500 hover:bg-spotify-green-600 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-spotify-green-500/20 active:scale-95"
               >
                   <LogIn className="w-4 h-4" />
-                  Autenticar com Spotify
+                  Autenticar
               </button>
             ) : (
               <button 
@@ -219,7 +219,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
                   className="bg-red-600/80 hover:bg-red-500/80 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-red-500/10 active:scale-95"
               >
                   <LogOut className="w-4 h-4" />
-                  Desconectar do Spotify
+                  Desconectar
               </button>
             )}
 
@@ -228,7 +228,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
                 className="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-zinc-500/10 active:scale-95"
             >
                 <Trash2 className="w-4 h-4" />
-                Apagar Tudo
+                Apagar
             </button>
 
 
