@@ -15,6 +15,16 @@ class NavidromeService {
     return `u=${USER}&t=${token}&s=${salt}&v=${VERSION}&c=${CLIENT}&f=json`;
   }
 
+  private sanitizeQuery(text: string): string {
+    return text
+      .replace(/[<>"/\\|?*]/g, '')
+      .replace(/\s*-\s*/g, ' ')
+      .replace(/\s*:\s*/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+
   private getUrl(endpoint: string) {
     return `${BASE_URL}/rest/${endpoint}?${this.getAuthParams()}`;
   }
@@ -224,6 +234,24 @@ class NavidromeService {
      // mas retornamos o array de músicas. Se for vazio, acabou.
      return { songs, total: 0 }; 
   }
+
+  async checkIfSongExists(artist: string, title: string): Promise<boolean> {
+    try {
+      const sanitizedArtist = this.sanitizeQuery(artist).split(',')[0];
+      const sanitizedTitle = this.sanitizeQuery(title);
+      // Search for the song by combining artist and title.
+      // Set songCount to 1 as we only need to know if at least one exists.
+      const query = this.sanitizeQuery(`${sanitizedArtist} ${sanitizedTitle}`);
+      console.log(`Checking existence of song: ${query}`);
+      const data = await this.fetchData('search2.view', `&query=${encodeURIComponent(query)}&songCount=1&songOffset=0&artistCount=0&albumCount=0`);
+      const songs = data['subsonic-response'].searchResult2?.song || [];
+      return songs.length > 0;
+    } catch (e) {
+      console.error(`Error checking if song exists: ${artist} - ${title}`, e);
+      return false;
+    }
+  }
+
 
   async getSongsByFilter(artist?: string, genre?: string, year?: string, size: number = 100, offset: number = 0, quickListType?: 'newest' | 'recent' | 'frequent' | 'highest'): Promise<{ songs: NaviSong[], total: number }> {
     // Strategy:

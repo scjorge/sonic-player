@@ -63,6 +63,7 @@ const App: React.FC = () => {
   // Tag Groups State (Carregado do LocalStorage)
   const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
   const [spotifyBrowseTracks, setSpotifyBrowseTracks] = useState<NaviSong[]>([]);
+  const [spotifyNavidromeExistenceMap, setSpotifyNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
 
   const loadGroupsFromStorage = () => {
       const groups = getStoredGroups();
@@ -285,41 +286,51 @@ const App: React.FC = () => {
 
     try {
         const { items, total } = await spotifyService.getPlaylistTracks(playlist.id, 0, currentSize);
-        const mappedSongs: NaviSong[] = items.map((track: any) => ({ // Should use a proper type here
-          id: track.id,
-          title: track.name,
-          artist: track.artists.map((a: any) => a.name).join(', '),
-          album: track.album.name,
-          year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
-          coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
-          duration: Math.floor(track.duration_ms / 1000),
-          path: track.external_urls.spotify,
-          track: track.track_number,
-          uri: track.uri,
-          genre: undefined,
-          comment: undefined,
-          suffix: undefined,
-          bitRate: undefined,
-          samplingRate: undefined,
-          discNumber: undefined,
-          contentType: 'audio/spotify',
-          size: undefined,
-          created: undefined,
-          albumId: undefined,
-          artistId: undefined,
-          type: 'music',
-          isVideo: false,
-          bpm: undefined,
-          playCount: undefined,
-          lastPlayed: undefined,
-          userRating: undefined,
-          averageRating: undefined,
-          moods: undefined,
-          group: undefined,
-          starred: undefined,
+        const mappedSongs: NaviSong[] = await Promise.all(items.map(async (track: any) => {
+          const naviSong: NaviSong = {
+            id: track.id,
+            title: track.name,
+            artist: track.artists.map((a: any) => a.name).join(', '),
+            album: track.album.name,
+            year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
+            coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
+            duration: Math.floor(track.duration_ms / 1000),
+            path: track.external_urls.spotify,
+            track: track.track_number,
+            uri: track.uri,
+            genre: undefined,
+            comment: undefined,
+            suffix: undefined,
+            bitRate: undefined,
+            samplingRate: undefined,
+            discNumber: undefined,
+            contentType: 'audio/spotify',
+            size: undefined,
+            created: undefined,
+            albumId: undefined,
+            artistId: undefined,
+            type: 'music',
+            isVideo: false,
+            bpm: undefined,
+            playCount: undefined,
+            lastPlayed: undefined,
+            userRating: undefined,
+            averageRating: undefined,
+            moods: undefined,
+            group: undefined,
+            starred: undefined,
+          };
+          return naviSong;
         }));
         setNaviSongs(mappedSongs);
         setTotalSongs(total);
+
+        // Check Navidrome existence for each song in the playlist
+        const existenceChecks = await Promise.all(mappedSongs.map(async song => {
+            const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
+            return [song.id, exists] as [string, boolean];
+        }));
+        setSpotifyNavidromeExistenceMap(new Map(existenceChecks));
     } catch (e) {
         console.error("Fetch spotify playlist failed", e);
     } finally {
@@ -488,41 +499,51 @@ const App: React.FC = () => {
       try {
           const offset = pageNum * size;
           const { items: results, total } = await spotifyService.searchTracks(query, size, offset);
-          const mappedSongs: NaviSong[] = results.map(track => ({
-              id: track.id,
-              title: track.name,
-              artist: track.artists.map((a: any) => a.name).join(', '),
-              album: track.album.name,
-              year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
-              coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
-              duration: Math.floor(track.duration_ms / 1000),
-              path: track.external_urls.spotify,
-              track: track.track_number,
-              uri: track.uri,
-              genre: undefined,
-              comment: undefined,
-              suffix: undefined,
-              bitRate: undefined,
-              samplingRate: undefined,
-              discNumber: undefined,
-              contentType: 'audio/spotify',
-              size: undefined,
-              created: undefined,
-              albumId: undefined,
-              artistId: undefined,
-              type: 'music',
-              isVideo: false,
-              bpm: undefined,
-              playCount: undefined,
-              lastPlayed: undefined,
-              userRating: undefined,
-              averageRating: undefined,
-              moods: undefined,
-              group: undefined,
-              starred: undefined,
+          const mappedSongs: NaviSong[] = await Promise.all(results.map(async track => {
+              const naviSong: NaviSong = {
+                  id: track.id,
+                  title: track.name,
+                  artist: track.artists.map((a: any) => a.name).join(', '),
+                  album: track.album.name,
+                  year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
+                  coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
+                  duration: Math.floor(track.duration_ms / 1000),
+                  path: track.external_urls.spotify,
+                  track: track.track_number,
+                  uri: track.uri,
+                  genre: undefined,
+                  comment: undefined,
+                  suffix: undefined,
+                  bitRate: undefined,
+                  samplingRate: undefined,
+                  discNumber: undefined,
+                  contentType: 'audio/spotify',
+                  size: undefined,
+                  created: undefined,
+                  albumId: undefined,
+                  artistId: undefined,
+                  type: 'music',
+                  isVideo: false,
+                  bpm: undefined,
+                  playCount: undefined,
+                  lastPlayed: undefined,
+                  userRating: undefined,
+                  averageRating: undefined,
+                  moods: undefined,
+                  group: undefined,
+                  starred: undefined,
+              };
+              return naviSong;
           }));
           setSpotifyBrowseTracks(mappedSongs);
           setTotalSpotifyBrowseItems(total);
+
+          // Check Navidrome existence for each song
+          const existenceChecks = await Promise.all(mappedSongs.map(async song => {
+              const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
+              return [song.id, exists] as [string, boolean];
+          }));
+          setSpotifyNavidromeExistenceMap(new Map(existenceChecks));
       } catch (e) {
           console.error("Failed to search Spotify tracks", e);
           setSpotifyBrowseTracks([]);
@@ -568,65 +589,8 @@ const App: React.FC = () => {
         setLoadingNavi(true);
         try {
             const { items, total } = await spotifyService.getPlaylistTracks(selectedPlaylistId, newPage * pageSize, pageSize);
-            const mappedSongs: NaviSong[] = items.map((track: any) => ({
-                id: track.id,
-                title: track.name,
-                artist: track.artists.map((a: any) => a.name).join(', '),
-                album: track.album.name,
-                year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
-                coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
-                duration: Math.floor(track.duration_ms / 1000),
-                path: track.external_urls.spotify,
-                track: track.track_number,
-                uri: track.uri,
-                genre: undefined,
-                comment: undefined,
-                suffix: undefined,
-                bitRate: undefined,
-                samplingRate: undefined,
-                discNumber: undefined,
-                contentType: 'audio/spotify',
-                size: undefined,
-                created: undefined,
-                albumId: undefined,
-                artistId: undefined,
-                type: 'music',
-                isVideo: false,
-                bpm: undefined,
-                playCount: undefined,
-                lastPlayed: undefined,
-                userRating: undefined,
-                averageRating: undefined,
-                moods: undefined,
-                group: undefined,
-                starred: undefined,
-            }));
-            setNaviSongs(mappedSongs);
-            setTotalSongs(total);
-        } catch (e) {
-            console.error("Failed to fetch spotify playlist page", e);
-        } finally {
-            setLoadingNavi(false);
-        }
-    }
-  };
-
-  const handlePageSizeChange = (newSize: number) => {
-    setPageSize(newSize);
-    setPage(0);
-    if (viewMode === 'navi_songs') {
-        if (activeSearchQuery) {
-            handleSearch(activeSearchQuery);
-        } else {
-            fetchSongs(0, newSize, activeArtist, activeGenre, activeYear, activeQuickList);
-        }
-    } else if (viewMode === 'spotify_playlist_tracks' && selectedPlaylistId) {
-        const playlistId = selectedPlaylistId;
-        const fetchNewSizePage = async () => {
-            setLoadingNavi(true);
-            try {
-                const { items, total } = await spotifyService.getPlaylistTracks(playlistId, 0, newSize);
-                const mappedSongs: NaviSong[] = items.map((track: any) => ({
+            const mappedSongs: NaviSong[] = await Promise.all(items.map(async (track: any) => {
+                const naviSong: NaviSong = {
                     id: track.id,
                     title: track.name,
                     artist: track.artists.map((a: any) => a.name).join(', '),
@@ -658,9 +622,86 @@ const App: React.FC = () => {
                     moods: undefined,
                     group: undefined,
                     starred: undefined,
+                };
+                return naviSong;
+            }));
+            setNaviSongs(mappedSongs);
+            setTotalSongs(total);
+
+            // Check Navidrome existence for each song in the playlist
+            const existenceChecks = await Promise.all(mappedSongs.map(async song => {
+                const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
+                return [song.id, exists] as [string, boolean];
+            }));
+            setSpotifyNavidromeExistenceMap(new Map(existenceChecks));
+        } catch (e) {
+            console.error("Failed to fetch spotify playlist page", e);
+        } finally {
+            setLoadingNavi(false);
+        }
+    }
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setPage(0);
+    if (viewMode === 'navi_songs') {
+        if (activeSearchQuery) {
+            handleSearch(activeSearchQuery);
+        } else {
+            fetchSongs(0, newSize, activeArtist, activeGenre, activeYear, activeQuickList);
+        }
+    } else if (viewMode === 'spotify_playlist_tracks' && selectedPlaylistId) {
+        const playlistId = selectedPlaylistId;
+        const fetchNewSizePage = async () => {
+            setLoadingNavi(true);
+            try {
+                const { items, total } = await spotifyService.getPlaylistTracks(playlistId, 0, newSize);
+                const mappedSongs: NaviSong[] = await Promise.all(items.map(async (track: any) => {
+                    const naviSong: NaviSong = {
+                        id: track.id,
+                        title: track.name,
+                        artist: track.artists.map((a: any) => a.name).join(', '),
+                        album: track.album.name,
+                        year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
+                        coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
+                        duration: Math.floor(track.duration_ms / 1000),
+                        path: track.external_urls.spotify,
+                        track: track.track_number,
+                        uri: track.uri,
+                        genre: undefined,
+                        comment: undefined,
+                        suffix: undefined,
+                        bitRate: undefined,
+                        samplingRate: undefined,
+                        discNumber: undefined,
+                        contentType: 'audio/spotify',
+                        size: undefined,
+                        created: undefined,
+                        albumId: undefined,
+                        artistId: undefined,
+                        type: 'music',
+                        isVideo: false,
+                        bpm: undefined,
+                        playCount: undefined,
+                        lastPlayed: undefined,
+                        userRating: undefined,
+                        averageRating: undefined,
+                        moods: undefined,
+                        group: undefined,
+                        starred: undefined,
+                    };
+                    return naviSong;
                 }));
                 setNaviSongs(mappedSongs);
                 setTotalSongs(total);
+
+                // Check Navidrome existence for each song in the playlist
+                const existenceChecks = await Promise.all(mappedSongs.map(async song => {
+                    const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
+                    return [song.id, exists] as [string, boolean];
+                }));
+                setSpotifyNavidromeExistenceMap(new Map(existenceChecks));
             } catch (e) {
                 console.error("Failed to fetch spotify playlist page", e);
             } finally {
@@ -705,41 +746,51 @@ const App: React.FC = () => {
 
         // Placeholder for future pagination of new releases
         const { items: results, total } = await spotifyService.getNewReleases(size, offset); // Assuming it returns { items, total }
-        const mappedSongs: NaviSong[] = results.map(track => ({
-            id: track.id,
-            title: track.name,
-            artist: track.artists.map((a: any) => a.name).join(', '),
-            album: track.album.name,
-            year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
-            coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
-            duration: Math.floor(track.duration_ms / 1000),
-            path: track.external_urls.spotify,
-            track: track.track_number,
-            uri: track.uri,
-            genre: undefined,
-            comment: undefined,
-            suffix: undefined,
-            bitRate: undefined,
-            samplingRate: undefined,
-            discNumber: undefined,
-            contentType: 'audio/spotify',
-            size: undefined,
-            created: undefined,
-            albumId: undefined,
-            artistId: undefined,
-            type: 'music',
-            isVideo: false,
-            bpm: undefined,
-            playCount: undefined,
-            lastPlayed: undefined,
-            userRating: undefined,
-            averageRating: undefined,
-            moods: undefined,
-            group: undefined,
-            starred: undefined,
+        const mappedSongs: NaviSong[] = await Promise.all(results.map(async track => {
+            const naviSong: NaviSong = {
+                id: track.id,
+                title: track.name,
+                artist: track.artists.map((a: any) => a.name).join(', '),
+                album: track.album.name,
+                year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
+                coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
+                duration: Math.floor(track.duration_ms / 1000),
+                path: track.external_urls.spotify,
+                track: track.track_number,
+                uri: track.uri,
+                genre: undefined,
+                comment: undefined,
+                suffix: undefined,
+                bitRate: undefined,
+                samplingRate: undefined,
+                discNumber: undefined,
+                contentType: 'audio/spotify',
+                size: undefined,
+                created: undefined,
+                albumId: undefined,
+                artistId: undefined,
+                type: 'music',
+                isVideo: false,
+                bpm: undefined,
+                playCount: undefined,
+                lastPlayed: undefined,
+                userRating: undefined,
+                averageRating: undefined,
+                moods: undefined,
+                group: undefined,
+                starred: undefined,
+            };
+            return naviSong;
         }));
         setSpotifyBrowseTracks(mappedSongs);
         setTotalSpotifyBrowseItems(total);
+
+        // Check Navidrome existence for each song
+        const existenceChecks = await Promise.all(mappedSongs.map(async song => {
+            const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
+            return [song.id, exists] as [string, boolean];
+        }));
+        setSpotifyNavidromeExistenceMap(new Map(existenceChecks));
     } catch (e) {
         console.error("Failed to fetch Spotify new releases", e);
         setSpotifyBrowseTracks([]);
@@ -1030,6 +1081,7 @@ const App: React.FC = () => {
                     totalItems={totalSpotifyBrowseItems}
                     onPageChange={handleSpotifyBrowsePageChange}
                     onPageSizeChange={handleSpotifyBrowsePageSizeChange}
+                    navidromeExistenceMap={spotifyNavidromeExistenceMap}
                 />
             </div>
         );
@@ -1058,6 +1110,7 @@ const App: React.FC = () => {
                     onPageSizeChange={handlePageSizeChange}
                     isSpotifyTable={true}
                     defaultColumns={SPOTIFY_COLUMN_CONFIG}
+                    navidromeExistenceMap={spotifyNavidromeExistenceMap}
                 />
             </div>
         );

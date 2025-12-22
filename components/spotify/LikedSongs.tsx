@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { spotifyService } from '../../services/spotifyService';
-import { SpotifyTrack, NaviSong } from '../../types';
+import { NaviSong } from '../../types';
 import SongTable from '../library/SongTable';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, Check, X } from 'lucide-react'; // Import Check and X icons
 import { SPOTIFY_COLUMN_CONFIG } from './spotifyConstants'; // Import the Spotify specific column config
+import { navidromeService } from '../../services/navidromeService'; // Import navidromeService
 
 interface LikedSongsProps {
   onPlay: (song: NaviSong) => void;
@@ -18,6 +19,7 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
   const [page, setPage] = useState(0); // 0-indexed page
   const [pageSize, setPageSize] = useState(50); // Default page size
   const [totalItems, setTotalItems] = useState(0);
+  const [navidromeExistenceMap, setNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map()); // New state
 
   useEffect(() => {
     const fetchLikedSongs = async () => {
@@ -69,6 +71,13 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
         }));
         setLikedSongs(mappedSongs);
         setTotalItems(response.total); // Set total items
+
+        // Check Navidrome existence for each song
+        const existenceChecks = await Promise.all(mappedSongs.map(async song => {
+            const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
+            return [song.id, exists] as [string, boolean];
+        }));
+        setNavidromeExistenceMap(new Map(existenceChecks));
       } catch (err) {
         console.error("Failed to fetch liked songs:", err);
         setError("Não foi possível carregar as músicas curtidas do Spotify. Verifique sua conexão ou autenticação.");
@@ -127,6 +136,7 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
           isSpotifyTable={true}
           currentTrackId={currentTrackId}
           isPlaying={isPlaying}
+          navidromeExistenceMap={navidromeExistenceMap}
         />
       ) : (
         <div className="flex justify-center items-center h-full text-zinc-400">

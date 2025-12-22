@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NaviSong } from '../../types';
-import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, Filter, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, History, CheckSquare, Square, AlignJustify, Heart, Info, BarChart2, Sparkles, TrendingUp, Award, Star, Tags } from 'lucide-react';
+import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, Filter, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, History, CheckSquare, Square, AlignJustify, Heart, Info, BarChart2, Sparkles, TrendingUp, Award, Star, Tags, Download } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 
 interface SongTableProps {
@@ -40,10 +40,11 @@ interface SongTableProps {
   onGroupEdit?: (song: NaviSong) => void; // Nova prop
   defaultColumns?: ColumnConfig[];
   isSpotifyTable?: boolean;
+  navidromeExistenceMap?: Map<string, boolean>;
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
-export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate';
+export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate' | 'download';
 
 type RowDensity = 'compact' | 'normal' | 'relaxed';
 
@@ -97,7 +98,8 @@ const SongTable: React.FC<SongTableProps> = ({
     onSetRating,
     onGroupEdit,
     defaultColumns,
-    isSpotifyTable
+    isSpotifyTable,
+    navidromeExistenceMap
 }) => {
   // --- STATE ---
   const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || [
@@ -383,6 +385,18 @@ const SongTable: React.FC<SongTableProps> = ({
       case 'group': return song.group || '-';
       case 'format': return <span className="text-xs uppercase bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400">{song.suffix || 'MP3'}</span>;
       case 'filename': return <span className="text-zinc-500 text-xs font-mono truncate" title={song.path}>{getFileName(song.path)}</span>;
+      case 'download': {
+          const existsInNavidrome = navidromeExistenceMap?.get(song.id);
+          return (
+              <div className="flex items-center justify-center">
+                  {existsInNavidrome ? (
+                      <Check className="w-4 h-4 text-green-500" title="Disponível Localmente" />
+                  ) : (
+                      <X className="w-4 h-4 text-red-500" title="Não Disponível Localmente" />
+                  )}
+              </div>
+          );
+      }
       default: return '-';
     }
   };
