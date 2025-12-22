@@ -114,7 +114,7 @@ const SpotifyPlaylists: React.FC<SpotifyPlaylistsProps> = ({ onPlaylistClick }) 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full text-white">
-        <Loader2 className="w-8 h-8 animate-spin mr-2" /> Carregando playlists...
+        <Loader2 className="w-8 h-8 animate-spin mr-2 text-green-500" /> Carregando playlists...
       </div>
     );
   }

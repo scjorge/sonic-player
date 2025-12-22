@@ -106,7 +106,7 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full text-white">
-        <Loader2 className="w-8 h-8 animate-spin mr-2" /> Carregando músicas curtidas...
+        <Loader2 className="w-8 h-8 animate-spin mr-2 text-green-500" /> Carregando músicas curtidas...
       </div>
     );
   }
