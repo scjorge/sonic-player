@@ -1048,6 +1048,18 @@ const App: React.FC = () => {
                 </div>
             );
         }
+        if (navidromeConnected === false) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
+                    <div className="text-zinc-400 mb-6">Configure seu Client ID e Client Secret nas configurações do Spotify para usar este recurso.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('spotify'); }} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="h-full">
                 <SongTable
@@ -1072,14 +1084,49 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_liked') {
+        if (navidromeConnected === false) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
+                    <div className="text-zinc-400 mb-6">Configure seu Client ID e Client Secret nas configurações do Spotify para usar este recurso.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('spotify'); }} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
         return <LikedSongs onPlay={playSpotifySong} currentTrackId={currentTrack?.id} isPlaying={isPlaying} onNavigateToLibraryQuery={handleSearch} />;
     }
 
     if (viewMode === 'spotify_playlists') {
+        if (navidromeConnected === false) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
+                    <div className="text-zinc-400 mb-6">Configure seu Client ID e Client Secret nas configurações do Spotify para usar este recurso.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('spotify'); }} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
         return <SpotifyPlaylists onPlaylistClick={handleSpotifyPlaylistClick} />;
     }
 
     if (viewMode === 'spotify_playlist_tracks') {
+        if (navidromeConnected === false) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
+                    <div className="text-zinc-400 mb-6">Configure seu Client ID e Client Secret nas configurações do Spotify para usar este recurso.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('spotify'); }} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="h-full">
                 <SongTable 
