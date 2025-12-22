@@ -330,15 +330,15 @@ class SpotifyService {
     }
   }
 
-  async getPlaylistTracks(playlistId: string): Promise<any[]> { // Should create a type for this
+  async getPlaylistTracks(playlistId: string, offset: number = 0, limit: number = 50): Promise<PaginatedSpotifyTracks> { // Should create a type for this
     const token = await this.getAccessToken();
     if (!token) {
       console.warn("No access token available for fetching playlist tracks.");
-      return [];
+      return { items: [], total: 0 };
     }
 
     try {
-      const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+      const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -348,14 +348,17 @@ class SpotifyService {
         if (response.status === 401) {
             this.logout();
         }
-        return [];
+        return { items: [], total: 0 };
       }
 
       const data = await response.json();
-      return data.items.map((item: any) => item.track); // The track object is nested in `item`.
+      return {
+        items: data.items.map((item: any) => item.track), // The track object is nested in `item`.
+        total: data.total
+      };
     } catch (error) {
       console.error("Spotify Get Playlist Tracks Error:", error);
-      return [];
+      return { items: [], total: 0 };
     }
   }
 

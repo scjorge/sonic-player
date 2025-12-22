@@ -273,8 +273,8 @@ const App: React.FC = () => {
     setActiveSearchQuery('');
     setPage(0);
     try {
-        const tracks = await spotifyService.getPlaylistTracks(playlist.id);
-        const mappedSongs: NaviSong[] = tracks.map((track: any) => ({ // Should use a proper type here
+        const { items, total } = await spotifyService.getPlaylistTracks(playlist.id, 0, pageSize);
+        const mappedSongs: NaviSong[] = items.map((track: any) => ({ // Should use a proper type here
           id: track.id,
           title: track.name,
           artist: track.artists.map((a: any) => a.name).join(', '),
@@ -308,8 +308,7 @@ const App: React.FC = () => {
           starred: undefined,
         }));
         setNaviSongs(mappedSongs);
-        setTotalSongs(mappedSongs.length);
-        setPageSize(Math.max(mappedSongs.length, 10));
+        setTotalSongs(total);
     } catch (e) {
         console.error("Fetch spotify playlist failed", e);
     } finally {
@@ -476,6 +475,50 @@ const App: React.FC = () => {
             setLoadingNavi(false);
         } else {
             fetchSongs(newPage, pageSize, activeArtist, activeGenre, activeYear, activeQuickList);
+        }
+    } else if (viewMode === 'spotify_playlist_tracks' && selectedPlaylistId) {
+        setLoadingNavi(true);
+        try {
+            const { items, total } = await spotifyService.getPlaylistTracks(selectedPlaylistId, newPage * pageSize, pageSize);
+            const mappedSongs: NaviSong[] = items.map((track: any) => ({
+                id: track.id,
+                title: track.name,
+                artist: track.artists.map((a: any) => a.name).join(', '),
+                album: track.album.name,
+                year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
+                coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
+                duration: Math.floor(track.duration_ms / 1000),
+                path: track.external_urls.spotify,
+                track: track.track_number,
+                uri: track.uri,
+                genre: undefined,
+                comment: undefined,
+                suffix: undefined,
+                bitRate: undefined,
+                samplingRate: undefined,
+                discNumber: undefined,
+                contentType: 'audio/spotify',
+                size: undefined,
+                created: undefined,
+                albumId: undefined,
+                artistId: undefined,
+                type: 'music',
+                isVideo: false,
+                bpm: undefined,
+                playCount: undefined,
+                lastPlayed: undefined,
+                userRating: undefined,
+                averageRating: undefined,
+                moods: undefined,
+                group: undefined,
+                starred: undefined,
+            }));
+            setNaviSongs(mappedSongs);
+            setTotalSongs(total);
+        } catch (e) {
+            console.error("Failed to fetch spotify playlist page", e);
+        } finally {
+            setLoadingNavi(false);
         }
     }
   };
