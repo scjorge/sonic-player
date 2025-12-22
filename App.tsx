@@ -965,7 +965,8 @@ const App: React.FC = () => {
   };
 
   const renderNaviContent = () => {
-    if (loadingNavi) return <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div></div>;
+    const isSpotifyView = ['spotify_browse', 'spotify_liked', 'spotify_playlists', 'spotify_playlist_tracks'].includes(viewMode);
+    if (loadingNavi) return <div className="flex justify-center items-center h-full"><div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${isSpotifyView ? 'border-green-500' : 'border-indigo-500'}`}></div></div>;
 
     if (viewMode === 'settings') {
         if (activeSettingsTab === 'groups') {
