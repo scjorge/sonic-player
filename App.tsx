@@ -1314,12 +1314,12 @@ const App: React.FC = () => {
       >
          <div className={`h-16 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between px-6'} border-b border-zinc-800`}>
             {!isSidebarCollapsed && (
-                <div className="flex items-center gap-3 overflow-hidden">
+                <button type="button" onClick={() => window.location.reload()} title="Recarregar" className="flex items-center gap-3 overflow-hidden hover:opacity-90 transition-opacity">
                     <div className="bg-indigo-600 p-1.5 rounded-lg flex-shrink-0">
                         <Disc3 className="w-5 h-5 text-white"/> 
                     </div>
                     <h1 className="font-bold tracking-tight whitespace-nowrap">SonicTag</h1>
-                </div>
+                </button>
             )}
             
             <button 
