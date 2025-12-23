@@ -1559,7 +1559,7 @@ const App: React.FC = () => {
                                                 </button>
                                                 {devicesDropdownOpen && (
                                                     <div className="absolute right-0 bottom-full mb-2 w-56 bg-zinc-900 border border-zinc-800 rounded shadow-xl z-50">
-                                                        <div className="p-2 text-xs text-zinc-400 border-b border-zinc-800">Dispositivos Spotify</div>
+                                                        <div className="p-2 text-xs text-zinc-400 border-b border-zinc-800">Dispositivos</div>
                                                         <div className="max-h-48 overflow-y-auto">
                                                             {spotifyDevices.length === 0 && (
                                                                 <div className="p-2 text-sm text-zinc-500">Nenhum dispositivo encontrado</div>
