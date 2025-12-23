@@ -20,66 +20,59 @@ const GroupTagModal: React.FC<GroupTagModalProps> = ({ song, groups, onClose, on
 
   // Check if an item is currently present in the string
   const isItemSelected = (group: TagGroup, item: string) => {
-    const groupNameEscaped = escapeRegExp(group.name);
-    const regex = new RegExp(`(${groupNameEscaped}\\()(.*?)(\\))`);
-    const match = localComments.match(regex);
-    
-    if (match) {
-        const content = match[2];
-        const target = `${group.prefix}=${item}`;
-        // Split by comma and clean up to check exact matches
-        const items = content.split(',').map(i => i.trim());
-        return items.includes(target);
-    }
-    return false;
+        const wrapperNameEscaped = 'DJ';
+        const regex = new RegExp(`(${wrapperNameEscaped}\\()(.*?)(\\))`);
+        const match = localComments.match(regex);
+
+        if (match) {
+                const content = match[2];
+                const target = `${group.prefix}=${item}`;
+                const items = content.split(',').map(i => i.trim()).filter(i => i.length > 0);
+                return items.includes(target);
+        }
+        return false;
   };
 
   const toggleItem = (group: TagGroup, item: string) => {
-    const groupNameEscaped = escapeRegExp(group.name);
-    const regex = new RegExp(`(${groupNameEscaped}\\()(.*?)(\\))`);
-    const match = localComments.match(regex);
-    const itemStr = `${group.prefix}=${item}`;
+        const wrapperName = 'DJ';
+        const regex = new RegExp(`(${wrapperName}\\()(.*?)(\\))`);
+        const match = localComments.match(regex);
+        const itemStr = `${group.prefix}=${item}`;
 
-    let newCommentStr = localComments;
+        let newCommentStr = localComments;
 
-    if (match) {
-      // Group exists
-      const fullMatch = match[0]; // e.g., Group(p=1, p=2)
-      const content = match[2];   // e.g., p=1, p=2
-      
-      let currentItems = content.split(',').map(i => i.trim()).filter(i => i.length > 0);
-      
-      if (currentItems.includes(itemStr)) {
-        // Remove item
-        currentItems = currentItems.filter(i => i !== itemStr);
-      } else {
-        // Add item
-        currentItems.push(itemStr);
-      }
+        if (match) {
+            // DJ(...) exists
+            const fullMatch = match[0];
+            const content = match[2];
+            let currentItems = content.split(',').map(i => i.trim()).filter(i => i.length > 0);
 
-      if (currentItems.length === 0) {
-        // If group is empty, remove the entire group tag + potential preceding space
-        // Try to match " Group(...)" or just "Group(...)"
-        const removeRegex = new RegExp(`\\s*${escapeRegExp(fullMatch)}`);
-        newCommentStr = localComments.replace(removeRegex, '');
-        // Fallback cleanup if it was at start without space
-        if (newCommentStr === localComments) {
-             newCommentStr = localComments.replace(fullMatch, '').trim();
+            if (currentItems.includes(itemStr)) {
+                currentItems = currentItems.filter(i => i !== itemStr);
+            } else {
+                currentItems.push(itemStr);
+            }
+
+            if (currentItems.length === 0) {
+                // remove the entire DJ(...) wrapper
+                const removeRegex = new RegExp(`\\s*${escapeRegExp(fullMatch)}`);
+                newCommentStr = localComments.replace(removeRegex, '');
+                if (newCommentStr === localComments) {
+                    newCommentStr = localComments.replace(fullMatch, '').trim();
+                }
+            } else {
+                const newWrapper = `${match[1]}${currentItems.join(', ')}${match[3]}`;
+                newCommentStr = localComments.replace(fullMatch, newWrapper);
+            }
+
+        } else {
+            // No DJ wrapper yet — create it and append at the end
+            const newWrapper = `${wrapperName}(${itemStr})`;
+            const separator = localComments.trim().length > 0 ? ' ' : '';
+            newCommentStr = localComments + separator + newWrapper;
         }
-      } else {
-        // Update group content
-        const newGroupStr = `${match[1]}${currentItems.join(', ')}${match[3]}`;
-        newCommentStr = localComments.replace(fullMatch, newGroupStr);
-      }
 
-    } else {
-      // Group doesn't exist, create it with the item
-      const newTag = `${group.name}(${itemStr})`;
-      const separator = localComments.trim().length > 0 ? ' ' : '';
-      newCommentStr = localComments + separator + newTag;
-    }
-
-    setLocalComments(newCommentStr);
+        setLocalComments(newCommentStr);
   };
 
   const handleSave = () => {
@@ -125,7 +118,7 @@ const GroupTagModal: React.FC<GroupTagModalProps> = ({ song, groups, onClose, on
                             <div key={group.id} className="space-y-3">
                                 <div className="flex items-baseline gap-2 border-b border-zinc-800 pb-2">
                                     <h4 className="text-indigo-400 font-bold text-sm uppercase tracking-wider">{group.name}</h4>
-                                    <span className="text-[10px] text-zinc-600 font-mono">prefixo: {group.prefix}</span>
+                                    <span className="text-[15px] text-zinc-600 font-mono">prefixo: {group.prefix}</span>
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                                     {group.items.map((item, idx) => {

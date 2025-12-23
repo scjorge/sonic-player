@@ -243,7 +243,6 @@ class NavidromeService {
       // Search for the song by combining artist and title.
       // Set songCount to 1 as we only need to know if at least one exists.
       const query = `${sanitizedArtist} ${sanitizedTitle}`;
-      console.log(`Checking existence of song: ${query}`);
       const data = await this.fetchData('search2.view', `&query=${encodeURIComponent(query)}&songCount=1&songOffset=0&artistCount=0&albumCount=0`);
       const songs = data['subsonic-response'].searchResult2?.song || [];
       return songs.length > 0;
