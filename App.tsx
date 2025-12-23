@@ -119,6 +119,10 @@ const App: React.FC = () => {
   // --- SPOTIFY AUTH STATE ---
   const [isAuthenticated, setIsAuthenticated] = useState(spotifyService.isAuthenticated());
   const [authMessage, setAuthMessage] = useState('');
+    // --- SPOTIFY DEVICES ---
+    const [spotifyDevices, setSpotifyDevices] = useState<any[]>([]);
+    const [spotifyActiveDeviceId, setSpotifyActiveDeviceId] = useState<string | null>(null);
+    const [devicesDropdownOpen, setDevicesDropdownOpen] = useState(false);
 
   // --- SPOTIFY PLAYBACK SYNC ---
   useEffect(() => {
@@ -236,6 +240,46 @@ const App: React.FC = () => {
     };
     init();
   }, []);
+
+    // Load Spotify devices when authenticated
+    useEffect(() => {
+        const load = async () => {
+            if (!isAuthenticated) return;
+            try {
+                const devices = await spotifyService.getDevices();
+                setSpotifyDevices(devices);
+                const active = await spotifyService.getActiveDevice();
+                setSpotifyActiveDeviceId(active);
+            } catch (e) {
+                console.error('Failed loading spotify devices', e);
+            }
+        };
+        load();
+    }, [isAuthenticated]);
+
+    const toggleDevicesDropdown = async () => {
+        if (!devicesDropdownOpen) {
+            try {
+                const devices = await spotifyService.getDevices();
+                setSpotifyDevices(devices);
+                const active = await spotifyService.getActiveDevice();
+                setSpotifyActiveDeviceId(active);
+            } catch (e) {
+                console.error('Failed to refresh devices', e);
+            }
+        }
+        setDevicesDropdownOpen(prev => !prev);
+    };
+
+    const selectSpotifyDevice = async (deviceId: string) => {
+        setDevicesDropdownOpen(false);
+        try {
+            const ok = await spotifyService.transferPlayback(deviceId, true);
+            if (ok) setSpotifyActiveDeviceId(deviceId);
+        } catch (e) {
+            console.error('Failed to transfer playback', e);
+        }
+    };
 
   // Load Navidrome Data when View Changes (Specific views)
   useEffect(() => {
@@ -1507,13 +1551,36 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 w-1/3">
-                    <Volume2 className="w-4 h-4 text-zinc-400" />
-                    <div className="w-24 h-1 bg-zinc-800 rounded-full relative group">
-                        <div className={`absolute top-0 left-0 h-full rounded-full transition-colors ${currentTrack?.sourceType === 'spotify' || currentTrack?.sourceType === 'spotify_preview' ? 'bg-green-500 group-hover:bg-green-400' : 'bg-indigo-500 group-hover:bg-indigo-400'}`} style={{ width: `${volume * 100}%` }} />
-                        <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                    </div>
-                </div>
+                                <div className="flex items-center justify-end gap-3 w-1/3">
+                                        {isAuthenticated && (currentTrack?.sourceType === 'spotify' || currentTrack?.sourceType === 'spotify_preview') && (
+                                            <div className="relative">
+                                                <button onClick={toggleDevicesDropdown} className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors">
+                                                    <Radio className="w-4 h-4" />
+                                                </button>
+                                                {devicesDropdownOpen && (
+                                                    <div className="absolute right-0 bottom-full mb-2 w-56 bg-zinc-900 border border-zinc-800 rounded shadow-xl z-50">
+                                                        <div className="p-2 text-xs text-zinc-400 border-b border-zinc-800">Dispositivos Spotify</div>
+                                                        <div className="max-h-48 overflow-y-auto">
+                                                            {spotifyDevices.length === 0 && (
+                                                                <div className="p-2 text-sm text-zinc-500">Nenhum dispositivo encontrado</div>
+                                                            )}
+                                                            {spotifyDevices.map(d => (
+                                                                <button key={d.id} onClick={() => selectSpotifyDevice(d.id)} className={`w-full text-left px-3 py-2 hover:bg-zinc-800 flex items-center justify-between ${spotifyActiveDeviceId === d.id ? 'text-green-400' : 'text-zinc-300'}`}>
+                                                                    <span className="truncate mr-2">{d.name || d.id}</span>
+                                                                    <span className="text-xs text-zinc-500">{d.is_active ? 'Ativo' : ''}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        <Volume2 className="w-4 h-4 text-zinc-400" />
+                                        <div className="w-24 h-1 bg-zinc-800 rounded-full relative group">
+                                                <div className={`absolute top-0 left-0 h-full rounded-full transition-colors ${currentTrack?.sourceType === 'spotify' || currentTrack?.sourceType === 'spotify_preview' ? 'bg-green-500 group-hover:bg-green-400' : 'bg-indigo-500 group-hover:bg-indigo-400'}`} style={{ width: `${volume * 100}%` }} />
+                                                <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                        </div>
+                                </div>
             </div>
         )}
       </div>

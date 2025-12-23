@@ -406,7 +406,7 @@ class SpotifyService {
 
 
 
-  private async getActiveDevice(): Promise<string | null> {
+  public async getActiveDevice(): Promise<string | null> {
     const token = await this.getAccessToken();
     if (!token) return null;
 
@@ -426,6 +426,57 @@ class SpotifyService {
     } catch (error) {
       console.error("Spotify Get Devices Error:", error);
       return null;
+    }
+  }
+
+  // Public: retorna a lista de dispositivos disponíveis ao usuário (Spotify Connect)
+  public async getDevices(): Promise<any[]> {
+    const token = await this.getAccessToken();
+    if (!token) return [];
+
+    try {
+      const response = await fetch('https://api.spotify.com/v1/me/player/devices', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to fetch Spotify devices:', errorData);
+        return [];
+      }
+
+      const data = await response.json();
+      return data.devices || [];
+    } catch (error) {
+      console.error("Spotify Get Devices Error:", error);
+      return [];
+    }
+  }
+
+  // Public: transfere a reprodução para o device especificado (Spotify Connect)
+  public async transferPlayback(deviceId: string, play: boolean = true): Promise<boolean> {
+    const token = await this.getAccessToken();
+    if (!token) return false;
+
+    try {
+      const response = await fetch('https://api.spotify.com/v1/me/player', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ device_ids: [deviceId], play })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('Failed to transfer playback:', err);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Spotify Transfer Playback Error:', error);
+      return false;
     }
   }
 
