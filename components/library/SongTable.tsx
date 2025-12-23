@@ -119,7 +119,7 @@ const SongTable: React.FC<SongTableProps> = ({
     { id: 'artist', label: 'Artista', width: 150, visible: true, minWidth: 100 },
     { id: 'album', label: 'Álbum', width: 150, visible: true, minWidth: 100 },
     { id: 'genre', label: 'Gênero', width: 100, visible: true, minWidth: 200 },
-    { id: 'comment', label: 'Comentários', width: 400, visible: true, minWidth: 400 },
+    { id: 'comment', label: 'Comentários', width: 400, visible: true, minWidth: 200 },
     { id: 'userRating', label: 'Avaliação', width: 100, visible: false, minWidth: 80 },
     { id: 'year', label: 'Ano', width: 60, visible: true, minWidth: 100 },
     { id: 'duration', label: 'Duração', width: 70, visible: true, minWidth: 60 },

@@ -1435,10 +1435,6 @@ const App: React.FC = () => {
                 {viewMode === 'navi_playlist' && <><List className="w-5 h-5 text-indigo-500" /> {naviPlaylists.find(p => p.id === selectedPlaylistId)?.name || 'Playlist'}</>}
                 {viewMode === 'spotify_playlist_tracks' && <><List className="w-5 h-5 text-green-500" /> {selectedSpotifyPlaylistName || 'Playlist'}</>}
             </h2>
-            <div className="flex items-center gap-2">
-                <Radio className="w-4 h-4 text-green-500 animate-pulse" />
-                <span className="text-xs text-green-400 font-mono">ONLINE</span>
-            </div>
         </div>
 
         <div className="flex-1 overflow-hidden relative">
