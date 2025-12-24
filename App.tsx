@@ -65,9 +65,7 @@ const App: React.FC = () => {
   const [showRemoveFromPlaylistModal, setShowRemoveFromPlaylistModal] = useState(false);
   
   // Tag Groups State (Carregado do LocalStorage)
-  const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
-    const [isTidalAuthenticated, setIsTidalAuthenticated] = useState(false);
-    const [tidalAuthMessage, setTidalAuthMessage] = useState('');
+    const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
   const [spotifyBrowseTracks, setSpotifyBrowseTracks] = useState<NaviSong[]>([]);
   const [spotifyNavidromeExistenceMap, setSpotifyNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
 
@@ -200,31 +198,18 @@ const App: React.FC = () => {
 
             if (path === '/callback' && code) {
                 console.log("Código de autorização recebido em App.tsx:", code, 'state=', state);
-                if (state === 'tidal') {
-                    const ok = await (await import('./services/tidalService')).tidalService.exchangeCodeForTokens(code);
-                    if (ok) {
-                        setIsTidalAuthenticated(true);
-                        setTidalAuthMessage('Autenticação com TIDAL bem-sucedida!');
-                        setTimeout(() => setTidalAuthMessage(''), 5000);
-                    } else {
-                        setTidalAuthMessage('Falha na autenticação com TIDAL.');
-                        setTimeout(() => setTidalAuthMessage(''), 5000);
-                    }
+                const success = await spotifyService.exchangeCodeForTokens(code);
+                if (success) {
+                    setIsAuthenticated(true);
+                    setAuthMessage("Autenticação com Spotify bem-sucedida!");
                 } else {
-                    const success = await spotifyService.exchangeCodeForTokens(code);
-                    if (success) {
-                        setIsAuthenticated(true);
-                        setAuthMessage("Autenticação com Spotify bem-sucedida!");
-                    } else {
-                        setAuthMessage("Falha na autenticação com Spotify.");
-                    }
+                    setAuthMessage("Falha na autenticação com Spotify.");
                 }
-                setTimeout(() => setAuthMessage(''), 5000);
 
                 // Set view to spotify settings
                 setViewMode('settings');
-                setActiveSettingsTab(state === 'tidal' ? 'tidal' : 'spotify');
-                
+                setActiveSettingsTab('spotify');
+
                 // Clear the code from URL after processing
                 window.history.replaceState({}, document.title, window.location.pathname);
                 return; // Do not proceed with normal data loading if it's a callback
@@ -1093,12 +1078,7 @@ const App: React.FC = () => {
         if (activeSettingsTab === 'tidal') {
             return (
                 <div className="h-full overflow-y-auto custom-scrollbar bg-zinc-950">
-                    <TidalSettings
-                        isAuthenticated={isTidalAuthenticated}
-                        authMessage={tidalAuthMessage}
-                        setIsAuthenticated={setIsTidalAuthenticated}
-                        setAuthMessage={setTidalAuthMessage}
-                    />
+                    <TidalSettings />
                 </div>
             );
         }

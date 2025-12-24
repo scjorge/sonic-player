@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { TidalCredentials } from '../../types';
 import { getTidalCredentials, saveTidalCredentials } from '../../services/data';
 import { tidalService } from '../../services/tidalService';
-import { Key, Save, CheckCircle2, AlertCircle, LogIn, LogOut, Trash2, Info, Copy } from 'lucide-react';
+import { Key, Save, CheckCircle2, AlertCircle, Trash2, Copy } from 'lucide-react';
 
 const CopyButton: React.FC = () => {
   const [copied, setCopied] = useState(false);
@@ -23,15 +23,8 @@ const CopyButton: React.FC = () => {
   );
 };
 
-interface Props {
-  isAuthenticated: boolean;
-  authMessage: string;
-  setIsAuthenticated: (v: boolean) => void;
-  setAuthMessage: (msg: string) => void;
-}
-
-const TidalSettings: React.FC<Props> = ({ isAuthenticated, authMessage, setIsAuthenticated, setAuthMessage }) => {
-  const [creds, setCreds] = useState<TidalCredentials>({ clientId: '', redirectUri: '' });
+const TidalSettings: React.FC = () => {
+  const [creds, setCreds] = useState<TidalCredentials>({ clientId: '', clientSecret: '' });
   const [showSaved, setShowSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof TidalCredentials, string>>>({});
 
@@ -44,48 +37,23 @@ const TidalSettings: React.FC<Props> = ({ isAuthenticated, authMessage, setIsAut
     const newErrors: Partial<Record<keyof TidalCredentials, string>> = {};
     let isValid = true;
     if (!creds.clientId) { newErrors.clientId = 'Client ID é obrigatório.'; isValid = false; }
-    if (!creds.redirectUri) { newErrors.redirectUri = 'Redirect URI é obrigatória.'; isValid = false; }
-    else { try { new URL(creds.redirectUri); } catch (_) { newErrors.redirectUri = 'A Redirect URI deve ser uma URL válida.'; isValid = false; } }
     setErrors(newErrors);
     return isValid;
   };
 
   const handleSave = () => {
     if (!validate()) return;
-    const toSave = { ...creds, accessToken: undefined, refreshToken: undefined, expiresAt: undefined } as any;
-    saveTidalCredentials(toSave);
+    saveTidalCredentials({ clientId: creds.clientId, clientSecret: creds.clientSecret });
     setShowSaved(true);
     setTimeout(() => setShowSaved(false), 3000);
   };
 
   const handleDelete = () => {
-    const empty = { clientId: '', redirectUri: '', scopes: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined } as any;
+    const empty: any = { clientId: '', clientSecret: '' };
     setCreds(empty);
     saveTidalCredentials(empty);
     setErrors({});
-    setIsAuthenticated(false);
-    tidalService.logout();
-  };
-
-  const handleAuthenticate = async () => {
-    if (!creds.clientId || !creds.redirectUri) {
-      setAuthMessage('Preencha Client ID e Redirect URI antes de autenticar.');
-      setTimeout(() => setAuthMessage(''), 5000);
-      return;
-    }
-    const url = await tidalService.getAuthorizationUrl(creds.scopes || '');
-    if (url) window.location.href = url;
-    else {
-      setAuthMessage('Não foi possível gerar URL de autenticação do Tidal.');
-      setTimeout(() => setAuthMessage(''), 5000);
-    }
-  };
-
-  const handleLogout = () => {
-    tidalService.logout();
-    setIsAuthenticated(false);
-    setAuthMessage('Desconectado do Tidal.');
-    setTimeout(() => setAuthMessage(''), 5000);
+    tidalService.clearCredentials();
   };
 
   return (
@@ -100,50 +68,30 @@ const TidalSettings: React.FC<Props> = ({ isAuthenticated, authMessage, setIsAut
 
       <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-8 space-y-6">
         <div className="grid grid-cols-1 gap-6">
-            <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                    <Key className="w-4 h-4" />
-                    Client ID
-                </label>
-                <input type="text" value={creds.clientId} onChange={(e) => setCreds({ ...creds, clientId: e.target.value })} placeholder="Seu Client ID do TIDAL" className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.clientId ? 'border-red-500' : 'border-zinc-700 focus:border-green-500'}`} />
-                {errors.clientId && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{errors.clientId}</p>}
-            </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+              <Key className="w-4 h-4" />
+              Client ID
+            </label>
+            <input type="text" value={creds.clientId} onChange={(e) => setCreds({ ...creds, clientId: e.target.value })} placeholder="Seu Client ID do TIDAL" className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.clientId ? 'border-red-500' : 'border-zinc-700 focus:border-green-500'}`} />
+            {errors.clientId && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{errors.clientId}</p>}
+          </div>
 
-            <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                    <Key className="w-4 h-4" />
-                    Redirect URI
-                    <div className="relative group">
-                        <Info className="w-4 h-4 text-zinc-600 cursor-pointer" />
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-zinc-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg border border-zinc-700">
-                            Insira a mesma Redirect URI configurada no painel de desenvolvedor do TIDAL.
-                            <div className="absolute left-1/2 -translate-x-1/2 bottom-[-4px] w-2 h-2 bg-zinc-800 rotate-45"></div>
-                        </div>
-                    </div>
-                </label>
-                <input type="text" value={creds.redirectUri || ''} onChange={(e) => setCreds({ ...creds, redirectUri: e.target.value })} placeholder="Ex: http://localhost:3000/callback" className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.redirectUri ? 'border-red-500' : 'border-zinc-700 focus:border-green-500'}`} />
-                {errors.redirectUri && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{errors.redirectUri}</p>}
-            </div>
-
-            <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">Escopos (opcional)</label>
-                <input type="text" value={creds.scopes || ''} onChange={(e) => setCreds({ ...creds, scopes: e.target.value })} placeholder="Ex: r_usr w_usr" className="w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono border-zinc-700 focus:border-green-500" />
-            </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+              <Key className="w-4 h-4" />
+              Client Secret
+            </label>
+            <input type="password" value={creds.clientSecret || ''} onChange={(e) => setCreds({ ...creds, clientSecret: e.target.value })} placeholder="Seu Client Secret do TIDAL (opcional)" className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono border-zinc-700 focus:border-green-500`} />
+          </div>
         </div>
 
         <div className="pt-4 flex flex-wrap items-center gap-4">
             <button onClick={handleSave} className="bg-green-600 hover:bg-green-500 text-black px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-green-500/10 active:scale-95"><Save className="w-4 h-4" />Salvar</button>
-            {!isAuthenticated ? (
-              <button onClick={handleAuthenticate} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 active:scale-95"><LogIn className="w-4 h-4" />Autenticar</button>
-            ) : (
-              <button onClick={handleLogout} className="bg-red-600/80 hover:bg-red-500/80 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-red-500/10 active:scale-95"><LogOut className="w-4 h-4" />Desconectar</button>
-            )}
 
             <button onClick={handleDelete} className="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-zinc-500/10 active:scale-95"><Trash2 className="w-4 h-4" />Apagar</button>
 
             {showSaved && (<div className="flex items-center gap-2 text-green-400 text-sm font-medium animate-fade-in"><CheckCircle2 className="w-4 h-4" />Credenciais salvas!</div>)}
-            {authMessage && (<div className={`flex items-center gap-2 text-sm font-medium animate-fade-in ${authMessage.includes('sucesso') ? 'text-green-400' : 'text-red-400'}`}>{authMessage.includes('sucesso') ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}{authMessage}</div>)}
-            {isAuthenticated && (<div className="flex items-center gap-2 text-green-400 text-sm font-medium"><CheckCircle2 className="w-4 h-4" />Autenticado com TIDAL</div>)}
         </div>
       </div>
 

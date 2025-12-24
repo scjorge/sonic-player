@@ -130,11 +130,7 @@ export interface SpotifyCredentials {
 
 export interface TidalCredentials {
   clientId: string;
-  redirectUri: string;
-  scopes?: string;
-  accessToken?: string;
-  refreshToken?: string;
-  expiresAt?: number;
+  clientSecret?: string;
 }
 
 export interface NavidromeCredentials {

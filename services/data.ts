@@ -92,48 +92,25 @@ export const saveSpotifyCredentials = (creds: SpotifyCredentials) => {
   }
 };
 
-// Tidal storage functions
+// Tidal storage functions (only clientId + clientSecret)
 export const getTidalCredentials = () => {
   try {
     const credsData = localStorage.getItem(TIDAL_KEY);
-    const authData = localStorage.getItem(TIDAL_AUTH_KEY);
-
     const creds: any = credsData ? JSON.parse(credsData) : {};
-    const auth: any = authData ? JSON.parse(authData) : {};
-
     return {
       clientId: creds.clientId || '',
-      redirectUri: creds.redirectUri || '',
-      scopes: creds.scopes || '',
-      accessToken: auth.accessToken,
-      refreshToken: auth.refreshToken,
-      expiresAt: auth.expiresAt,
-      codeVerifier: auth.codeVerifier,
+      clientSecret: creds.clientSecret || ''
     };
   } catch (e) {
     console.error('Erro ao carregar Tidal do LocalStorage', e);
-    return { clientId: '', redirectUri: '', scopes: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined, codeVerifier: undefined };
+    return { clientId: '', clientSecret: '' };
   }
 };
 
-export const saveTidalCredentials = (creds: any) => {
+export const saveTidalCredentials = (creds: { clientId: string; clientSecret?: string }) => {
   try {
-    const { clientId, redirectUri, scopes, accessToken, refreshToken, expiresAt } = creds;
-    localStorage.setItem(TIDAL_KEY, JSON.stringify({ clientId, redirectUri, scopes }));
-
-    // Save auth data; also allow saving a temporary codeVerifier even if tokens aren't present
-    const authPayload: any = {};
-    if (accessToken !== undefined) authPayload.accessToken = accessToken;
-    if (refreshToken !== undefined) authPayload.refreshToken = refreshToken;
-    if (expiresAt !== undefined) authPayload.expiresAt = expiresAt;
-    if (creds.codeVerifier !== undefined) authPayload.codeVerifier = creds.codeVerifier;
-
-    // If there's any auth-related data, store it; otherwise remove the key
-    if (Object.keys(authPayload).length > 0) {
-      localStorage.setItem(TIDAL_AUTH_KEY, JSON.stringify(authPayload));
-    } else {
-      localStorage.removeItem(TIDAL_AUTH_KEY);
-    }
+    const { clientId, clientSecret } = creds;
+    localStorage.setItem(TIDAL_KEY, JSON.stringify({ clientId, clientSecret }));
   } catch (e) {
     console.error('Erro ao salvar Tidal no LocalStorage', e);
   }
