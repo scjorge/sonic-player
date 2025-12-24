@@ -128,6 +128,15 @@ export interface SpotifyCredentials {
   expiresAt?: number; // Unix timestamp in milliseconds when the token expires
 }
 
+export interface TidalCredentials {
+  clientId: string;
+  redirectUri: string;
+  scopes?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+}
+
 export interface NavidromeCredentials {
   baseUrl: string;
   user: string;

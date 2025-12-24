@@ -4,6 +4,8 @@ import { TagGroup, SpotifyCredentials } from '../types';
 const STORAGE_KEY = 'sonictag_groups';
 const SPOTIFY_KEY = 'sonictag_spotify';
 const SPOTIFY_AUTH_KEY = 'sonictag_spotify_auth';
+const TIDAL_KEY = 'sonictag_tidal';
+const TIDAL_AUTH_KEY = 'sonictag_tidal_auth';
 const NAVIDROME_KEY = 'sonictag_navidrome';
 
 
@@ -87,6 +89,44 @@ export const saveSpotifyCredentials = (creds: SpotifyCredentials) => {
     }
   } catch (e) {
     console.error("Erro ao salvar Spotify no LocalStorage", e);
+  }
+};
+
+// Tidal storage functions
+export const getTidalCredentials = () => {
+  try {
+    const credsData = localStorage.getItem(TIDAL_KEY);
+    const authData = localStorage.getItem(TIDAL_AUTH_KEY);
+
+    const creds: any = credsData ? JSON.parse(credsData) : {};
+    const auth: any = authData ? JSON.parse(authData) : {};
+
+    return {
+      clientId: creds.clientId || '',
+      redirectUri: creds.redirectUri || '',
+      scopes: creds.scopes || '',
+      accessToken: auth.accessToken,
+      refreshToken: auth.refreshToken,
+      expiresAt: auth.expiresAt,
+    };
+  } catch (e) {
+    console.error('Erro ao carregar Tidal do LocalStorage', e);
+    return { clientId: '', redirectUri: '', scopes: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined };
+  }
+};
+
+export const saveTidalCredentials = (creds: any) => {
+  try {
+    const { clientId, redirectUri, scopes, accessToken, refreshToken, expiresAt } = creds;
+    localStorage.setItem(TIDAL_KEY, JSON.stringify({ clientId, redirectUri, scopes }));
+
+    if (accessToken && (refreshToken !== undefined) && expiresAt) {
+      localStorage.setItem(TIDAL_AUTH_KEY, JSON.stringify({ accessToken, refreshToken, expiresAt }));
+    } else {
+      localStorage.removeItem(TIDAL_AUTH_KEY);
+    }
+  } catch (e) {
+    console.error('Erro ao salvar Tidal no LocalStorage', e);
   }
 };
 

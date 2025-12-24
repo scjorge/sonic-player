@@ -12,13 +12,14 @@ import ConfirmationModal from './components/library/ConfirmationModal';
 import GroupSettings from './components/settings/GroupSettings';
 import GroupTagModal from './components/library/GroupTagModal';
 import SpotifySettings from './components/settings/SpotifySettings';
+import TidalSettings from './components/settings/TidalSettings';
 import NavidromeSettings from './components/settings/NavidromeSettings';
 import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
 
 type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks';
-type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'general'; 
+type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
 const App: React.FC = () => {
@@ -65,6 +66,8 @@ const App: React.FC = () => {
   
   // Tag Groups State (Carregado do LocalStorage)
   const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
+    const [isTidalAuthenticated, setIsTidalAuthenticated] = useState(false);
+    const [tidalAuthMessage, setTidalAuthMessage] = useState('');
   const [spotifyBrowseTracks, setSpotifyBrowseTracks] = useState<NaviSong[]>([]);
   const [spotifyNavidromeExistenceMap, setSpotifyNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
 
@@ -192,22 +195,35 @@ const App: React.FC = () => {
             // Check for Spotify callback
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
+            const state = urlParams.get('state');
             const path = window.location.pathname;
 
             if (path === '/callback' && code) {
-                console.log("Código de autorização recebido em App.tsx:", code);
-                const success = await spotifyService.exchangeCodeForTokens(code);
-                if (success) {
-                    setIsAuthenticated(true);
-                    setAuthMessage("Autenticação com Spotify bem-sucedida!");
+                console.log("Código de autorização recebido em App.tsx:", code, 'state=', state);
+                if (state === 'tidal') {
+                    const ok = await (await import('./services/tidalService')).tidalService.exchangeCodeForTokens(code);
+                    if (ok) {
+                        setIsTidalAuthenticated(true);
+                        setTidalAuthMessage('Autenticação com TIDAL bem-sucedida!');
+                        setTimeout(() => setTidalAuthMessage(''), 5000);
+                    } else {
+                        setTidalAuthMessage('Falha na autenticação com TIDAL.');
+                        setTimeout(() => setTidalAuthMessage(''), 5000);
+                    }
                 } else {
-                    setAuthMessage("Falha na autenticação com Spotify.");
+                    const success = await spotifyService.exchangeCodeForTokens(code);
+                    if (success) {
+                        setIsAuthenticated(true);
+                        setAuthMessage("Autenticação com Spotify bem-sucedida!");
+                    } else {
+                        setAuthMessage("Falha na autenticação com Spotify.");
+                    }
                 }
                 setTimeout(() => setAuthMessage(''), 5000);
 
                 // Set view to spotify settings
                 setViewMode('settings');
-                setActiveSettingsTab('spotify');
+                setActiveSettingsTab(state === 'tidal' ? 'tidal' : 'spotify');
                 
                 // Clear the code from URL after processing
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -1074,6 +1090,18 @@ const App: React.FC = () => {
                 </div>
             );
         }
+        if (activeSettingsTab === 'tidal') {
+            return (
+                <div className="h-full overflow-y-auto custom-scrollbar bg-zinc-950">
+                    <TidalSettings
+                        isAuthenticated={isTidalAuthenticated}
+                        authMessage={tidalAuthMessage}
+                        setIsAuthenticated={setIsTidalAuthenticated}
+                        setAuthMessage={setTidalAuthMessage}
+                    />
+                </div>
+            );
+        }
         return <div className="p-10 text-zinc-500">Selecione uma opção de configuração.</div>;
     }
 
@@ -1355,6 +1383,14 @@ const App: React.FC = () => {
                     >
                         <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-4 h-4 flex-shrink-0 object-contain" alt="" />
                         {!isSidebarCollapsed && "Spotify API"}
+                    </button>
+
+                    <button
+                        onClick={() => setActiveSettingsTab('tidal')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'tidal' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+                    >
+                        <img src="https://tidal.com/favicon.ico" className="w-4 h-4 flex-shrink-0 object-contain" alt="" />
+                        {!isSidebarCollapsed && "TIDAL API"}
                     </button>
 
                     <button
