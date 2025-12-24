@@ -50,8 +50,9 @@ class TidalService {
     const codeVerifier = this.generateCodeVerifier();
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
 
-    // Save verifier to localStorage for exchange step
-    localStorage.setItem('tidal_code_verifier', codeVerifier);
+    // Save verifier using the data helper so it persists through the redirect
+    const stored: any = getTidalCredentials();
+    saveTidalCredentials({ ...stored, codeVerifier });
 
     const url = new URL(AUTH_ENDPOINT);
     url.searchParams.append('response_type', 'code');
@@ -67,7 +68,7 @@ class TidalService {
 
   public async exchangeCodeForTokens(code: string): Promise<boolean> {
     const creds: any = getTidalCredentials();
-    const verifier = localStorage.getItem('tidal_code_verifier');
+    const verifier = (creds && creds.codeVerifier) || null;
     if (!creds.clientId || !creds.redirectUri || !verifier) {
       console.error('Tidal credentials ou code_verifier ausentes.');
       return false;
@@ -95,8 +96,9 @@ class TidalService {
 
       const data = await response.json();
       this.setTokens(data.access_token, data.refresh_token, data.expires_in);
-      // Clean up verifier
-      localStorage.removeItem('tidal_code_verifier');
+      // Clean up verifier from storage
+      const stored: any = getTidalCredentials();
+      saveTidalCredentials({ ...stored, codeVerifier: undefined });
       return true;
     } catch (e) {
       console.error('Tidal token exchange error', e);

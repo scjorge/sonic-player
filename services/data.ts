@@ -108,10 +108,11 @@ export const getTidalCredentials = () => {
       accessToken: auth.accessToken,
       refreshToken: auth.refreshToken,
       expiresAt: auth.expiresAt,
+      codeVerifier: auth.codeVerifier,
     };
   } catch (e) {
     console.error('Erro ao carregar Tidal do LocalStorage', e);
-    return { clientId: '', redirectUri: '', scopes: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined };
+    return { clientId: '', redirectUri: '', scopes: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined, codeVerifier: undefined };
   }
 };
 
@@ -120,8 +121,16 @@ export const saveTidalCredentials = (creds: any) => {
     const { clientId, redirectUri, scopes, accessToken, refreshToken, expiresAt } = creds;
     localStorage.setItem(TIDAL_KEY, JSON.stringify({ clientId, redirectUri, scopes }));
 
-    if (accessToken && (refreshToken !== undefined) && expiresAt) {
-      localStorage.setItem(TIDAL_AUTH_KEY, JSON.stringify({ accessToken, refreshToken, expiresAt }));
+    // Save auth data; also allow saving a temporary codeVerifier even if tokens aren't present
+    const authPayload: any = {};
+    if (accessToken !== undefined) authPayload.accessToken = accessToken;
+    if (refreshToken !== undefined) authPayload.refreshToken = refreshToken;
+    if (expiresAt !== undefined) authPayload.expiresAt = expiresAt;
+    if (creds.codeVerifier !== undefined) authPayload.codeVerifier = creds.codeVerifier;
+
+    // If there's any auth-related data, store it; otherwise remove the key
+    if (Object.keys(authPayload).length > 0) {
+      localStorage.setItem(TIDAL_AUTH_KEY, JSON.stringify(authPayload));
     } else {
       localStorage.removeItem(TIDAL_AUTH_KEY);
     }

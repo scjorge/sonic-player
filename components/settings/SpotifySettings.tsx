@@ -260,7 +260,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
               <li>Faça login com sua conta Spotify.</li>
               <li>Clique em "Create app", dê um nome e descrição.</li>
               <li>Vá em "Settings" no seu novo app para visualizar o Client ID e Client Secret.</li>
-              <li className="flex items-center gap-3">Na mesma página de "Settings", adicione uma "Redirect URI":
+              <li>Na mesma página de "Settings", adicione uma "Redirect URI":
                 <div className="ml-2 flex items-center gap-2">
                   <code className="bg-zinc-700/50 text-xs rounded p-1">{window.location.origin}/callback</code>
                   <CopyButton />

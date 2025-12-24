@@ -151,10 +151,13 @@ const TidalSettings: React.FC<Props> = ({ isAuthenticated, authMessage, setIsAut
           <h4 className="text-sm font-bold text-zinc-300 mb-2">Como obter estas credenciais?</h4>
           <ol className="text-sm text-zinc-500 space-y-2 list-decimal list-inside">
               <li>Registre um app em <a href="https://developer.tidal.com/" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">TIDAL for Developers</a>.</li>
-              <li>Adicione a Redirect URI nas configurações do app.</li>
-              <li>Salve o Client ID e defina os escopos necessários (opcional).</li>
-              <li>Use o botão <strong>Autenticar</strong> para iniciar o fluxo PKCE e autorizar sua conta.</li>
-              <li>Ao final você será redirecionado para <code className="bg-zinc-700/50 text-xs rounded p-1">{window.location.origin}/callback</code>. <CopyButton /></li>
+              <li>Copie o Client ID em <strong>Overview</strong></li>
+              <li>Em <strong>Settings</strong>, defina os escopos necessários (opcional) e adicione uma "Redirect URI"
+                <div className="ml-2 flex items-center gap-2">
+                  <code className="bg-zinc-700/50 text-xs rounded p-1">{window.location.origin}/callback</code>
+                  <CopyButton />
+                </div>
+              </li>
           </ol>
       </div>
     </div>
