@@ -1470,9 +1470,9 @@ const App: React.FC = () => {
                         <div className="space-y-1">
                             <button
                                 onClick={() => { setViewMode('tidal_browse'); setActiveSearchQuery(''); setPage(0); setTidalTracks([]); }}
-                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_browse' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_browse' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                             >
-                                <img src="https://tidal.com/favicon.ico" className="w-4 h-4 flex-shrink-0 object-contain" alt="" />
+                                <Navigation className="w-4 h-4 flex-shrink-0" />
                                 {!isSidebarCollapsed && <span>Navegar</span>}
                             </button>
                         </div>

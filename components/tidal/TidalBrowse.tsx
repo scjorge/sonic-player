@@ -104,6 +104,7 @@ const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen }) => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
           defaultColumns={TIDAL_COLUMN_CONFIG}
+          isTidalTable={true}
         />
     </div>
   );
