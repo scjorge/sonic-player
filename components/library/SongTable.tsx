@@ -47,7 +47,7 @@ interface SongTableProps {
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
-export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate' | 'download';
+export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate' | 'download' | 'isrc';
 
 type RowDensity = 'compact' | 'normal' | 'relaxed';
 
@@ -332,7 +332,7 @@ const SongTable: React.FC<SongTableProps> = ({
                 {/* Imagem de Fundo */}
                 {song.coverArt ? (
                     <img 
-                        src={song.contentType === 'audio/spotify' ? song.coverArt : navidromeService.getCoverArtUrl(song.coverArt)} 
+                        src={(song.contentType === 'audio/spotify' || song.contentType === 'audio/tidal') ? song.coverArt : navidromeService.getCoverArtUrl(song.coverArt)} 
                         alt="" 
                         className={`w-full h-full object-cover transition-opacity duration-200 ${isCurrentSong ? 'opacity-50' : 'group-hover/cover:opacity-50'}`} 
                         loading="lazy"
@@ -355,6 +355,7 @@ const SongTable: React.FC<SongTableProps> = ({
       case 'title': return <span className={`font-medium ${currentTrackId === song.id ? (isSpotifyTable ? 'text-green-400' : 'text-indigo-400') : 'text-zinc-100'}`}>{song.title}</span>;
       case 'artist': return song.artist;
       case 'album': return song.album;
+      case 'isrc': return song.isrc;
       case 'userRating': {
           const rating = song.userRating || 0;
           return (

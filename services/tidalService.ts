@@ -101,18 +101,21 @@ class TidalService {
     const mapped = tracks.map((t: any) => {
       const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
       const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
+      const year = t.album ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
       const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
-      const duration = t.duration ? Math.floor(t.duration / 1000) : (t.durationMs ? Math.floor(t.durationMs / 1000) : undefined);
-      const path = t.url || (t.link || undefined);
+      const path = t.url || undefined;
+      const isrc = t.isrc || undefined;
 
       return {
         id: String(t.id || t.trackId || `${artist}-${t.title}`),
         title: t.title || t.name || '',
         artist: artist,
         album: albumName,
-        coverArt: cover,
-        duration: duration,
-        uri: path,
+        coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, "/")}/80x80.jpg`, // pass the cover URL/id directly
+        url: path,
+        year: year,
+        isrc: isrc,
+        contentType: 'audio/tidal', // ensure UI uses this cover link directly
       } as any;
     });
 

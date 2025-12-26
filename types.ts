@@ -23,6 +23,7 @@ export interface NaviSong {
   // Novos campos para a tabela e modal detalhado
   genre?: string;
   comment?: string;
+  isrc?: string;
   suffix?: string; // Formato (mp3, flac)
   bitRate?: number;
   samplingRate?: number;
