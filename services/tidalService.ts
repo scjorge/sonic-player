@@ -95,6 +95,7 @@ class TidalService {
           year: year,
           isrc: t.isrc || undefined,
           contentType: 'audio/tidal',
+          duration: t.duration || undefined,
         } as any;
       });
       return mapped
