@@ -78,16 +78,88 @@ class TidalService {
   }
 
   async searchTracks(query: string, limit = 50, offset = 0) {
+    const getMappepTracks = (tracks: any[]) => {
+      const mapped = tracks.map((t: any) => {
+        const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
+        const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
+        const year = t.album && t.album.releaseDate ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
+        const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
+
+        return {
+          id: String(t.id || t.trackId || `${artist}-${t.title}`),
+          title: t.title || t.name || '',
+          artist: artist,
+          album: albumName,
+          coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/80x80.jpg`,
+          url: t.url || t.playUrl || undefined,
+          year: year,
+          isrc: t.isrc || undefined,
+          contentType: 'audio/tidal',
+        } as any;
+      });
+      return mapped
+    }
+
     const token = this.getAccessToken();
     const countryCode = this.getCredentials().countryCode;
     if (!token) throw new Error('Not authenticated with TIDAL');
 
+    const q = (query || '').trim();
+    const isrcRegex = /^[A-Z]{2}[A-Z0-9]{3}\d{7}$/i;
+
+    // If the query matches ISRC format, prefer the v2 tracks lookup
+    if (isrcRegex.test(q)) {
+      const params = new URLSearchParams();
+      params.append('filter[isrc]', q);
+      params.append('countryCode', countryCode);
+
+      const url = `https://openapi.tidal.com/v2/tracks?${params.toString()}`;
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.api+json'
+        }
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error('Tidal ISRC lookup failed: ' + JSON.stringify(body));
+      }
+
+      const json = await res.json();
+
+      // Econtra pelo ID
+      const paramsID = new URLSearchParams();
+      paramsID.append('countryCode', countryCode);
+
+      const urlTracks = `https://api.tidal.com/v1/tracks/${json.data[0].id}?${params.toString()}`;
+      const resTracks = await fetch(urlTracks, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!resTracks.ok) {
+        const body = await resTracks.json().catch(() => ({}));
+        throw new Error('Tidal ID lookup failed: ' + JSON.stringify(body));
+      }
+
+      const track = await resTracks.json();
+      const total = 1;
+
+      const tracks = [track];
+      const mapped = getMappepTracks(tracks);
+      return { items: mapped, total };
+    }
+
+    // Regular search (v1)
     const params = new URLSearchParams();
     params.append('query', query);
     params.append('limit', String(limit));
     params.append('offset', String(offset));
     params.append('types', 'TRACKS');
-    params.append('countryCode', countryCode);
+    if (countryCode) params.append('countryCode', countryCode);
 
     const res = await fetch(`https://api.tidal.com/v1/search?${params.toString()}`, {
       headers: {
@@ -107,27 +179,7 @@ class TidalService {
     const total = (json.tracks && json.tracks.total) ? json.tracks.total : (json.total || tracks.length);
 
     // Map to NaviSong minimal shape
-    const mapped = tracks.map((t: any) => {
-      const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
-      const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
-      const year = t.album ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
-      const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
-      const path = t.url || undefined;
-      const isrc = t.isrc || undefined;
-
-      return {
-        id: String(t.id || t.trackId || `${artist}-${t.title}`),
-        title: t.title || t.name || '',
-        artist: artist,
-        album: albumName,
-        coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, "/")}/80x80.jpg`, // pass the cover URL/id directly
-        url: path,
-        year: year,
-        isrc: isrc,
-        contentType: 'audio/tidal', // ensure UI uses this cover link directly
-      } as any;
-    });
-
+    const mapped = getMappepTracks(tracks);
     return { items: mapped, total };
   }
 
