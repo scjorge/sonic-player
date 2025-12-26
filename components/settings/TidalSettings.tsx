@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { TidalCredentials } from '../../types';
 import { getTidalCredentials, saveTidalCredentials } from '../../services/data';
 import { tidalService } from '../../services/tidalService';
-import { Key, Save, CheckCircle2, AlertCircle, Trash2, Copy } from 'lucide-react';
+import { Copy } from 'lucide-react';
+import { DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET } from '../tidal/tidalConstants';
 
 const CopyButton: React.FC = () => {
   const [copied, setCopied] = useState(false);
@@ -24,9 +25,6 @@ const CopyButton: React.FC = () => {
 };
 
 const TidalSettings: React.FC = () => {
-  const DEFAULT_CLIENT_ID = 'fX2JxdmntZWK0ixT';
-  const DEFAULT_CLIENT_SECRET = '1Nn9AfDAjxrgJFJbKNWLeAyKGVGmINuXPPLHVXAvxAg=';
-
   // Read environment-provided values (Vite: import.meta.env)
   const ENV_CLIENT_ID = (import.meta as any).env?.VITE_TIDAL_CLIENT_ID || undefined;
   const ENV_CLIENT_SECRET = (import.meta as any).env?.VITE_TIDAL_CLIENT_SECRET || undefined;
