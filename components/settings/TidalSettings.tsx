@@ -68,7 +68,6 @@ const TidalSettings: React.FC = () => {
       const data: any = await tidalService.startDeviceAuth();
       // Open verification URL in new tab (prefer verification_uri_complete)
       const openUrl = data.verificationUriComplete;
-      console.log(openUrl)
       if (openUrl) window.open(`https://${openUrl}`, '_blank');
 
       setAuthStatus(`Código: ${data.userCode} — Aguardando autorização...`);
@@ -104,7 +103,7 @@ const TidalSettings: React.FC = () => {
             <img src="https://tidal.com/favicon.ico" className="w-8 h-8 object-contain" alt="Tidal" />
             TIDAL API
         </h2>
-        <p className="text-zinc-400 text-base max-w-2xl">Configure o Client ID e Redirect URI para permitir autenticação via Authorization Code (PKCE) com o TIDAL.</p>
+        <p className="text-zinc-400 text-base max-w-2xl">Conecte sua conta do TIDAL.</p>
       </div>
 
       <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-8 space-y-6">
@@ -118,20 +117,6 @@ const TidalSettings: React.FC = () => {
 
             {authStatus && (<div className="flex items-center gap-2 text-sm font-medium animate-fade-in text-zinc-300">{authStatus}</div>)}
         </div>
-      </div>
-
-      <div className="bg-zinc-900/30 rounded-xl p-6 border border-dashed border-zinc-800">
-          <h4 className="text-sm font-bold text-zinc-300 mb-2">Como obter estas credenciais?</h4>
-          <ol className="text-sm text-zinc-500 space-y-2 list-decimal list-inside">
-              <li>Registre um app em <a href="https://developer.tidal.com/" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">TIDAL for Developers</a>.</li>
-              <li>Copie o Client ID em <strong>Overview</strong></li>
-              <li>Em <strong>Settings</strong>, defina os escopos necessários (opcional) e adicione uma "Redirect URI"
-                <div className="ml-2 flex items-center gap-2">
-                  <code className="bg-zinc-700/50 text-xs rounded p-1">{window.location.origin}/callback</code>
-                  <CopyButton />
-                </div>
-              </li>
-          </ol>
       </div>
     </div>
   );
