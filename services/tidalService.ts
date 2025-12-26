@@ -87,6 +87,12 @@ class TidalService {
     if (creds.accessToken && creds.expiresAt && creds.expiresAt > Date.now()) return creds.accessToken;
     return null;
   }
+
+  // Logout: remove only auth tokens (keep clientId/secret)
+  logout() {
+    const creds: any = getTidalCredentials();
+    saveTidalCredentials({ clientId: creds.clientId || '', clientSecret: creds.clientSecret || '' });
+  }
 }
 
 export const tidalService = new TidalService();
