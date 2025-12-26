@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, SpotifyTrack } from './types';
 import { navidromeService } from './services/navidromeService';
 import { spotifyService } from './services/spotifyService';
+import { tidalService } from './services/tidalService';
+import TidalBrowse from './components/tidal/TidalBrowse.tsx';
 import { getStoredGroups, getSpotifyCredentials } from './services/data';
 import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation, AlertCircle } from 'lucide-react';
 import SongTable from './components/library/SongTable';
@@ -18,7 +20,7 @@ import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
@@ -51,10 +53,10 @@ const App: React.FC = () => {
 
   // --- STATE: VIEW & MODALS ---
   const [viewMode, setViewMode] = useState<ViewMode>('navi_songs');
-    const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('navidrome');
-    const [navidromeConnected, setNavidromeConnected] = useState<boolean | null>(null);
-    const [navidromeStatusMessage, setNavidromeStatusMessage] = useState<string | null>(null);
-  
+  const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('navidrome');
+  const [navidromeConnected, setNavidromeConnected] = useState<boolean | null>(null);
+  const [navidromeStatusMessage, setNavidromeStatusMessage] = useState<string | null>(null);
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isPlaylistsExpanded, setIsPlaylistsExpanded] = useState(true);
   
@@ -63,11 +65,16 @@ const App: React.FC = () => {
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
   const [showAddToPlaylistModal, setShowAddToPlaylistModal] = useState(false);
   const [showRemoveFromPlaylistModal, setShowRemoveFromPlaylistModal] = useState(false);
-  
+
   // Tag Groups State (Carregado do LocalStorage)
-    const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
+  const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
   const [spotifyBrowseTracks, setSpotifyBrowseTracks] = useState<NaviSong[]>([]);
-  const [spotifyNavidromeExistenceMap, setSpotifyNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
+  const [spotifyNavidromeExistenceMap, setSpotifyNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map()); 
+
+  // Tidal search state
+  const [tidalTracks, setTidalTracks] = useState<NaviSong[]>([]);
+  const [tidalTotal, setTidalTotal] = useState(0);
+  const [tidalPageSize, setTidalPageSize] = useState(50);
 
   const loadGroupsFromStorage = () => {
       const groups = getStoredGroups();
@@ -233,6 +240,7 @@ const App: React.FC = () => {
             } else if (viewMode === 'spotify_browse') {
                 handleSpotifyBrowseClick(0, spotifyBrowsePageSize);
             }
+            // if tidal_browse was default, nothing to do until user searches
         } catch (e) {
             console.error("Init failed", e);
             setAuthMessage("Erro durante a inicialização da aplicação.");
@@ -630,6 +638,31 @@ const App: React.FC = () => {
       }
   };
 
+  const handleTidalSearch = async (query: string, pageNum: number = 0, size: number = tidalPageSize) => {
+      setActiveSearchQuery(query);
+      if (!query.trim()) {
+          // clear results
+          setTidalTracks([]);
+          setTidalTotal(0);
+          return;
+      }
+      setLoadingNavi(true);
+      setPage(pageNum);
+      setTidalPageSize(size);
+      try {
+          const offset = pageNum * size;
+          const { items, total } = await tidalService.searchTracks(query, size, offset);
+          setTidalTracks(items);
+          setTidalTotal(total || items.length);
+      } catch (e) {
+          console.error('Failed to search TIDAL tracks', e);
+          setTidalTracks([]);
+          setTidalTotal(0);
+      } finally {
+          setLoadingNavi(false);
+      }
+  };
+
   const handleSpotifyBrowsePageChange = (newPage: number) => {
     if (activeSearchQuery) {
       handleSpotifyBrowseSearch(activeSearchQuery, newPage, spotifyBrowsePageSize);
@@ -717,6 +750,21 @@ const App: React.FC = () => {
             setLoadingNavi(false);
         }
     }
+    else if (viewMode === 'tidal_browse') {
+        // perform paginated tidal search
+        const q = activeSearchQuery;
+        setLoadingNavi(true);
+        try {
+            const offset = newPage * tidalPageSize;
+            const { items, total } = await tidalService.searchTracks(q, tidalPageSize, offset);
+            setTidalTracks(items);
+            setTidalTotal(total || items.length);
+        } catch (e) {
+            console.error('Failed tidal page fetch', e);
+        } finally {
+            setLoadingNavi(false);
+        }
+    }
   };
 
   const handlePageSizeChange = (newSize: number) => {
@@ -786,6 +834,11 @@ const App: React.FC = () => {
             }
         };
         fetchNewSizePage();
+    }
+    else if (viewMode === 'tidal_browse') {
+        setTidalPageSize(newSize);
+        setPage(0);
+        if (activeSearchQuery) handleTidalSearch(activeSearchQuery, 0, newSize);
     }
   };
 
@@ -941,6 +994,14 @@ const App: React.FC = () => {
       };
       loadAndPlay(playerTrack);
   };
+
+    const playTidalSong = (song: NaviSong) => {
+        if (song.path) {
+            window.open(song.path, '_blank');
+            return;
+        }
+        console.log('Tidal play requested but no URL available for', song);
+    };
 
   const loadAndPlay = (track: PlayerTrack) => {
     if (audioRef.current) {
@@ -1131,6 +1192,44 @@ const App: React.FC = () => {
                     onNavigateToLibraryQuery={handleSearch}
                     navidromeExistenceMap={spotifyNavidromeExistenceMap}
                 />
+            </div>
+        );
+    }
+
+    if (viewMode === 'tidal_browse') {
+        const creds = tidalService.getCredentials();
+        if (!creds?.clientId || !creds?.clientSecret) {
+            return (
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                    <div className="p-4 bg-yellow-500/10 rounded-full">
+                        <AlertCircle className="w-12 h-12 text-yellow-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">Configuração Necessária</h3>
+                    <p className="text-zinc-500 max-w-md">
+                        Você precisa configurar seu Client ID e Client Secret do TIDAL nas configurações antes de buscar.
+                    </p>
+                    <div className="flex gap-3 mt-4">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('tidal'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
+        if (!tidalService.isAuthenticated()) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Sessão TIDAL não autenticada.</div>
+                    <div className="text-zinc-400 mb-6">Autentique-se nas configurações do TIDAL para usar a busca.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('tidal'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="h-full">
+                <TidalBrowse onOpen={playTidalSong} />
             </div>
         );
     }
@@ -1461,6 +1560,20 @@ const App: React.FC = () => {
                                 <List className="w-4 h-4 flex-shrink-0" /> 
                                 {!isSidebarCollapsed && <span>Playlists</span>}
                             </button>
+                                                        
+                        </div>
+                    </div>
+                    {/* TIDAL SECTION */}
+                    <div className="animate-fade-in mt-6">
+                        {!isSidebarCollapsed && <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2 flex items-center gap-2">TIDAL</h3>}
+                        <div className="space-y-1">
+                            <button
+                                onClick={() => { setViewMode('tidal_browse'); setActiveSearchQuery(''); setPage(0); setTidalTracks([]); }}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_browse' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                            >
+                                <img src="https://tidal.com/favicon.ico" className="w-4 h-4 flex-shrink-0 object-contain" alt="" />
+                                {!isSidebarCollapsed && <span>Navegar</span>}
+                            </button>
                         </div>
                     </div>
                 </>
@@ -1483,6 +1596,7 @@ const App: React.FC = () => {
                 {viewMode === 'navi_albums' && <><Library className="w-5 h-5 text-indigo-500" /> Álbuns</>}
                 {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
                 {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador Spotify</>}
+                {viewMode === 'tidal_browse' && <><img src="https://tidal.com/favicon.ico" className="w-5 h-5 object-contain" /> Navegador TIDAL</>}
                 {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
                 {viewMode === 'spotify_playlists' && <><List className="w-5 h-5 text-green-500" /> Playlists do Spotify</>}
                 {viewMode === 'settings' && (

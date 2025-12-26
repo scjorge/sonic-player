@@ -69,6 +69,56 @@ class TidalService {
     throw new Error('Timeout aguardando autorização do dispositivo');
   }
 
+  async searchTracks(query: string, limit = 50, offset = 0) {
+    const token = this.getAccessToken();
+    if (!token) throw new Error('Not authenticated with TIDAL');
+
+    const params = new URLSearchParams();
+    params.append('query', query);
+    params.append('limit', String(limit));
+    params.append('offset', String(offset));
+    params.append('types', 'TRACKS');
+    params.append('countryCode', 'BR');
+
+    const res = await fetch(`https://api.tidal.com/v1/search?${params.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error('Tidal search failed: ' + JSON.stringify(json));
+    }
+
+    const json = await res.json();
+    // Try to map known structure: { tracks: { items: [...], total: N } }
+    const tracks = (json.tracks && json.tracks.items) ? json.tracks.items : (json.items || []);
+    const total = (json.tracks && json.tracks.total) ? json.tracks.total : (json.total || tracks.length);
+
+    // Map to NaviSong minimal shape
+    const mapped = tracks.map((t: any) => {
+      const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
+      const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
+      const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
+      const duration = t.duration ? Math.floor(t.duration / 1000) : (t.durationMs ? Math.floor(t.durationMs / 1000) : undefined);
+      const path = t.url || (t.link || undefined);
+
+      return {
+        id: String(t.id || t.trackId || `${artist}-${t.title}`),
+        title: t.title || t.name || '',
+        artist: artist,
+        album: albumName,
+        coverArt: cover,
+        duration: duration,
+        uri: path,
+      } as any;
+    });
+
+    return { items: mapped, total };
+  }
+
   getCredentials() {
     return getTidalCredentials();
   }
