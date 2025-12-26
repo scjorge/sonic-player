@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { NaviSong } from '../../types';
 import { tidalService } from '../../services/tidalService';
+import { navidromeService } from '../../services/navidromeService';
 import SongTable from '../library/SongTable';
 import { TIDAL_COLUMN_CONFIG } from './tidalConstants';
 import { Search, Music, AlertCircle, Loader2 } from 'lucide-react';
 
 interface TidalBrowseProps {
   onOpen?: (song: NaviSong) => void;
+  onNavigateToLibraryQuery?: (query: string) => void;
 }
 
-const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen }) => {
+const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQuery }) => {
   const [query, setQuery] = useState('');
   const [tracks, setTracks] = useState<NaviSong[]>([]);
+  const [navidromeExistenceMap, setNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
   const [loading, setLoading] = useState(false);
   const [configured, setConfigured] = useState<boolean>(false);
   const [page, setPage] = useState(0);
@@ -35,8 +38,21 @@ const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen }) => {
     try {
       const offset = p * size;
       const res = await tidalService.searchTracks(q, size, offset);
-      setTracks(res.items || []);
-      setTotal(res.total || (res.items ? res.items.length : 0));
+      const items = res.items || [];
+      setTracks(items);
+      setTotal(res.total || (items ? items.length : 0));
+
+      // Check Navidrome existence for each returned track
+      try {
+        const checks = await Promise.all(items.map(async (song: NaviSong) => {
+          const exists = await navidromeService.checkIfSongExists(song.artist || '', song.title || '');
+          return [song.id, exists] as [string, boolean];
+        }));
+        setNavidromeExistenceMap(new Map(checks));
+      } catch (e) {
+        console.error('Failed to check navidrome existence for tidal results', e);
+        setNavidromeExistenceMap(new Map());
+      }
     } catch (err) {
       console.error('Tidal search failed', err);
       setTracks([]);
@@ -105,6 +121,8 @@ const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen }) => {
           onPageSizeChange={handlePageSizeChange}
           defaultColumns={TIDAL_COLUMN_CONFIG}
           isTidalTable={true}
+          navidromeExistenceMap={navidromeExistenceMap}
+          onNavigateToLibraryQuery={onNavigateToLibraryQuery}
         />
     </div>
   );

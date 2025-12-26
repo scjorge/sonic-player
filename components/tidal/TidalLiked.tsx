@@ -7,6 +7,7 @@ import { TIDAL_COLUMN_CONFIG } from './tidalConstants';
 
 interface TidalLikedProps {
   onOpen: (song: NaviSong) => void;
+  onNavigateToLibraryQuery?: (query: string) => void;
 }
 
 const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen }) => {
@@ -16,6 +17,7 @@ const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen }) => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
+  const [navidromeExistenceMap, setNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
 
   useEffect(() => {
     const load = async () => {
@@ -31,8 +33,21 @@ const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen }) => {
 
         const offset = page * pageSize;
         const res = await tidalService.getFavoriteTracks(pageSize, offset);
-        setItems(res.items || []);
-        setTotal(res.total || (res.items ? res.items.length : 0));
+        const items = res.items || [];
+        setItems(items);
+        setTotal(res.total || (items ? items.length : 0));
+
+        // Check Navidrome existence for each favorite
+        try {
+          const checks = await Promise.all(items.map(async (song: NaviSong) => {
+            const exists = await (await import('../../services/navidromeService')).navidromeService.checkIfSongExists(song.artist || '', song.title || '');
+            return [song.id, exists] as [string, boolean];
+          }));
+          setNavidromeExistenceMap(new Map(checks));
+        } catch (e) {
+          console.error('Failed to check navidrome existence for tidal favorites', e);
+          setNavidromeExistenceMap(new Map());
+        }
       } catch (e: any) {
         console.error('Failed to load TIDAL favorites', e);
         const msg = e?.message || String(e) || 'Erro desconhecido ao buscar favoritos TIDAL.';
@@ -72,6 +87,8 @@ const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen }) => {
           onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
           defaultColumns={TIDAL_COLUMN_CONFIG}
           isTidalTable={true}
+          navidromeExistenceMap={navidromeExistenceMap}
+          onNavigateToLibraryQuery={onNavigateToLibraryQuery}
         />
       ) : (
         <div className="flex items-center justify-center h-full text-zinc-400">Nenhuma faixa favorita encontrada.</div>

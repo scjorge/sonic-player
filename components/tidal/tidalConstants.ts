@@ -13,4 +13,5 @@ export const TIDAL_COLUMN_CONFIG: ColumnConfig[] = [
   { id: 'year', label: 'Ano', width: 80, visible: true, minWidth: 60 },
   { id: 'duration', label: 'Duração', width: 80, visible: true, minWidth: 60 },
   { id: 'isrc', label: 'ISRC', width: 150, visible: false, minWidth: 80 },
+  { id: 'download', label: 'Local', width: 70, visible: true, minWidth: 50 },
 ];

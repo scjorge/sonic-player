@@ -870,12 +870,12 @@ const App: React.FC = () => {
         coverUrl: song.coverArt || null,
         src: song.path, // Not used for playback, but good for consistency
         duration: song.duration,
-        sourceType: 'spotify',
-      };
-      setCurrentTrack(playerTrack);
+                sourceType: 'spotify',
+            };
+            setCurrentTrack(playerTrack);
       setIsPlaying(true); // Assume playback starts immediately
       setCurrentTime(0); // Reset local time for new Spotify track
-      setDuration(song.duration); // Set duration based on Spotify track
+            setDuration(song.duration); // Set duration based on Spotify track
     }
   };
 
@@ -894,7 +894,7 @@ const App: React.FC = () => {
           duration: 30, // Spotify previews are 30s
           sourceType: 'spotify_preview'
       };
-      loadAndPlay(playerTrack);
+      
   };
 
     const playTidalSong = (song: NaviSong) => {
@@ -1127,7 +1127,7 @@ const App: React.FC = () => {
             );
         }
 
-        return <TidalLiked onOpen={playTidalSong} />;
+        return <TidalLiked onOpen={playTidalSong} onNavigateToLibraryQuery={handleSearch} />;
     }
 
     if (viewMode === 'tidal_browse') {
@@ -1163,7 +1163,7 @@ const App: React.FC = () => {
 
         return (
             <div className="h-full">
-                <TidalBrowse onOpen={playTidalSong} />
+                <TidalBrowse onOpen={playTidalSong} onNavigateToLibraryQuery={handleSearch} />
             </div>
         );
     }
