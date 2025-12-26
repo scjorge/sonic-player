@@ -122,6 +122,79 @@ class TidalService {
     return { items: mapped, total };
   }
 
+  async getFavoriteTracks(limit = 50, offset = 0) {
+    const token = this.getAccessToken();
+    if (!token) throw new Error('Not authenticated with TIDAL');
+
+    const params = new URLSearchParams();
+    params.append('limit', String(limit));
+    params.append('offset', String(offset));
+    params.append('countryCode', 'BR');
+
+    const endpoints = [
+      `https://api.tidal.com/v1/my/favorites/tracks?${params.toString()}`,
+      `https://api.tidal.com/v1/me/favorites/tracks?${params.toString()}`,
+      `https://api.tidal.com/v1/users/me/favorites/tracks?${params.toString()}`,
+    ];
+
+    let json: any = null;
+    let lastErr: any = null;
+
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          // If 404 try next endpoint, if 401/403 raise immediately
+          if (res.status === 404) {
+            lastErr = { status: res.status, body };
+            continue;
+          }
+          throw new Error('Tidal favorites fetch failed: ' + JSON.stringify(body));
+        }
+
+        json = await res.json();
+        break;
+      } catch (e) {
+        lastErr = e;
+        continue;
+      }
+    }
+
+    if (!json) {
+      throw new Error('Tidal favorites fetch failed: ' + JSON.stringify(lastErr));
+    }
+    const tracks = (json.items) ? json.items : (json.tracks && json.tracks.items ? json.tracks.items : []);
+    const total = (json.total) ? json.total : (json.tracks && json.tracks.total ? json.tracks.total : tracks.length);
+
+    const mapped = tracks.map((t: any) => {
+      const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
+      const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
+      const year = t.album && t.album.releaseDate ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
+      const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
+
+      return {
+        id: String(t.id || t.trackId || `${artist}-${t.title}`),
+        title: t.title || t.name || '',
+        artist: artist,
+        album: albumName,
+        coverArt: cover ? `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/80x80.jpg` : undefined,
+        path: t.url || t.playUrl || undefined,
+        year: year,
+        isrc: t.isrc || undefined,
+        contentType: 'audio/tidal',
+      } as any;
+    });
+
+    return { items: mapped, total };
+  }
+
   getCredentials() {
     return getTidalCredentials();
   }

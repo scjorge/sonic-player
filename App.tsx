@@ -4,6 +4,7 @@ import { navidromeService } from './services/navidromeService';
 import { spotifyService } from './services/spotifyService';
 import { tidalService } from './services/tidalService';
 import TidalBrowse from './components/tidal/TidalBrowse.tsx';
+import TidalLiked from './components/tidal/TidalLiked';
 import { getStoredGroups, getSpotifyCredentials } from './services/data';
 import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation, AlertCircle } from 'lucide-react';
 import SongTable from './components/library/SongTable';
@@ -20,7 +21,7 @@ import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_favorites';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
@@ -1097,6 +1098,38 @@ const App: React.FC = () => {
         );
     }
 
+    if (viewMode === 'tidal_favorites') {
+        const creds = tidalService.getCredentials();
+        if (!creds?.clientId || !creds?.clientSecret) {
+            return (
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                    <div className="p-4 bg-yellow-500/10 rounded-full">
+                        <AlertCircle className="w-12 h-12 text-yellow-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">Configuração Necessária</h3>
+                    <p className="text-zinc-500 max-w-md">Você precisa configurar seu Client ID e Client Secret do TIDAL nas configurações antes de acessar os favoritos.</p>
+                    <div className="flex gap-3 mt-4">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('tidal'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
+        if (!tidalService.isAuthenticated()) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Sessão TIDAL não autenticada.</div>
+                    <div className="text-zinc-400 mb-6">Autentique-se nas configurações do TIDAL para acessar os favoritos.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('tidal'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
+        return <TidalLiked onOpen={playTidalSong} />;
+    }
+
     if (viewMode === 'tidal_browse') {
         const creds = tidalService.getCredentials();
         if (!creds?.clientId || !creds?.clientSecret) {
@@ -1475,6 +1508,13 @@ const App: React.FC = () => {
                                 <Navigation className="w-4 h-4 flex-shrink-0" />
                                 {!isSidebarCollapsed && <span>Navegar</span>}
                             </button>
+                            <button 
+                                onClick={() => { setViewMode('tidal_favorites'); setPage(0); }}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_favorites' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                            >
+                                <Heart className="w-4 h-4 flex-shrink-0" />
+                                {!isSidebarCollapsed && <span>Curtidas</span>}
+                            </button>
                         </div>
                     </div>
                 </>
@@ -1498,6 +1538,7 @@ const App: React.FC = () => {
                 {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
                 {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador Spotify</>}
                 {viewMode === 'tidal_browse' && <><img src="https://tidal.com/favicon.ico" className="w-5 h-5 object-contain" /> Navegador TIDAL</>}
+                {viewMode === 'tidal_favorites' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Favoritos TIDAL</>}
                 {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
                 {viewMode === 'spotify_playlists' && <><List className="w-5 h-5 text-green-500" /> Playlists do Spotify</>}
                 {viewMode === 'settings' && (
