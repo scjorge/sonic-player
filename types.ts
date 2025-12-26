@@ -133,6 +133,13 @@ export interface TidalCredentials {
   clientSecret?: string;
 }
 
+// Extend Tidal credentials with auth tokens when available
+export interface TidalAuth {
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+}
+
 export interface NavidromeCredentials {
   baseUrl: string;
   user: string;

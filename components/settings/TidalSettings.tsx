@@ -27,6 +27,7 @@ const TidalSettings: React.FC = () => {
   const [creds, setCreds] = useState<TidalCredentials>({ clientId: '', clientSecret: '' });
   const [showSaved, setShowSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof TidalCredentials, string>>>({});
+  const [authStatus, setAuthStatus] = useState<string>('');
 
   useEffect(() => {
     const stored: any = getTidalCredentials();
@@ -46,6 +47,34 @@ const TidalSettings: React.FC = () => {
     saveTidalCredentials({ clientId: creds.clientId, clientSecret: creds.clientSecret });
     setShowSaved(true);
     setTimeout(() => setShowSaved(false), 3000);
+  };
+
+  const handleAuthenticate = async () => {
+    try {
+      setShowSaved(false);
+      setAuthStatus('Iniciando autenticação...');
+      const data: any = await tidalService.startDeviceAuth();
+      // Open verification URL in new tab (prefer verification_uri_complete)
+      const openUrl = data.verificationUriComplete;
+      console.log(openUrl)
+      if (openUrl) window.open(`https://${openUrl}`, '_blank');
+
+      setAuthStatus(`Código: ${data.userCode} — Aguardando autorização...`);
+
+      // Poll for token
+      const tokenData = await tidalService.pollDeviceToken(data.deviceCode, data.interval || 5, data.expiresIn || 600);
+      if (tokenData && tokenData.access_token) {
+        setAuthStatus('Autenticação bem-sucedida!');
+        // Refresh displayed creds from storage
+        const stored: any = getTidalCredentials();
+        setCreds(stored);
+        setTimeout(() => setAuthStatus(''), 5000);
+      }
+    } catch (e: any) {
+      console.error('Auth error', e);
+      setAuthStatus('Falha na autenticação: ' + (e.message || String(e)));
+      setTimeout(() => setAuthStatus(''), 5000);
+    }
   };
 
   const handleDelete = () => {
@@ -91,7 +120,10 @@ const TidalSettings: React.FC = () => {
 
             <button onClick={handleDelete} className="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-zinc-500/10 active:scale-95"><Trash2 className="w-4 h-4" />Apagar</button>
 
+            <button onClick={handleAuthenticate} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 active:scale-95">Autenticar</button>
+
             {showSaved && (<div className="flex items-center gap-2 text-green-400 text-sm font-medium animate-fade-in"><CheckCircle2 className="w-4 h-4" />Credenciais salvas!</div>)}
+            {authStatus && (<div className="flex items-center gap-2 text-sm font-medium animate-fade-in text-zinc-300">{authStatus}</div>)}
         </div>
       </div>
 
