@@ -24,14 +24,24 @@ const CopyButton: React.FC = () => {
 };
 
 const TidalSettings: React.FC = () => {
-  const [creds, setCreds] = useState<TidalCredentials>({ clientId: '', clientSecret: '' });
+  const DEFAULT_CLIENT_ID = 'fX2JxdmntZWK0ixT';
+  const DEFAULT_CLIENT_SECRET = '1Nn9AfDAjxrgJFJbKNWLeAyKGVGmINuXPPLHVXAvxAg=';
+
+  // Read environment-provided values (Vite: import.meta.env)
+  const ENV_CLIENT_ID = (import.meta as any).env?.VITE_TIDAL_CLIENT_ID || undefined;
+  const ENV_CLIENT_SECRET = (import.meta as any).env?.VITE_TIDAL_CLIENT_SECRET || undefined;
+
+  const [creds, setCreds] = useState<TidalCredentials>({ clientId: ENV_CLIENT_ID || DEFAULT_CLIENT_ID, clientSecret: ENV_CLIENT_SECRET || DEFAULT_CLIENT_SECRET });
   const [showSaved, setShowSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof TidalCredentials, string>>>({});
   const [authStatus, setAuthStatus] = useState<string>('');
 
   useEffect(() => {
     const stored: any = getTidalCredentials();
-    setCreds(stored);
+    setCreds({
+      clientId: ENV_CLIENT_ID || stored.clientId || DEFAULT_CLIENT_ID,
+      clientSecret: ENV_CLIENT_SECRET || stored.clientSecret || DEFAULT_CLIENT_SECRET,
+    });
   }, []);
 
   const validate = (): boolean => {
@@ -42,11 +52,13 @@ const TidalSettings: React.FC = () => {
     return isValid;
   };
 
-  const handleSave = () => {
-    if (!validate()) return;
-    saveTidalCredentials({ clientId: creds.clientId, clientSecret: creds.clientSecret });
-    setShowSaved(true);
-    setTimeout(() => setShowSaved(false), 3000);
+  // No manual save UI — credentials are taken from env or stored automatically before auth
+  const prepareCredentialsForAuth = () => {
+    const clientId = ENV_CLIENT_ID || creds.clientId || DEFAULT_CLIENT_ID;
+    const clientSecret = ENV_CLIENT_SECRET || creds.clientSecret || DEFAULT_CLIENT_SECRET;
+    // persist chosen values so tidalService can read them
+    saveTidalCredentials({ clientId, clientSecret });
+    setCreds({ clientId, clientSecret });
   };
 
   const handleAuthenticate = async () => {
@@ -96,33 +108,14 @@ const TidalSettings: React.FC = () => {
       </div>
 
       <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-8 space-y-6">
-        <div className="grid grid-cols-1 gap-6">
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-              <Key className="w-4 h-4" />
-              Client ID
-            </label>
-            <input type="text" value={creds.clientId} onChange={(e) => setCreds({ ...creds, clientId: e.target.value })} placeholder="Seu Client ID do TIDAL" className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.clientId ? 'border-red-500' : 'border-zinc-700 focus:border-green-500'}`} />
-            {errors.clientId && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{errors.clientId}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-              <Key className="w-4 h-4" />
-              Client Secret
-            </label>
-            <input type="password" value={creds.clientSecret || ''} onChange={(e) => setCreds({ ...creds, clientSecret: e.target.value })} placeholder="Seu Client Secret do TIDAL (opcional)" className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono border-zinc-700 focus:border-green-500`} />
-          </div>
+        <div className="flex flex-col gap-2">
+          <div className="text-sm text-zinc-400">Usando Client ID:</div>
+          <div className="font-mono text-sm text-white select-all">{ENV_CLIENT_ID || creds.clientId}</div>
         </div>
 
         <div className="pt-4 flex flex-wrap items-center gap-4">
-            <button onClick={handleSave} className="bg-green-600 hover:bg-green-500 text-black px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-green-500/10 active:scale-95"><Save className="w-4 h-4" />Salvar</button>
+            <button onClick={() => { prepareCredentialsForAuth(); handleAuthenticate(); }} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 active:scale-95">Conectar</button>
 
-            <button onClick={handleDelete} className="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-zinc-500/10 active:scale-95"><Trash2 className="w-4 h-4" />Apagar</button>
-
-            <button onClick={handleAuthenticate} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 active:scale-95">Autenticar</button>
-
-            {showSaved && (<div className="flex items-center gap-2 text-green-400 text-sm font-medium animate-fade-in"><CheckCircle2 className="w-4 h-4" />Credenciais salvas!</div>)}
             {authStatus && (<div className="flex items-center gap-2 text-sm font-medium animate-fade-in text-zinc-300">{authStatus}</div>)}
         </div>
       </div>
