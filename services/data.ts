@@ -104,6 +104,8 @@ export const getTidalCredentials = () => {
     return {
       clientId: creds.clientId || '',
       clientSecret: creds.clientSecret || '',
+      userId: auth.userId || '',
+      countryCode: auth.countryCode || 'BR',
       accessToken: auth.accessToken,
       refreshToken: auth.refreshToken,
       expiresAt: auth.expiresAt,
@@ -116,13 +118,13 @@ export const getTidalCredentials = () => {
 
 export const saveTidalCredentials = (creds: any) => {
   try {
-    const { clientId, clientSecret, accessToken, refreshToken, expiresAt } = creds;
+    const { clientId, clientSecret, accessToken, refreshToken, expiresAt, countryCode, userId} = creds;
     // Save basic credentials
     localStorage.setItem(TIDAL_KEY, JSON.stringify({ clientId, clientSecret }));
 
     // Save auth tokens separately
     if (accessToken && refreshToken && expiresAt) {
-      localStorage.setItem(TIDAL_AUTH_KEY, JSON.stringify({ accessToken, refreshToken, expiresAt }));
+      localStorage.setItem(TIDAL_AUTH_KEY, JSON.stringify({ accessToken, refreshToken, expiresAt, countryCode, userId}));
     } else {
       localStorage.removeItem(TIDAL_AUTH_KEY);
     }

@@ -52,7 +52,15 @@ class TidalService {
       if (res.ok) {
         const expiresAt = Date.now() + (json.expires_in * 1000);
         // Save tokens
-        saveTidalCredentials({ clientId: creds.clientId, clientSecret: creds.clientSecret, accessToken: json.access_token, refreshToken: json.refresh_token, expiresAt });
+        saveTidalCredentials({
+            clientId: creds.clientId,
+            clientSecret: creds.clientSecret,
+            accessToken: json.access_token,
+            refreshToken: json.refresh_token,
+            expiresAt: expiresAt,
+            countryCode: json.user.countryCode,
+            userId: json.user.userId,
+        });
         return json;
       }
 
@@ -71,6 +79,7 @@ class TidalService {
 
   async searchTracks(query: string, limit = 50, offset = 0) {
     const token = this.getAccessToken();
+    const countryCode = this.getCredentials().countryCode;
     if (!token) throw new Error('Not authenticated with TIDAL');
 
     const params = new URLSearchParams();
@@ -78,7 +87,7 @@ class TidalService {
     params.append('limit', String(limit));
     params.append('offset', String(offset));
     params.append('types', 'TRACKS');
-    params.append('countryCode', 'BR');
+    params.append('countryCode', countryCode);
 
     const res = await fetch(`https://api.tidal.com/v1/search?${params.toString()}`, {
       headers: {
@@ -124,14 +133,20 @@ class TidalService {
 
   async getFavoriteTracks(limit = 50, offset = 0) {
     const token = this.getAccessToken();
+    const countryCode = this.getCredentials().countryCode;
     if (!token) throw new Error('Not authenticated with TIDAL');
 
     const params = new URLSearchParams();
     params.append('limit', String(limit));
     params.append('offset', String(offset));
-    params.append('countryCode', 'BR');
+    params.append('countryCode', countryCode);
 
     const endpoints = [
+      // Try v2 endpoints first
+      `https://api.tidal.com/v2/me/favorites/tracks?${params.toString()}`,
+      `https://api.tidal.com/v2/users/me/favorites/tracks?${params.toString()}`,
+      `https://api.tidal.com/v2/favorites/tracks?${params.toString()}`,
+      // Fallback to v1 endpoints
       `https://api.tidal.com/v1/my/favorites/tracks?${params.toString()}`,
       `https://api.tidal.com/v1/me/favorites/tracks?${params.toString()}`,
       `https://api.tidal.com/v1/users/me/favorites/tracks?${params.toString()}`,
@@ -170,8 +185,9 @@ class TidalService {
     if (!json) {
       throw new Error('Tidal favorites fetch failed: ' + JSON.stringify(lastErr));
     }
-    const tracks = (json.items) ? json.items : (json.tracks && json.tracks.items ? json.tracks.items : []);
-    const total = (json.total) ? json.total : (json.tracks && json.tracks.total ? json.tracks.total : tracks.length);
+    // v2 may return { data: [...] } or { items: [...] } or { tracks: { items: [...] } }
+    const tracks = json?.data || json?.items || (json.tracks && json.tracks.items) || [];
+    const total = json?.total || json?.meta?.total || (json.tracks && json.tracks.total) || tracks.length;
 
     const mapped = tracks.map((t: any) => {
       const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
