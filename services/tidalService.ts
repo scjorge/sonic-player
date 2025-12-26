@@ -25,7 +25,7 @@ class TidalService {
     return res.json();
   }
 
-  async pollDeviceToken(device_code: string, intervalSec = 5, timeoutSec = 600) {
+  async pollDeviceToken(device_code: string, intervalSec = 5, timeoutSec = 60) {
     const creds: any = getTidalCredentials();
     if (!creds.clientId || !creds.clientSecret) throw new Error('Client ID/Secret não configurados');
 

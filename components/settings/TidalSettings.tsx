@@ -75,7 +75,7 @@ const TidalSettings: React.FC = () => {
       setAuthStatus(`Código: ${data.userCode} — Aguardando autorização...`);
 
       // Poll for token
-      const tokenData = await tidalService.pollDeviceToken(data.deviceCode, data.interval || 5, data.expiresIn || 600);
+      const tokenData = await tidalService.pollDeviceToken(data.deviceCode, data.interval || 5, data.expiresIn / 2 || 60);
       if (tokenData && tokenData.access_token) {
         setAuthStatus('Autenticação bem-sucedida!');
         // Refresh displayed creds from storage
