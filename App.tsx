@@ -356,33 +356,20 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSpotifyPlaylistClick = async (playlist: NaviPlaylist) => {
-    setLoadingNavi(true);
-    setViewMode('spotify_playlist_tracks');
-    setSelectedPlaylistId(playlist.id);
-    setSelectedSpotifyPlaylistName(playlist.name);
-    setActiveSearchQuery('');
-    setPage(0);
-
-    const currentSize = pageSize > 50 ? 50 : pageSize;
-    if (pageSize > 50) {
-      setPageSize(50);
-    }
-
-    try {
-        const { items, total } = await spotifyService.getPlaylistTracks(playlist.id, 0, currentSize);
+  const getSpotifyMappedSongs = async (items: any[]): Promise<NaviSong[]> => {
         const mappedSongs: NaviSong[] = await Promise.all(items.map(async (track: any) => {
           const naviSong: NaviSong = {
             id: track.id,
             title: track.name,
-            artist: track.artists.map((a: any) => a.name).join(', '),
+            artist: track.artists ? track.artists.map((a: any) => a.name).join(', ') : undefined,
             album: track.album.name,
             year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
-            coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
+            coverArt: track.album.images && track.album.images.length > 0 ? track.album.images[0].url : undefined,
             duration: Math.floor(track.duration_ms / 1000),
-            path: track.external_urls.spotify,
+            path: track.external_urls ? track.external_urls.spotify : undefined,
             track: track.track_number,
             uri: track.uri,
+            isrc: track.external_ids ? track.external_ids.isrc : undefined,
             genre: undefined,
             comment: undefined,
             suffix: undefined,
@@ -407,6 +394,25 @@ const App: React.FC = () => {
           };
           return naviSong;
         }));
+        return mappedSongs
+  }
+
+  const handleSpotifyPlaylistClick = async (playlist: NaviPlaylist) => {
+    setLoadingNavi(true);
+    setViewMode('spotify_playlist_tracks');
+    setSelectedPlaylistId(playlist.id);
+    setSelectedSpotifyPlaylistName(playlist.name);
+    setActiveSearchQuery('');
+    setPage(0);
+
+    const currentSize = pageSize > 50 ? 50 : pageSize;
+    if (pageSize > 50) {
+      setPageSize(50);
+    }
+
+    try {
+        const { items, total } = await spotifyService.getPlaylistTracks(playlist.id, 0, currentSize);
+        const mappedSongs: NaviSong[] = await getSpotifyMappedSongs(items);
         setNaviSongs(mappedSongs);
         setTotalSongs(total);
 
@@ -584,42 +590,7 @@ const App: React.FC = () => {
       try {
           const offset = pageNum * size;
           const { items: results, total } = await spotifyService.searchTracks(query, size, offset);
-          const mappedSongs: NaviSong[] = await Promise.all(results.map(async track => {
-              const naviSong: NaviSong = {
-                  id: track.id,
-                  title: track.name,
-                  artist: track.artists.map((a: any) => a.name).join(', '),
-                  album: track.album.name,
-                  year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
-                  coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
-                  duration: Math.floor(track.duration_ms / 1000),
-                  path: track.external_urls.spotify,
-                  track: track.track_number,
-                  uri: track.uri,
-                  genre: undefined,
-                  comment: undefined,
-                  suffix: undefined,
-                  bitRate: undefined,
-                  samplingRate: undefined,
-                  discNumber: undefined,
-                  contentType: 'audio/spotify',
-                  size: undefined,
-                  created: undefined,
-                  albumId: undefined,
-                  artistId: undefined,
-                  type: 'music',
-                  isVideo: false,
-                  bpm: undefined,
-                  playCount: undefined,
-                  lastPlayed: undefined,
-                  userRating: undefined,
-                  averageRating: undefined,
-                  moods: undefined,
-                  group: undefined,
-                  starred: undefined,
-              };
-              return naviSong;
-          }));
+          const mappedSongs: NaviSong[] = await getSpotifyMappedSongs(results);
           setSpotifyBrowseTracks(mappedSongs);
           setTotalSpotifyBrowseItems(total);
 
@@ -699,42 +670,7 @@ const App: React.FC = () => {
         setLoadingNavi(true);
         try {
             const { items, total } = await spotifyService.getPlaylistTracks(selectedPlaylistId, newPage * pageSize, pageSize);
-            const mappedSongs: NaviSong[] = await Promise.all(items.map(async (track: any) => {
-                const naviSong: NaviSong = {
-                    id: track.id,
-                    title: track.name,
-                    artist: track.artists.map((a: any) => a.name).join(', '),
-                    album: track.album.name,
-                    year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
-                    coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
-                    duration: Math.floor(track.duration_ms / 1000),
-                    path: track.external_urls.spotify,
-                    track: track.track_number,
-                    uri: track.uri,
-                    genre: undefined,
-                    comment: undefined,
-                    suffix: undefined,
-                    bitRate: undefined,
-                    samplingRate: undefined,
-                    discNumber: undefined,
-                    contentType: 'audio/spotify',
-                    size: undefined,
-                    created: undefined,
-                    albumId: undefined,
-                    artistId: undefined,
-                    type: 'music',
-                    isVideo: false,
-                    bpm: undefined,
-                    playCount: undefined,
-                    lastPlayed: undefined,
-                    userRating: undefined,
-                    averageRating: undefined,
-                    moods: undefined,
-                    group: undefined,
-                    starred: undefined,
-                };
-                return naviSong;
-            }));
+            const mappedSongs: NaviSong[] = await getSpotifyMappedSongs(items);
             setNaviSongs(mappedSongs);
             setTotalSongs(total);
 
@@ -782,42 +718,7 @@ const App: React.FC = () => {
             setLoadingNavi(true);
             try {
                 const { items, total } = await spotifyService.getPlaylistTracks(playlistId, 0, newSize);
-                const mappedSongs: NaviSong[] = await Promise.all(items.map(async (track: any) => {
-                    const naviSong: NaviSong = {
-                        id: track.id,
-                        title: track.name,
-                        artist: track.artists.map((a: any) => a.name).join(', '),
-                        album: track.album.name,
-                        year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
-                        coverArt: track.album.images.length > 0 ? track.album.images[0].url : undefined,
-                        duration: Math.floor(track.duration_ms / 1000),
-                        path: track.external_urls.spotify,
-                        track: track.track_number,
-                        uri: track.uri,
-                        genre: undefined,
-                        comment: undefined,
-                        suffix: undefined,
-                        bitRate: undefined,
-                        samplingRate: undefined,
-                        discNumber: undefined,
-                        contentType: 'audio/spotify',
-                        size: undefined,
-                        created: undefined,
-                        albumId: undefined,
-                        artistId: undefined,
-                        type: 'music',
-                        isVideo: false,
-                        bpm: undefined,
-                        playCount: undefined,
-                        lastPlayed: undefined,
-                        userRating: undefined,
-                        averageRating: undefined,
-                        moods: undefined,
-                        group: undefined,
-                        starred: undefined,
-                    };
-                    return naviSong;
-                }));
+                const mappedSongs: NaviSong[] = await getSpotifyMappedSongs(items);
                 setNaviSongs(mappedSongs);
                 setTotalSongs(total);
 

@@ -47,6 +47,7 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
           path: track.external_urls.spotify, // Use Spotify URL as path for distinction
           track: track.track_number,
           uri: track.uri,
+          isrc: track.external_ids ? track.external_ids.isrc : undefined,
           // Defaulting other NaviSong properties
           genre: undefined,
           comment: undefined,
