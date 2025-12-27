@@ -10,6 +10,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - 6789:3000
+      - 6790:3001
     command: "sleep infinity"
     env_file:
       - "../.env"

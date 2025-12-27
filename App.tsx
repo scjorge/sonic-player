@@ -6,9 +6,10 @@ import { tidalService } from './services/tidalService';
 import TidalBrowse from './components/tidal/TidalBrowse.tsx';
 import TidalLiked from './components/tidal/TidalLiked';
 import TidalPlaylists from './components/tidal/TidalPlaylists';
+import TidalDownloads from './components/tidal/TidalDownloads';
 import { TIDAL_COLUMN_CONFIG } from './components/tidal/tidalConstants';
 import { getStoredGroups, getSpotifyCredentials } from './services/data';
-import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation, AlertCircle } from 'lucide-react';
+import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation, AlertCircle, Download } from 'lucide-react';
 import SongTable from './components/library/SongTable';
 import CreatePlaylistModal from './components/library/CreatePlaylistModal';
 import PlaylistSelectorModal from './components/library/PlaylistSelectorModal';
@@ -24,7 +25,7 @@ import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_favorites' | 'tidal_playlists' | 'tidal_playlist_tracks';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_favorites' | 'tidal_playlists' | 'tidal_playlist_tracks' | 'tidal_downloads';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
@@ -1320,6 +1321,22 @@ const App: React.FC = () => {
         return <TidalPlaylists onPlaylistClick={handleTidalPlaylistClick} />;
     }
 
+    if (viewMode === 'tidal_downloads') {
+        if (!tidalService.isAuthenticated()) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Sessão TIDAL não autenticada.</div>
+                    <div className="text-zinc-400 mb-6">Autentique-se nas configurações do TIDAL para visualizar downloads.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('tidal'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
+        return <TidalDownloads />;
+    }
+
     if (viewMode === 'tidal_playlist_tracks') {
         if (!tidalService.isAuthenticated()) {
             return (
@@ -1679,6 +1696,13 @@ const App: React.FC = () => {
                             >
                                 <List className="w-4 h-4 flex-shrink-0" />
                                 {!isSidebarCollapsed && <span>Playlists</span>}
+                            </button>
+                            <button 
+                                onClick={() => setViewMode('tidal_downloads')}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_downloads' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                            >
+                                <Download className="w-4 h-4 flex-shrink-0" />
+                                {!isSidebarCollapsed && <span>Downloads</span>}
                             </button>
                         </div>
                     </div>

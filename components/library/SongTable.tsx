@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { NaviSong } from '../../types';
 import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, Filter, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, History, CheckSquare, Square, AlignJustify, Heart, Info, BarChart2, Sparkles, TrendingUp, Award, Star, Tags, Download } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
+import { tidalService } from '../../services/tidalService';
+import { TIDAL_QUALITY } from '../tidal/tidalConstants';
+import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../tidal/tidalConstants';
 
 interface SongTableProps {
   songs: NaviSong[];
@@ -526,6 +529,40 @@ const SongTable: React.FC<SongTableProps> = ({
               >
                   <Info className="w-4 h-4" /> Informações
               </button>
+                            {/* TIDAL download option */}
+                            {contextMenu.song.contentType === 'audio/tidal' && (
+                                <button
+                                    onClick={async () => {
+                                        setContextMenu({ ...contextMenu, visible: false });
+                                        try {
+                                            const accessToken = tidalService.getAccessToken();
+                                            const body = {
+                                                trackId: contextMenu.song!.id,
+                                                title: contextMenu.song!.title,
+                                                artist: contextMenu.song!.artist,
+                                                accessToken: accessToken || undefined
+                                            };
+                                            const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/download`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify(body)
+                                            });
+                                            if (!resp.ok) {
+                                                const err = await resp.json().catch(() => ({}));
+                                                throw new Error(err.error || 'Failed to queue download');
+                                            }
+                                            const json = await resp.json();
+                                            alert('Download enfileirado no servidor (id: ' + json.id + ')');
+                                        } catch (e: any) {
+                                            console.error('TIDAL download request failed', e);
+                                            alert('Falha ao iniciar download no servidor: ' + (e?.message || String(e)));
+                                        }
+                                    }}
+                                    className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+                                >
+                                    <Download className="w-4 h-4" /> Download
+                                </button>
+                            )}
           </div>
       )}
 

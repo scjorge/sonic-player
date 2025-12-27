@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node server/server.js"
   },
   "dependencies": {
     "@google/genai": "^1.33.0",
     "browser-id3-writer": "^6.3.1",
     "clsx": "2.1.1",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "lucide-react": "0.294.0",
     "music-metadata": "^11.10.3",
@@ -19,7 +21,12 @@
     "react-dom": "18.3.1",
     "react-jsx-runtime": "^1.0.0-alpha.1"
   },
+  "optionalDependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2"
+  },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
