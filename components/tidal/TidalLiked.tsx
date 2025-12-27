@@ -8,9 +8,11 @@ import { TIDAL_COLUMN_CONFIG } from './tidalConstants';
 interface TidalLikedProps {
   onOpen: (song: NaviSong) => void;
   onNavigateToLibraryQuery?: (query: string) => void;
+  currentTrackId?: string | null;
+  isPlaying?: boolean;
 }
 
-const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen, onNavigateToLibraryQuery }) => {
+const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen, onNavigateToLibraryQuery, currentTrackId, isPlaying }) => {
   const [items, setItems] = useState<NaviSong[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +82,8 @@ const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen, onNavigateToLibraryQuer
         <SongTable
           songs={items}
           onPlay={onOpen}
+          currentTrackId={currentTrackId}
+          isPlaying={isPlaying}
           page={page}
           pageSize={pageSize}
           totalItems={total}

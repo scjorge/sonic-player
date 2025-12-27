@@ -1233,7 +1233,7 @@ const App: React.FC = () => {
             );
         }
 
-        return <TidalLiked onOpen={playTidalSong} onNavigateToLibraryQuery={handleSearch} />;
+        return <TidalLiked onOpen={playTidalSong} onNavigateToLibraryQuery={handleSearch} currentTrackId={currentTrack?.id} isPlaying={isPlaying} />;
     }
 
     if (viewMode === 'tidal_browse') {
@@ -1269,7 +1269,7 @@ const App: React.FC = () => {
 
         return (
             <div className="h-full">
-                <TidalBrowse onOpen={playTidalSong} onNavigateToLibraryQuery={handleSearch} initialQuery={tidalInitialQuery} autoFocus={tidalAutoFocus} />
+                <TidalBrowse onOpen={playTidalSong} onNavigateToLibraryQuery={handleSearch} initialQuery={tidalInitialQuery} autoFocus={tidalAutoFocus} currentTrackId={currentTrack?.id} isPlaying={isPlaying} />
             </div>
         );
     }
@@ -1363,8 +1363,8 @@ const App: React.FC = () => {
                     page={page}
                     pageSize={pageSize}
                     totalItems={totalSongs}
-                    onPageChange={(p) => { setPage(p); }}
-                    onPageSizeChange={(s) => setPageSize(s)}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
                     navidromeExistenceMap={spotifyNavidromeExistenceMap}
                     onNavigateToLibraryQuery={handleSearch}
                 />

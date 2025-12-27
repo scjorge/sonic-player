@@ -11,9 +11,11 @@ interface TidalBrowseProps {
   onNavigateToLibraryQuery?: (query: string) => void;
   initialQuery?: string;
   autoFocus?: boolean;
+  currentTrackId?: string | null;
+  isPlaying?: boolean;
 }
 
-const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQuery, initialQuery, autoFocus }) => {
+const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQuery, initialQuery, autoFocus, currentTrackId, isPlaying }) => {
   const [query, setQuery] = useState('');
   const [tracks, setTracks] = useState<NaviSong[]>([]);
   const [navidromeExistenceMap, setNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
@@ -117,14 +119,14 @@ const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQu
 
   return (
     <div className="flex flex-col h-full bg-zinc-950">
-                <SongTable
+        <SongTable
           songs={tracks}
           onPlay={(s) => { if (onOpen) onOpen(s); }}
-          currentTrackId={null}
-          isPlaying={false}
+          currentTrackId={currentTrackId}
+          isPlaying={isPlaying}
           onSearch={handleSearch}
-                  activeSearchQuery={query}
-                  autoFocusSearch={!!autoFocus}
+          activeSearchQuery={query}
+          autoFocusSearch={!!autoFocus}
           page={page}
           pageSize={pageSize}
           totalItems={total}
