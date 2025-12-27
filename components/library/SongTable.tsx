@@ -3,7 +3,7 @@ import { NaviSong } from '../../types';
 import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, Filter, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, History, CheckSquare, Square, AlignJustify, Heart, Info, BarChart2, Sparkles, TrendingUp, Award, Star, Tags, Download } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
-import showToast from '../../utils/toast';
+import showToast from '../utils/toast';
 import { sanitizeQuery } from '../../services/tools';
 import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../tidal/tidalConstants';
 
