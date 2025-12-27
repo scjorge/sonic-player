@@ -1668,11 +1668,11 @@ const App: React.FC = () => {
                 {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
                 {viewMode === 'navi_favorites' && <><Heart className="w-5 h-5 text-indigo-500 fill-indigo-500" /> Favoritos</>}
                 {viewMode === 'navi_playlist' && <><List className="w-5 h-5 text-indigo-500" /> {naviPlaylists.find(p => p.id === selectedPlaylistId)?.name || 'Playlist'}</>}
-                {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador</>}
+                {viewMode === 'spotify_browse' && <><Navigation className="w-4 h-4 flex-shrink-0 text-green-500" /> Navegador</>}
                 {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
                 {viewMode === 'spotify_playlists' && <><List className="w-5 h-5 text-green-500" /> Playlists</>}
                 {viewMode === 'spotify_playlist_tracks' && <><List className="w-5 h-5 text-green-500" /> {selectedPlaylistName || 'Playlist'}</>}
-                {viewMode === 'tidal_browse' && <><img src="https://tidal.com/favicon.ico" className="w-5 h-5 object-contain" /> Navegador</>}
+                {viewMode === 'tidal_browse' && <><Navigation className="w-4 h-4 flex-shrink-0 text-yellow-500" /> Navegador</>}
                 {viewMode === 'tidal_liked' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Músicas Curtidas</>}
                 {viewMode === 'tidal_playlists' && <><List className="w-5 h-5 text-yellow-500" /> Playlists</>}
                 {viewMode === 'tidal_playlist_tracks' && <><List className="w-5 h-5 text-yellow-500" /> {selectedPlaylistName || 'Playlist'}</>}
