@@ -78,30 +78,30 @@ class TidalService {
     throw new Error('Timeout aguardando autorização do dispositivo');
   }
 
+  getMappepTracks(tracks: any[]) {
+    const mapped = tracks.map((t: any) => {
+    const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
+    const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
+    const year = t.album && t.album.releaseDate ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
+    const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
+
+    return {
+        id: String(t.id || t.trackId || `${artist}-${t.title}`),
+        title: t.title || t.name || '',
+        artist: artist,
+        album: albumName,
+        coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/80x80.jpg`,
+        url: t.url || t.playUrl || undefined,
+        year: year,
+        isrc: t.isrc || undefined,
+        contentType: 'audio/tidal',
+        duration: t.duration || undefined,
+    } as any;
+    });
+    return mapped
+  }
+
   async searchTracks(query: string, limit = 50, offset = 0) {
-    const getMappepTracks = (tracks: any[]) => {
-      const mapped = tracks.map((t: any) => {
-        const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
-        const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
-        const year = t.album && t.album.releaseDate ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
-        const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
-
-        return {
-          id: String(t.id || t.trackId || `${artist}-${t.title}`),
-          title: t.title || t.name || '',
-          artist: artist,
-          album: albumName,
-          coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/80x80.jpg`,
-          url: t.url || t.playUrl || undefined,
-          year: year,
-          isrc: t.isrc || undefined,
-          contentType: 'audio/tidal',
-          duration: t.duration || undefined,
-        } as any;
-      });
-      return mapped
-    }
-
     const token = this.getAccessToken();
     const countryCode = this.getCredentials().countryCode;
     if (!token) throw new Error('Not authenticated with TIDAL');
@@ -151,7 +151,7 @@ class TidalService {
       const total = 1;
 
       const tracks = [track];
-      const mapped = getMappepTracks(tracks);
+      const mapped = this.getMappepTracks(tracks);
       return { items: mapped, total };
     }
 
@@ -181,13 +181,15 @@ class TidalService {
     const total = (json.tracks && json.tracks.total) ? json.tracks.total : (json.total || tracks.length);
 
     // Map to NaviSong minimal shape
-    const mapped = getMappepTracks(tracks);
+    const mapped = this.getMappepTracks(tracks);
     return { items: mapped, total };
   }
 
   async getFavoriteTracks(limit = 50, offset = 0) {
+    const creds = this.getCredentials();
     const token = this.getAccessToken();
-    const countryCode = this.getCredentials().countryCode;
+    const countryCode = creds.countryCode;
+    const userID = creds.userId;
     if (!token) throw new Error('Not authenticated with TIDAL');
 
     const params = new URLSearchParams();
@@ -195,73 +197,22 @@ class TidalService {
     params.append('offset', String(offset));
     params.append('countryCode', countryCode);
 
-    const endpoints = [
-      // Try v2 endpoints first
-      `https://api.tidal.com/v2/me/favorites/tracks?${params.toString()}`,
-      `https://api.tidal.com/v2/users/me/favorites/tracks?${params.toString()}`,
-      `https://api.tidal.com/v2/favorites/tracks?${params.toString()}`,
-      // Fallback to v1 endpoints
-      `https://api.tidal.com/v1/my/favorites/tracks?${params.toString()}`,
-      `https://api.tidal.com/v1/me/favorites/tracks?${params.toString()}`,
-      `https://api.tidal.com/v1/users/me/favorites/tracks?${params.toString()}`,
-    ];
-
-    let json: any = null;
-    let lastErr: any = null;
-
-    for (const url of endpoints) {
-      try {
-        const res = await fetch(url, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          // If 404 try next endpoint, if 401/403 raise immediately
-          if (res.status === 404) {
-            lastErr = { status: res.status, body };
-            continue;
-          }
-          throw new Error('Tidal favorites fetch failed: ' + JSON.stringify(body));
+    const res = await fetch(`https://api.tidal.com/v1/users/${userID}/favorites/tracks?${params.toString()}`, {
+        headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
         }
-
-        json = await res.json();
-        break;
-      } catch (e) {
-        lastErr = e;
-        continue;
-      }
-    }
-
-    if (!json) {
-      throw new Error('Tidal favorites fetch failed: ' + JSON.stringify(lastErr));
-    }
-    // v2 may return { data: [...] } or { items: [...] } or { tracks: { items: [...] } }
-    const tracks = json?.data || json?.items || (json.tracks && json.tracks.items) || [];
-    const total = json?.total || json?.meta?.total || (json.tracks && json.tracks.total) || tracks.length;
-
-    const mapped = tracks.map((t: any) => {
-      const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
-      const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
-      const year = t.album && t.album.releaseDate ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
-      const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
-
-      return {
-        id: String(t.id || t.trackId || `${artist}-${t.title}`),
-        title: t.title || t.name || '',
-        artist: artist,
-        album: albumName,
-        coverArt: cover ? `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/80x80.jpg` : undefined,
-        path: t.url || t.playUrl || undefined,
-        year: year,
-        isrc: t.isrc || undefined,
-        contentType: 'audio/tidal',
-      } as any;
     });
 
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error('Tidal favorites fetch failed: ' + JSON.stringify(body));
+    }
+
+    const json = await res.json();
+    const tracks = json.items.map((t: any) => { return t.item });
+    const total = json.totalNumberOfItems;
+    const mapped = this.getMappepTracks(tracks);    
     return { items: mapped, total };
   }
 

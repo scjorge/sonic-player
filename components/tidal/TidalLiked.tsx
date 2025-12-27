@@ -10,7 +10,7 @@ interface TidalLikedProps {
   onNavigateToLibraryQuery?: (query: string) => void;
 }
 
-const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen }) => {
+const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen, onNavigateToLibraryQuery }) => {
   const [items, setItems] = useState<NaviSong[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
