@@ -81,7 +81,7 @@ export interface PlayerTrack {
   coverUrl: string | null;
   src: string; // Remote URL
   duration: number; // seconds
-  sourceType: 'navidrome' | 'spotify' | 'spotify_preview';
+  sourceType: 'navidrome' | 'spotify' | 'spotify_preview' | 'tidal';
 }
 
 // App Types

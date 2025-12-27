@@ -897,12 +897,50 @@ const App: React.FC = () => {
       
   };
 
-    const playTidalSong = (song: NaviSong) => {
-        if (song.path) {
-            window.open(song.path, '_blank');
-            return;
+    const playTidalSong = async (song: NaviSong) => {
+        try {
+            // If a path URL is provided, prefer opening it
+            if (song.path) {
+                window.open(song.path, '_blank');
+                return;
+            }
+
+            // Attempt to get playback info from TIDAL
+            const prefQuality: any = 'HIGH';
+            const info = await tidalService.getTidalPlaybackInfo(song.id, prefQuality);
+            if (!info || !info.urls || info.urls.length === 0) {
+                console.warn('No playback URLs returned for TIDAL track', song.id, info);
+                return;
+            }
+
+            // urls may be strings or objects with a url property
+            const firstUrl = info.urls.find((u: any) => typeof u === 'string' || (u && (u.url || u.uri))) || info.urls[0];
+            let streamUrl: string | null = null;
+            if (typeof firstUrl === 'string') streamUrl = firstUrl;
+            else if (firstUrl.url) streamUrl = firstUrl.url;
+            else if (firstUrl.uri) streamUrl = firstUrl.uri;
+
+            if (!streamUrl) {
+                console.warn('Unable to determine stream URL from TIDAL playback info', info);
+                return;
+            }
+
+            const playerTrack: PlayerTrack = {
+                id: song.id,
+                title: song.title,
+                artist: song.artist,
+                coverUrl: song.coverArt || null,
+                src: streamUrl,
+                duration: song.duration || 0,
+                sourceType: 'tidal',
+            };
+
+            loadAndPlay(playerTrack);
+        } catch (e) {
+            console.error('Failed to play TIDAL track', e);
+            // fallback: open path if available
+            if (song.path) window.open(song.path, '_blank');
         }
-        console.log('Tidal play requested but no URL available for', song);
     };
 
   const loadAndPlay = (track: PlayerTrack) => {
