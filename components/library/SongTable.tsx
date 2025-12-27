@@ -3,6 +3,7 @@ import { NaviSong } from '../../types';
 import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, Filter, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, History, CheckSquare, Square, AlignJustify, Heart, Info, BarChart2, Sparkles, TrendingUp, Award, Star, Tags, Download } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
+import showToast from '../../utils/toast';
 import { TIDAL_QUALITY } from '../tidal/tidalConstants';
 import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../tidal/tidalConstants';
 
@@ -552,10 +553,10 @@ const SongTable: React.FC<SongTableProps> = ({
                                                 throw new Error(err.error || 'Failed to queue download');
                                             }
                                             const json = await resp.json();
-                                            alert('Download enfileirado no servidor (id: ' + json.id + ')');
+                                            showToast('Download enfileirado no servidor (id: ' + json.id + ')', 'success');
                                         } catch (e: any) {
                                             console.error('TIDAL download request failed', e);
-                                            alert('Falha ao iniciar download no servidor: ' + (e?.message || String(e)));
+                                            showToast('Falha ao iniciar download no servidor: ' + (e?.message || String(e)), 'error');
                                         }
                                     }}
                                     className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
