@@ -18,7 +18,7 @@ const TidalDownloads: React.FC = () => {
       const res = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads`);
       if (!res.ok) return;
       const json = await res.json();
-      setItems(json.items || []);
+      setItems(json.items.reverse() || []);
     } catch (e) {
       // ignore
     }
