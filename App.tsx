@@ -181,6 +181,21 @@ const App: React.FC = () => {
     };
   }, [currentTrack, isPlaying]);
 
+    // Ensure only one player is active at a time
+    const setExclusivePlayer = (newSource: 'navidrome' | 'spotify' | 'spotify_preview' | 'tidal') => {
+        // Stop Spotify full-player if we're switching to any other source
+        if (newSource !== 'spotify') {
+            try { spotifyService.stop(); } catch (e) { /* ignore */ }
+        }
+
+        // Pause in-page audio (used by navidrome, tidal and spotify_preview) unless we're starting a preview
+        if (newSource !== 'spotify_preview') {
+            if (audioRef.current && !audioRef.current.paused) {
+                try { audioRef.current.pause(); } catch (e) { /* ignore */ }
+            }
+        }
+    };
+
   // --- EFFECTS ---
 
   useEffect(() => {
@@ -835,8 +850,7 @@ const App: React.FC = () => {
   };
 
   const playNaviSong = (song: NaviSong) => {
-    // Stop any active Spotify playback
-    spotifyService.stop();
+        setExclusivePlayer('navidrome');
 
     if (currentTrack?.id === song.id) {
         togglePlayPause();
@@ -856,10 +870,7 @@ const App: React.FC = () => {
   };
 
   const playSpotifySong = (song: NaviSong) => {
-    // Pause any active Navidrome playback
-    if (audioRef.current && !audioRef.current.paused) {
-      audioRef.current.pause();
-    }
+        setExclusivePlayer('spotify');
 
     if (song.uri) {
       spotifyService.playTrack(song.uri);
@@ -885,6 +896,7 @@ const App: React.FC = () => {
           togglePlayPause();
           return;
       }
+      setExclusivePlayer('spotify_preview');
       const playerTrack: PlayerTrack = {
           id: track.id,
           title: track.name,
@@ -894,7 +906,7 @@ const App: React.FC = () => {
           duration: 30, // Spotify previews are 30s
           sourceType: 'spotify_preview'
       };
-      
+      loadAndPlay(playerTrack);
   };
 
     const playTidalSong = async (song: NaviSong) => {
@@ -905,6 +917,9 @@ const App: React.FC = () => {
                 return;
             }
 
+            // Ensure other players (eg. Spotify) are stopped before starting TIDAL
+            setExclusivePlayer('tidal');
+
             // Attempt to get playback info from TIDAL
             const prefQuality: any = 'HIGH';
             const info = await tidalService.getTidalPlaybackInfo(song.id, prefQuality);
@@ -914,11 +929,11 @@ const App: React.FC = () => {
             }
 
             // urls may be strings or objects with a url property
-            const firstUrl = info.urls.find((u: any) => typeof u === 'string' || (u && (u.url || u.uri))) || info.urls[0];
+            const firstUrl: any = info.urls.find((u: any) => typeof u === 'string' || (u && (u.url || u.uri))) || info.urls[0];
             let streamUrl: string | null = null;
             if (typeof firstUrl === 'string') streamUrl = firstUrl;
-            else if (firstUrl.url) streamUrl = firstUrl.url;
-            else if (firstUrl.uri) streamUrl = firstUrl.uri;
+            else if (firstUrl && firstUrl.url) streamUrl = firstUrl.url;
+            else if (firstUrl && firstUrl.uri) streamUrl = firstUrl.uri;
 
             if (!streamUrl) {
                 console.warn('Unable to determine stream URL from TIDAL playback info', info);
@@ -1644,7 +1659,7 @@ const App: React.FC = () => {
                         <button onClick={handlePrevious} className="text-zinc-400 hover:text-white transition-colors">
                             <SkipBack className="w-5 h-5" />
                         </button>
-                        <button onClick={togglePlayPause} className={`w-10 h-10 rounded-full ${currentTrack?.sourceType === 'spotify' ? 'bg-green-600 hover:bg-green-500 shadow-lg shadow-green-500/20' : 'bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20'} text-white flex items-center justify-center transition-transform active:scale-95`}>
+                        <button onClick={togglePlayPause} className={`w-10 h-10 rounded-full ${currentTrack?.sourceType === 'spotify' ? 'bg-green-600 hover:bg-green-500 shadow-lg shadow-green-500/20' : currentTrack?.sourceType === 'tidal' ? 'bg-yellow-600 hover:bg-yellow-500 shadow-lg shadow-yellow-500/20' : 'bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20'} text-white flex items-center justify-center transition-transform active:scale-95`}>
                             {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
                         </button>
                         <button onClick={handleNext} className="text-zinc-400 hover:text-white transition-colors">
@@ -1654,7 +1669,7 @@ const App: React.FC = () => {
                     <div className="w-full max-w-md flex items-center gap-2">
                         <span className="text-[10px] text-zinc-500 font-mono w-8 text-right">{formatTime(currentTime)}</span>
                         <div className="flex-1 h-1 bg-zinc-800 rounded-full relative group cursor-pointer">
-                            <div className={`absolute top-0 left-0 h-full ${currentTrack?.sourceType === 'spotify' ? 'bg-green-500' : 'bg-indigo-500'} rounded-full`} style={{ width: `${(currentTime / duration) * 100}%` }} />
+                            <div className={`absolute top-0 left-0 h-full ${currentTrack?.sourceType === 'spotify' ? 'bg-green-500' : currentTrack?.sourceType === 'tidal' ? 'bg-yellow-500' : 'bg-indigo-500'} rounded-full`} style={{ width: `${(currentTime / duration) * 100}%` }} />
                             <input type="range" min={0} max={duration || 100} value={currentTime} onChange={handleSeek} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                         </div>
                         <span className="text-[10px] text-zinc-500 font-mono w-8">{formatTime(duration)}</span>
@@ -1687,7 +1702,7 @@ const App: React.FC = () => {
                                         )}
                                         <Volume2 className="w-4 h-4 text-zinc-400" />
                                         <div className="w-24 h-1 bg-zinc-800 rounded-full relative group">
-                                                <div className={`absolute top-0 left-0 h-full rounded-full transition-colors ${currentTrack?.sourceType === 'spotify' || currentTrack?.sourceType === 'spotify_preview' ? 'bg-green-500 group-hover:bg-green-400' : 'bg-indigo-500 group-hover:bg-indigo-400'}`} style={{ width: `${volume * 100}%` }} />
+                                                <div className={`absolute top-0 left-0 h-full rounded-full transition-colors ${currentTrack?.sourceType === 'spotify' || currentTrack?.sourceType === 'spotify_preview' ? 'bg-green-500 group-hover:bg-green-400' : currentTrack?.sourceType === 'tidal' ? 'bg-yellow-500 group-hover:bg-yellow-400' : 'bg-indigo-500 group-hover:bg-indigo-400'}`} style={{ width: `${volume * 100}%` }} />
                                                 <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                                         </div>
                                 </div>
