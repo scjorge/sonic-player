@@ -1,5 +1,5 @@
 import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, SubsonicResponse } from '../types';
-import { MD5 } from './tools.ts';
+import { MD5, sanitizeQuery } from './tools.ts';
 import { getNavidromeCredentials } from './data';
 
 const CLIENT = 'SonicTagPlayer';
@@ -14,11 +14,6 @@ class NavidromeService {
     const user = creds.user || '';
     return `u=${encodeURIComponent(user)}&t=${token}&s=${salt}&v=${VERSION}&c=${CLIENT}&f=json`;
   }
-
-  private sanitizeQuery(text: string): string {
-    return (text || '').replace(/[<>:\"/\\|?*-]/g, ' ').replace(/\s+/g, ' ').trim();
-  }
-
 
   private getUrl(endpoint: string) {
     const creds = getNavidromeCredentials();
@@ -238,8 +233,8 @@ class NavidromeService {
 
   async checkIfSongExists(artist: string, title: string): Promise<boolean> {
     try {
-      const sanitizedArtist = this.sanitizeQuery(artist).split(',')[0];
-      const sanitizedTitle = this.sanitizeQuery(title);
+      const sanitizedArtist = sanitizeQuery(artist).split(',')[0];
+      const sanitizedTitle = sanitizeQuery(title);
       // Search for the song by combining artist and title.
       // Set songCount to 1 as we only need to know if at least one exists.
       const query = `${sanitizedArtist} ${sanitizedTitle}`;

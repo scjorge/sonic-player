@@ -1,3 +1,6 @@
+export function sanitizeQuery(text: string): string {
+    return (text || '').replace(/[<>:\"/\\|?*-]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
 
 export function MD5(input: string) {
     input = utf8ToBinaryString(input);

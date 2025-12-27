@@ -4,7 +4,7 @@ import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon,
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../../utils/toast';
-import { TIDAL_QUALITY } from '../tidal/tidalConstants';
+import { sanitizeQuery } from '../../services/tools';
 import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../tidal/tidalConstants';
 
 interface SongTableProps {
@@ -119,9 +119,6 @@ const SongTable: React.FC<SongTableProps> = ({
     navidromeConnected = null,
     onOpenNavidromeSettings
 }) => {
-    const sanitizeQuery = (text?: string) => {
-        return (text || '').replace(/[<>:\"/\\|?*-]/g, ' ').replace(/\s+/g, ' ').trim();
-    };
   // --- STATE ---
   const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || [
     { id: 'select', label: '', width: 50, visible: true, minWidth: 50 },

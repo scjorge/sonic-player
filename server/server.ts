@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
 import cors from 'cors';
+import { sanitizeQuery } from '../services/tools';
 import { tidalService } from '../services/tidalService.ts';
 import { TIDAL_QUALITY } from '../components/tidal/tidalConstants.ts';
 
@@ -19,13 +20,6 @@ if (!fs.existsSync(DOWNLOAD_DIR)) fs.mkdirSync(DOWNLOAD_DIR, { recursive: true }
 // In-memory download registry
 const downloads = new Map();
 
-function createDownloadId() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-app.get('/', (_req, res) => {
-  res.json({ "status": "ok" });
-});
 
 app.get('/api/tidal/downloads', (_req, res) => {
   const list = Array.from(downloads.values()).map(d => ({ id: d.id, title: d.title, artist: d.artist, progress: d.progress, status: d.status, filename: d.filename }));
@@ -34,14 +28,12 @@ app.get('/api/tidal/downloads', (_req, res) => {
 
 app.post('/api/tidal/download', async (req, res) => {
   try {
-    const { trackId, creds, song, downloadPath } = req.body;
+    const { trackId, creds, song } = req.body;
     if (!trackId) return res.status(400).json({ error: 'trackId or streamUrl required' });
 
-    const id = createDownloadId();
-    const safeArtist = (song.artist || 'artist').replace(/[\\/:*?"<>|]/g, '_').slice(0, 60);
-    const safeTitle = (song.title || 'track').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
-    const filename = `${safeArtist} - ${safeTitle}`;
-    const outDir = downloadPath || DOWNLOAD_DIR;
+    const id = Math.random().toString(36).slice(2, 10);
+    const filename = sanitizeQuery(`${song.artist} - ${song.title}`);
+    const outDir = DOWNLOAD_DIR;
     if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
     const destPath = path.join(outDir, filename + '.tmp');
@@ -53,6 +45,7 @@ app.post('/api/tidal/download', async (req, res) => {
       progress: 0,
       status: 'queued',
       filename: path.basename(destPath),
+      error: null,
     };
     downloads.set(id, item);
 
