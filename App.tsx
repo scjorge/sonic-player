@@ -5,6 +5,8 @@ import { spotifyService } from './services/spotifyService';
 import { tidalService } from './services/tidalService';
 import TidalBrowse from './components/tidal/TidalBrowse.tsx';
 import TidalLiked from './components/tidal/TidalLiked';
+import TidalPlaylists from './components/tidal/TidalPlaylists';
+import { TIDAL_COLUMN_CONFIG } from './components/tidal/tidalConstants';
 import { getStoredGroups, getSpotifyCredentials } from './services/data';
 import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation, AlertCircle } from 'lucide-react';
 import SongTable from './components/library/SongTable';
@@ -21,7 +23,7 @@ import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_favorites';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_favorites' | 'tidal_playlists' | 'tidal_playlist_tracks';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
@@ -444,6 +446,35 @@ const App: React.FC = () => {
         setLoadingNavi(false);
     }
   };
+
+    const handleTidalPlaylistClick = async (playlist: NaviPlaylist) => {
+        setLoadingNavi(true);
+        setViewMode('tidal_playlist_tracks');
+        setSelectedPlaylistId(playlist.id);
+        setSelectedSpotifyPlaylistName(playlist.name); // reuse field for display
+        setActiveSearchQuery('');
+        setPage(0);
+
+        const currentSize = pageSize > 100 ? 100 : pageSize;
+        if (pageSize > 100) setPageSize(100);
+
+        try {
+            const { items, total } = await tidalService.getPlaylistItems(playlist.id, 0, currentSize);
+            const mappedSongs = items || [];
+            setNaviSongs(mappedSongs);
+            setTotalSongs(total || mappedSongs.length);
+
+            const existenceChecks = await Promise.all(mappedSongs.map(async song => {
+                    const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
+                    return [song.id, exists] as [string, boolean];
+            }));
+            setSpotifyNavidromeExistenceMap(new Map(existenceChecks));
+        } catch (e) {
+            console.error('Fetch tidal playlist failed', e);
+        } finally {
+            setLoadingNavi(false);
+        }
+    };
 
   const handleFavoritesClick = async () => {
     setLoadingNavi(true);
@@ -1252,6 +1283,57 @@ const App: React.FC = () => {
         return <SpotifyPlaylists onPlaylistClick={handleSpotifyPlaylistClick} />;
     }
 
+    if (viewMode === 'tidal_playlists') {
+        if (!tidalService.isAuthenticated()) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Recursos do TIDAL indisponíveis.</div>
+                    <div className="text-zinc-400 mb-6">Autentique-se nas configurações do TIDAL para usar este recurso.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('tidal'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
+        return <TidalPlaylists onPlaylistClick={handleTidalPlaylistClick} />;
+    }
+
+    if (viewMode === 'tidal_playlist_tracks') {
+        if (!tidalService.isAuthenticated()) {
+            return (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Recursos do TIDAL indisponíveis.</div>
+                    <div className="text-zinc-400 mb-6">Autentique-se nas configurações do TIDAL para usar este recurso.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('tidal'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Reuse existing naviSongs rendering for playlist tracks
+        return (
+            <div className="h-full">
+                <SongTable
+                    songs={naviSongs}
+                    onPlay={playTidalSong}
+                    currentTrackId={currentTrack?.id}
+                    isPlaying={isPlaying}
+                    defaultColumns={TIDAL_COLUMN_CONFIG}
+                    isTidalTable={true}
+                    page={page}
+                    pageSize={pageSize}
+                    totalItems={totalSongs}
+                    onPageChange={(p) => { setPage(p); }}
+                    onPageSizeChange={(s) => setPageSize(s)}
+                    navidromeExistenceMap={spotifyNavidromeExistenceMap}
+                    onNavigateToLibraryQuery={handleSearch}
+                />
+            </div>
+        );
+    }
+
     if (viewMode === 'spotify_playlist_tracks') {
         if (!isAuthenticated) {
             return (
@@ -1567,6 +1649,13 @@ const App: React.FC = () => {
                             >
                                 <Heart className="w-4 h-4 flex-shrink-0" />
                                 {!isSidebarCollapsed && <span>Curtidas</span>}
+                            </button>
+                            <button 
+                                onClick={() => setViewMode('tidal_playlists')}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_playlists' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                            >
+                                <List className="w-4 h-4 flex-shrink-0" />
+                                {!isSidebarCollapsed && <span>Playlists</span>}
                             </button>
                         </div>
                     </div>

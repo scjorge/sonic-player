@@ -216,6 +216,73 @@ class TidalService {
     return { items: mapped, total };
   }
 
+  async getUserPlaylists(limit = 50, offset = 0) {
+    const creds = this.getCredentials();
+    const token = this.getAccessToken();
+    const countryCode = creds.countryCode;
+    const userID = creds.userId;
+    if (!token) throw new Error('Not authenticated with TIDAL');
+
+    const params = new URLSearchParams();
+    params.append('limit', String(limit));
+    params.append('offset', String(offset));
+    if (countryCode) params.append('countryCode', countryCode);
+
+    const res = await fetch(`https://api.tidal.com/v1/users/${userID}/playlists?${params.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error('Tidal playlists fetch failed: ' + JSON.stringify(body));
+    }
+
+    const json = await res.json();
+    const items = json.items || [];
+    const mapped = items.map((p: any) => ({
+      id: p.uuid || p.id,
+      name: p.title || p.name,
+      songCount: p.numberOfTracks || p.numberOfItems || p.length || 0,
+    }));
+
+    const total = json.totalNumberOfItems || json.total || mapped.length;
+    return { items: mapped, total };
+  }
+
+  async getPlaylistItems(playlistId: string, limit = 100, offset = 0) {
+    const creds = this.getCredentials();
+    const token = this.getAccessToken();
+    const countryCode = creds.countryCode;
+    if (!token) throw new Error('Not authenticated with TIDAL');
+
+    const params = new URLSearchParams();
+    params.append('limit', String(limit));
+    params.append('offset', String(offset));
+    if (countryCode) params.append('countryCode', countryCode);
+
+    const res = await fetch(`https://api.tidal.com/v1/playlists/${playlistId}/items?${params.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error('Tidal playlist items fetch failed: ' + JSON.stringify(body));
+    }
+
+    const json = await res.json();
+    const items = json.items || [];
+    const tracks = items.map((it: any) => it.item || it.track || it);
+    const mapped = this.getMappepTracks(tracks);
+    const total = json.totalNumberOfItems;
+    return { items: mapped, total };
+  }
+
   getCredentials() {
     return getTidalCredentials();
   }
