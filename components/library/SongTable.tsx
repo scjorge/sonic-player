@@ -474,25 +474,25 @@ const SongTable: React.FC<SongTableProps> = ({
                   <Play className="w-4 h-4" /> Play
               </button>
 
-                            {/* Spotify -> Search on TIDAL options */}
-                            {contextMenu.song.contentType === 'audio/spotify' && (
-                                <>
-                                    <button
-                                        onClick={() => { if (onSearchTidalByTitle) onSearchTidalByTitle(`${contextMenu.song.artist.split(",")[0]} ${contextMenu.song.title}`); setContextMenu({ ...contextMenu, visible: false }); }}
-                                        className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
-                                    >
-                                        <Search className="w-4 h-4" /> Buscar no TIDAL por título
-                                    </button>
-                                    <button
-                                        onClick={() => { if (onSearchTidalByISRC && contextMenu.song!.isrc) onSearchTidalByISRC(contextMenu.song!.isrc); setContextMenu({ ...contextMenu, visible: false }); }}
-                                        className={`w-full text-left px-3 py-2 text-sm ${contextMenu.song!.isrc ? 'text-zinc-300 hover:bg-zinc-800 hover:text-white' : 'text-zinc-600 cursor-not-allowed' } flex items-center gap-2`}
-                                        disabled={!contextMenu.song!.isrc}
-                                        title={contextMenu.song!.isrc ? 'Buscar por ISRC' : 'ISRC não disponível'}
-                                    >
-                                        <Search className="w-4 h-4" /> Buscar no TIDAL por ISRC
-                                    </button>
-                                </>
-                            )}
+                {/* Spotify -> Search on TIDAL options */}
+                {contextMenu.song.contentType === 'audio/spotify' && (
+                    <>
+                        <button
+                            onClick={() => { if (onSearchTidalByTitle) onSearchTidalByTitle(`${contextMenu.song.artist.split(",")[0]} ${contextMenu.song.title}`); setContextMenu({ ...contextMenu, visible: false }); }}
+                            className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+                        >
+                            <Search className="w-4 h-4" /> Buscar no TIDAL por título
+                        </button>
+                        <button
+                            onClick={() => { if (onSearchTidalByISRC && contextMenu.song!.isrc) onSearchTidalByISRC(contextMenu.song!.isrc); setContextMenu({ ...contextMenu, visible: false }); }}
+                            className={`w-full text-left px-3 py-2 text-sm ${contextMenu.song!.isrc ? 'text-zinc-300 hover:bg-zinc-800 hover:text-white' : 'text-zinc-600 cursor-not-allowed' } flex items-center gap-2`}
+                            disabled={!contextMenu.song!.isrc}
+                            title={contextMenu.song!.isrc ? 'Buscar por ISRC' : 'ISRC não disponível'}
+                        >
+                            <Search className="w-4 h-4" /> Buscar no TIDAL por ISRC
+                        </button>
+                    </>
+                )}
 
               <button 
                 onClick={() => { onToggleFavorite && onToggleFavorite(contextMenu.song!); setContextMenu({ ...contextMenu, visible: false }); }}
@@ -761,19 +761,19 @@ const SongTable: React.FC<SongTableProps> = ({
                     <div className="flex gap-1">
                         <button 
                             onClick={() => setRowDensity('compact')}
-                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'compact' ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'compact' ? isSpotifyTable ? 'bg-green-600 text-white' : isTidalTable ? 'bg-yellow-600 text-white' : 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
                         >
                             Peq.
                         </button>
                         <button 
                             onClick={() => setRowDensity('normal')}
-                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'normal' ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'normal' ? isSpotifyTable ? 'bg-green-600 text-white' : isTidalTable ? 'bg-yellow-600 text-white' : 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
                         >
                             Méd.
                         </button>
                         <button 
                             onClick={() => setRowDensity('relaxed')}
-                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'relaxed' ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'relaxed' ? isSpotifyTable ? 'bg-green-600 text-white' : isTidalTable ? 'bg-yellow-600 text-white' : 'bg-ndigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
                         >
                             Grd.
                         </button>
@@ -792,7 +792,7 @@ const SongTable: React.FC<SongTableProps> = ({
                         className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 flex items-center justify-between transition-colors"
                     >
                         {col.label || (col.id === 'select' ? 'Seleção' : col.id)}
-                        {col.visible && <Check className="w-3.5 h-3.5 text-indigo-500" />}
+                        {col.visible && <Check className={isSpotifyTable ? 'w-3.5 h-3.5 text-green-500' : isTidalTable ? 'w-3.5 h-3.5 text-yellow-500' : "w-3.5 h-3.5 text-indigo-500"} />}
                     </button>
                     ))}
                 </div>
