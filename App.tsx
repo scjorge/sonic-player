@@ -66,7 +66,7 @@ const App: React.FC = () => {
   const [isPlaylistsExpanded, setIsPlaylistsExpanded] = useState(true);
   
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
-  const [selectedSpotifyPlaylistName, setSelectedSpotifyPlaylistName] = useState<string | null>(null);
+  const [selectedPlaylistName, setselectedPlaylistName] = useState<string | null>(null);
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
   const [showAddToPlaylistModal, setShowAddToPlaylistModal] = useState(false);
   const [showRemoveFromPlaylistModal, setShowRemoveFromPlaylistModal] = useState(false);
@@ -75,9 +75,9 @@ const App: React.FC = () => {
   const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
   const [spotifyBrowseTracks, setSpotifyBrowseTracks] = useState<NaviSong[]>([]);
   const [spotifyNavidromeExistenceMap, setSpotifyNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map()); 
-    // TIDAL cross-search state (used when triggering TIDAL search from other views)
-    const [tidalInitialQuery, setTidalInitialQuery] = useState<string>('');
-    const [tidalAutoFocus, setTidalAutoFocus] = useState<boolean>(false);
+  // TIDAL cross-search state (used when triggering TIDAL search from other views)
+  const [tidalInitialQuery, setTidalInitialQuery] = useState<string>('');
+  const [tidalAutoFocus, setTidalAutoFocus] = useState<boolean>(false);
 
   // Tidal search state
   const [tidalTracks, setTidalTracks] = useState<NaviSong[]>([]);
@@ -399,7 +399,7 @@ const App: React.FC = () => {
     setLoadingNavi(true);
     setViewMode('spotify_playlist_tracks');
     setSelectedPlaylistId(playlist.id);
-    setSelectedSpotifyPlaylistName(playlist.name);
+    setselectedPlaylistName(playlist.name);
     setActiveSearchQuery('');
     setPage(0);
 
@@ -431,7 +431,7 @@ const App: React.FC = () => {
         setLoadingNavi(true);
         setViewMode('tidal_playlist_tracks');
         setSelectedPlaylistId(playlist.id);
-        setSelectedSpotifyPlaylistName(playlist.name); // reuse field for display
+        setselectedPlaylistName(playlist.name); // reuse field for display
         setActiveSearchQuery('');
         setPage(0);
 
@@ -1666,12 +1666,17 @@ const App: React.FC = () => {
                 {viewMode === 'navi_songs' && <><ListMusic className="w-5 h-5 text-indigo-500" /> Músicas</>}
                 {viewMode === 'navi_albums' && <><Library className="w-5 h-5 text-indigo-500" /> Álbuns</>}
                 {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
+                {viewMode === 'navi_favorites' && <><Heart className="w-5 h-5 text-indigo-500 fill-indigo-500" /> Favoritos</>}
+                {viewMode === 'navi_playlist' && <><List className="w-5 h-5 text-indigo-500" /> {naviPlaylists.find(p => p.id === selectedPlaylistId)?.name || 'Playlist'}</>}
                 {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador</>}
                 {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
                 {viewMode === 'spotify_playlists' && <><List className="w-5 h-5 text-green-500" /> Playlists</>}
+                {viewMode === 'spotify_playlist_tracks' && <><List className="w-5 h-5 text-green-500" /> {selectedPlaylistName || 'Playlist'}</>}
+                
                 {viewMode === 'tidal_browse' && <><img src="https://tidal.com/favicon.ico" className="w-5 h-5 object-contain" /> Navegador</>}
                 {viewMode === 'tidal_liked' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Músicas Curtidas</>}
                 {viewMode === 'tidal_playlists' && <><List className="w-5 h-5 text-yellow-500" /> Playlists</>}
+                {viewMode === 'tidal_playlist_tracks' && <><List className="w-5 h-5 text-yellow-500" /> {selectedPlaylistName || 'Playlist'}</>}
                 {viewMode === 'tidal_downloads' && <><Download className="w-5 h-5 text-yellow-400" /> Downloads</>}
                 {viewMode === 'settings' && (
                     <>
@@ -1679,9 +1684,6 @@ const App: React.FC = () => {
                         {activeSettingsTab === 'navidrome' ? 'Configurar Navidrome' : activeSettingsTab === 'groups' ? 'Gerenciar Grupos' : activeSettingsTab === 'spotify' ? 'Configurar Spotify' : 'Configurações'}
                     </>
                 )}
-                {viewMode === 'navi_favorites' && <><Heart className="w-5 h-5 text-indigo-500 fill-indigo-500" /> Favoritos</>}
-                {viewMode === 'navi_playlist' && <><List className="w-5 h-5 text-indigo-500" /> {naviPlaylists.find(p => p.id === selectedPlaylistId)?.name || 'Playlist'}</>}
-                {viewMode === 'spotify_playlist_tracks' && <><List className="w-5 h-5 text-green-500" /> {selectedSpotifyPlaylistName || 'Playlist'}</>}
             </h2>
         </div>
 
