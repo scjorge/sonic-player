@@ -136,7 +136,7 @@ export interface TidalCredentials {
 
 export interface TidalPlayback {
   trackId: string,
-  audioQuality:  "LOW" | "HIGH" | "LOSSLESS" | "HI_RES_LOSSLESS",
+  audioQuality: "LOW" | "HIGH" | "LOSSLESS" | "HI_RES_LOSSLESS",
   mimeType: string,
   codecs: string,
   encryptionType: string,

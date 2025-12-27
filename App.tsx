@@ -18,6 +18,7 @@ import GroupSettings from './components/settings/GroupSettings';
 import GroupTagModal from './components/library/GroupTagModal';
 import SpotifySettings from './components/settings/SpotifySettings';
 import TidalSettings from './components/settings/TidalSettings';
+import { TIDAL_QUALITY } from './components/tidal/tidalConstants';
 import NavidromeSettings from './components/settings/NavidromeSettings';
 import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
@@ -971,8 +972,7 @@ const App: React.FC = () => {
             setExclusivePlayer('tidal');
 
             // Attempt to get playback info from TIDAL
-            const prefQuality: any = 'HIGH';
-            const info = await tidalService.getTidalPlaybackInfo(song.id, prefQuality);
+            const info = await tidalService.getTidalPlaybackInfo(song.id, TIDAL_QUALITY);
             if (!info || !info.urls || info.urls.length === 0) {
                 console.warn('No playback URLs returned for TIDAL track', song.id, info);
                 return;
