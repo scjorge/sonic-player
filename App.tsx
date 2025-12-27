@@ -1666,13 +1666,13 @@ const App: React.FC = () => {
                 {viewMode === 'navi_songs' && <><ListMusic className="w-5 h-5 text-indigo-500" /> Músicas</>}
                 {viewMode === 'navi_albums' && <><Library className="w-5 h-5 text-indigo-500" /> Álbuns</>}
                 {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
-                {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador Spotify</>}
+                {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador</>}
                 {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
-                {viewMode === 'spotify_playlists' && <><List className="w-5 h-5 text-green-500" /> Playlists do Spotify</>}
-                {viewMode === 'tidal_browse' && <><img src="https://tidal.com/favicon.ico" className="w-5 h-5 object-contain" /> Navegador TIDAL</>}
-                {viewMode === 'tidal_liked' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Favoritos TIDAL</>}
-                {viewMode === 'tidal_playlists' && <><List className="w-5 h-5 text-yellow-500" /> Playlists do TIDAL</>}
-                {viewMode === 'tidal_downloads' && <><Download className="w-5 h-5 text-yellow-400" /> Downloads TIDAL</>}
+                {viewMode === 'spotify_playlists' && <><List className="w-5 h-5 text-green-500" /> Playlists</>}
+                {viewMode === 'tidal_browse' && <><img src="https://tidal.com/favicon.ico" className="w-5 h-5 object-contain" /> Navegador</>}
+                {viewMode === 'tidal_liked' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Músicas Curtidas</>}
+                {viewMode === 'tidal_playlists' && <><List className="w-5 h-5 text-yellow-500" /> Playlists</>}
+                {viewMode === 'tidal_downloads' && <><Download className="w-5 h-5 text-yellow-400" /> Downloads</>}
                 {viewMode === 'settings' && (
                     <>
                         <Settings className="w-5 h-5 text-indigo-500" />
