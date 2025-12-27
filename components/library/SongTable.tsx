@@ -539,8 +539,7 @@ const SongTable: React.FC<SongTableProps> = ({
                                             const accessToken = tidalService.getAccessToken();
                                             const body = {
                                                 trackId: contextMenu.song!.id,
-                                                title: contextMenu.song!.title,
-                                                artist: contextMenu.song!.artist,
+                                                song: contextMenu.song,
                                                 accessToken: accessToken || undefined
                                             };
                                             const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/download`, {

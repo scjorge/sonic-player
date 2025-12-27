@@ -901,25 +901,6 @@ const App: React.FC = () => {
     }
   };
 
-  const playSpotifyTrack = (track: SpotifyTrack) => {
-      if (!track.preview_url) return;
-      if (currentTrack?.id === track.id) {
-          togglePlayPause();
-          return;
-      }
-      setExclusivePlayer('spotify_preview');
-      const playerTrack: PlayerTrack = {
-          id: track.id,
-          title: track.name,
-          artist: track.artists[0].name,
-          coverUrl: track.album.images[0]?.url || null,
-          src: track.preview_url,
-          duration: 30, // Spotify previews are 30s
-          sourceType: 'spotify_preview'
-      };
-      loadAndPlay(playerTrack);
-  };
-
     const playTidalSong = async (song: NaviSong) => {
         try {
             // If a path URL is provided, prefer opening it

@@ -32,19 +32,26 @@ app.get('/api/tidal/downloads', (_req, res) => {
 
 app.post('/api/tidal/download', async (req, res) => {
   try {
-    const { trackId, streamUrl, title, artist, accessToken, downloadPath } = req.body;
+    const { trackId, streamUrl, song, accessToken, downloadPath } = req.body;
     if (!streamUrl && !trackId) return res.status(400).json({ error: 'trackId or streamUrl required' });
 
     const id = createDownloadId();
-    const safeArtist = (artist || 'artist').replace(/[\\/:*?"<>|]/g, '_').slice(0, 60);
-    const safeTitle = (title || 'track').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
+    const safeArtist = (song.artist || 'artist').replace(/[\\/:*?"<>|]/g, '_').slice(0, 60);
+    const safeTitle = (song.title || 'track').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
     const filename = `${safeArtist} - ${safeTitle}`;
     const outDir = downloadPath || DOWNLOAD_DIR;
     if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
     const destPath = path.join(outDir, filename + '.tmp');
 
-    const item = { id, title, artist, progress: 0, status: 'queued', filename: path.basename(destPath) };
+    const item = {
+      id: id,
+      title: song.title,
+      artist: song.artist,
+      progress: 0,
+      status: 'queued',
+      filename: path.basename(destPath),
+    };
     downloads.set(id, item);
 
     // Start download asynchronously
