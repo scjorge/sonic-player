@@ -13,8 +13,8 @@ class TidalServerService {
         this.downloads = new Map();
     }
 
-    async getdownloads(){
-        const list = Array.from(this.downloads.values()).map(d => ({
+    getdownloadsItems() {
+        const items = Array.from(this.downloads.values()).map(d => ({
             id: d.id,
             title: d.title,
             artist: d.artist,
@@ -22,7 +22,15 @@ class TidalServerService {
             status: d.status,
             filename: d.filename,
         }));
-        return { items: list }
+        return items;
+    }
+
+    setdownloadsItems(item: any) {
+        this.downloads.set(item.id, item);
+    }
+
+    async getdownloads(){
+        return { items: this.getdownloadsItems() };
     }
 
     async downloadTrack(trackId, creds, song) {
@@ -44,7 +52,7 @@ class TidalServerService {
                 filename: path.basename(path.join(outDir, filename + '.tmp')),
                 error: null,
             };
-            this.downloads.set(id, item);
+            this.setdownloadsItems(item);
 
             // Start download asynchronously
             (async () => {
