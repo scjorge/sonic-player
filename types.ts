@@ -134,6 +134,14 @@ export interface TidalCredentials {
   clientSecret?: string;
 }
 
+export interface TidalPlayback {
+  trackId: string,
+  audioQuality:  "LOW" | "HIGH" | "LOSSLESS" | "HI_RES_LOSSLESS",
+  mimeType: string,
+  codecs: string,
+  encryptionType: string,
+  urls: Array<string>
+}
 // Extend Tidal credentials with auth tokens when available
 export interface TidalAuth {
   accessToken?: string;

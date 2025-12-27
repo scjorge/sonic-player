@@ -1,4 +1,5 @@
 import { getTidalCredentials, saveTidalCredentials } from './data';
+import { TidalPlayback } from '../types';
 
 const AUTH_BASE = 'https://auth.tidal.com/v1/oauth2';
 
@@ -287,6 +288,92 @@ class TidalService {
   logout() {
     const creds: any = getTidalCredentials();
     saveTidalCredentials({ clientId: creds.clientId || '', clientSecret: creds.clientSecret || '' });
+  }
+
+  async getTidalPlaybackInfo(trackId: string, audioQuality: TidalPlayback['audioQuality']): Promise<TidalPlayback> {
+    const parseBTSManifest = (manifestText: any, data: any) => {
+        const manifest = JSON.parse(manifestText);
+
+        return {
+            trackId: data.trackId,
+            audioQuality: data.audioQuality,
+            mimeType: manifest.mimeType || null,
+            codecs: manifest.codecs || null,
+            encryptionType: manifest.encryptionType || null,
+            urls: Array.isArray(manifest.urls) ? manifest.urls : []
+        };
+    }
+
+    const parseDASHManifest = (manifestText: any, data: any) => {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(manifestText, "application/xml");
+
+        const adaptationSet = xml.querySelector("AdaptationSet");
+        const representation = xml.querySelector("Representation");
+        const segmentTemplate = xml.querySelector("SegmentTemplate");
+
+        const mimeType =
+            adaptationSet?.getAttribute("mimeType") || null;
+
+        const codecs =
+            representation?.getAttribute("codecs") || null;
+
+        const baseUrls = [...xml.querySelectorAll("BaseURL")]
+            .map(el => el.textContent)
+            .filter(Boolean);
+
+        // DASH normalmente não expõe uma URL única,
+        // mas sim segmentos. Aqui padronizamos
+        // retornando os BaseURL disponíveis.
+        return {
+            trackId: data.trackId,
+            audioQuality: data.audioQuality,
+            mimeType,
+            codecs,
+            encryptionType: "DASH",
+            urls: baseUrls
+        };
+    }
+
+
+    const token = this.getAccessToken();
+    const countryCode = this.getCredentials().countryCode;
+    if (!token) throw new Error('Not authenticated with TIDAL');
+
+    const url =
+        `https://api.tidal.com/v1/tracks/${trackId}/playbackinfopostpaywall` +
+        `?playbackmode=STREAM` +
+        `&assetpresentation=FULL` +
+        `&audioquality=${audioQuality}` +
+        `&countryCode=${countryCode}`;
+
+    const res = await fetch(url, {
+        headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.tidal.v1+json"
+        }
+    });
+
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`TIDAL error ${res.status}: ${err}`);
+    }
+
+    const data = await res.json();
+
+    // Decodifica o manifest Base64
+    const manifestText = atob(data.manifest);
+    const mimeType = data.manifestMimeType;
+
+    if (mimeType === "application/vnd.tidal.bts") {
+        return parseBTSManifest(manifestText, data);
+    }
+
+    if (mimeType === "application/dash+xml") {
+        return parseDASHManifest(manifestText, data);
+    }
+
+    throw new Error(`Unsupported manifest type: ${mimeType}`);
   }
 }
 
