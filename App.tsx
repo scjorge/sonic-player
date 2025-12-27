@@ -926,18 +926,18 @@ const App: React.FC = () => {
     if (song.uri) {
       spotifyService.playTrack(song.uri);
       const playerTrack: PlayerTrack = {
-        id: song.id,
-        title: song.title,
-        artist: song.artist,
-        coverUrl: song.coverArt || null,
-        src: song.path, // Not used for playback, but good for consistency
-        duration: song.duration,
-                sourceType: 'spotify',
-            };
-            setCurrentTrack(playerTrack);
-      setIsPlaying(true); // Assume playback starts immediately
-      setCurrentTime(0); // Reset local time for new Spotify track
-            setDuration(song.duration); // Set duration based on Spotify track
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            coverUrl: song.coverArt || null,
+            src: song.path, // Not used for playback, but good for consistency
+            duration: song.duration,
+            sourceType: 'spotify',
+        };
+        setCurrentTrack(playerTrack);
+        setIsPlaying(true); // Assume playback starts immediately
+        setCurrentTime(0); // Reset local time for new Spotify track
+        setDuration(song.duration); // Set duration based on Spotify track
     }
   };
 
