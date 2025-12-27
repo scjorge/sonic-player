@@ -78,14 +78,14 @@ class TidalService {
     throw new Error('Timeout aguardando autorização do dispositivo');
   }
 
-  getMappepTracks(tracks: any[]) {
+  private getTidalMappedTracks(tracks: any[]) {
     const mapped = tracks.map((t: any) => {
-    const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
-    const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
-    const year = t.album && t.album.releaseDate ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
-    const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
+      const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
+      const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
+      const year = t.album && t.album.releaseDate ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
+      const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
 
-    return {
+      return {
         id: String(t.id || t.trackId || `${artist}-${t.title}`),
         title: t.title || t.name || '',
         artist: artist,
@@ -96,7 +96,8 @@ class TidalService {
         isrc: t.isrc || undefined,
         contentType: 'audio/tidal',
         duration: t.duration || undefined,
-    } as any;
+        track: t.trackNumber || undefined,
+      };
     });
     return mapped
   }
@@ -151,7 +152,7 @@ class TidalService {
       const total = 1;
 
       const tracks = [track];
-      const mapped = this.getMappepTracks(tracks);
+      const mapped = this.getTidalMappedTracks(tracks);
       return { items: mapped, total };
     }
 
@@ -181,7 +182,7 @@ class TidalService {
     const total = (json.tracks && json.tracks.total) ? json.tracks.total : (json.total || tracks.length);
 
     // Map to NaviSong minimal shape
-    const mapped = this.getMappepTracks(tracks);
+    const mapped = this.getTidalMappedTracks(tracks);
     return { items: mapped, total };
   }
 
@@ -212,7 +213,7 @@ class TidalService {
     const json = await res.json();
     const tracks = json.items.map((t: any) => { return t.item });
     const total = json.totalNumberOfItems;
-    const mapped = this.getMappepTracks(tracks);    
+    const mapped = this.getTidalMappedTracks(tracks);    
     return { items: mapped, total };
   }
 
@@ -278,7 +279,7 @@ class TidalService {
     const json = await res.json();
     const items = json.items || [];
     const tracks = items.map((it: any) => it.item || it.track || it);
-    const mapped = this.getMappepTracks(tracks);
+    const mapped = this.getTidalMappedTracks(tracks);
     const total = json.totalNumberOfItems;
     return { items: mapped, total };
   }

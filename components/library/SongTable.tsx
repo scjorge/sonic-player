@@ -371,7 +371,7 @@ const SongTable: React.FC<SongTableProps> = ({
             </div>
         );
       }
-    case 'title': return <span className={`font-medium ${currentTrackId === song.id ? (isSpotifyTable ? 'text-green-400' : isTidalTable ? 'text-yellow-400' : 'text-indigo-400') : 'text-zinc-100'}`}>{song.title}</span>;
+      case 'title': return <span className={`font-medium ${currentTrackId === song.id ? (isSpotifyTable ? 'text-green-400' : isTidalTable ? 'text-yellow-400' : 'text-indigo-400') : 'text-zinc-100'}`}>{song.title}</span>;
       case 'artist': return song.artist;
       case 'album': return song.album;
       case 'isrc': return song.isrc;

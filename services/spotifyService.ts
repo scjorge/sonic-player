@@ -1,5 +1,5 @@
 
-import { SpotifyCredentials, SpotifyTrack, PaginatedSpotifyTracks } from '../types';
+import { SpotifyCredentials, SpotifyTrack, PaginatedSpotifyTracks, NaviSong } from '../types';
 import { getSpotifyCredentials, saveSpotifyCredentials } from './data'; // Importar saveSpotifyCredentials
 
 class SpotifyService {
@@ -28,6 +28,47 @@ class SpotifyService {
       this.userRefreshToken = creds.refreshToken;
       this.userTokenExpiresAt = creds.expiresAt;
     }
+  }
+
+  async getSpotifyMappedTracks(items: any[]): Promise<NaviSong[] > {
+    const mappedSongs: NaviSong[] = await Promise.all(items.map(async (track: any) => {
+      const naviSong: NaviSong = {
+        id: track.id,
+        title: track.name,
+        artist: track.artists ? track.artists.map((a: any) => a.name).join(', ') : undefined,
+        album: track.album.name,
+        year: track.album.release_date ? parseInt(track.album.release_date.substring(0, 4)) : undefined,
+        coverArt: track.album.images && track.album.images.length > 0 ? track.album.images[0].url : undefined,
+        duration: Math.floor(track.duration_ms / 1000),
+        path: track.external_urls ? track.external_urls.spotify : undefined,
+        track: track.track_number,
+        uri: track.uri,
+        isrc: track.external_ids ? track.external_ids.isrc : undefined,
+        genre: undefined,
+        comment: undefined,
+        suffix: undefined,
+        bitRate: undefined,
+        samplingRate: undefined,
+        discNumber: undefined,
+        contentType: 'audio/spotify',
+        size: undefined,
+        created: undefined,
+        albumId: undefined,
+        artistId: undefined,
+        type: 'music',
+        isVideo: false,
+        bpm: undefined,
+        playCount: undefined,
+        lastPlayed: undefined,
+        userRating: undefined,
+        averageRating: undefined,
+        moods: undefined,
+        group: undefined,
+        starred: undefined,
+      };
+      return naviSong;
+    }));
+    return mappedSongs
   }
 
   // Helper para construir a URL de autorização do Spotify
@@ -395,7 +436,7 @@ class SpotifyService {
 
       const data = await response.json();
       return {
-        items: data.items.map((item: any) => item.track), // The track object is nested in `item`.
+        items: data.items.map((item: any) => item.track),
         total: data.total
       };
     } catch (error) {
