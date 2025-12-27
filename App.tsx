@@ -73,6 +73,9 @@ const App: React.FC = () => {
   const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
   const [spotifyBrowseTracks, setSpotifyBrowseTracks] = useState<NaviSong[]>([]);
   const [spotifyNavidromeExistenceMap, setSpotifyNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map()); 
+    // TIDAL cross-search state (used when triggering TIDAL search from other views)
+    const [tidalInitialQuery, setTidalInitialQuery] = useState<string>('');
+    const [tidalAutoFocus, setTidalAutoFocus] = useState<boolean>(false);
 
   // Tidal search state
   const [tidalTracks, setTidalTracks] = useState<NaviSong[]>([]);
@@ -267,6 +270,22 @@ const App: React.FC = () => {
     };
     init();
   }, []);
+
+    const openTidalSearchByTitle = (q: string) => {
+        if (!q) return;
+        setTidalInitialQuery(q);
+        setTidalAutoFocus(true);
+        setViewMode('tidal_browse');
+        setTimeout(() => setTidalAutoFocus(false), 500);
+    };
+
+    const openTidalSearchByISRC = (isrc: string) => {
+        if (!isrc) return;
+        setTidalInitialQuery(isrc);
+        setTidalAutoFocus(true);
+        setViewMode('tidal_browse');
+        setTimeout(() => setTidalAutoFocus(false), 500);
+    };
 
     // Load Spotify devices when authenticated
     useEffect(() => {
@@ -1177,6 +1196,8 @@ const App: React.FC = () => {
                     onPageSizeChange={handleSpotifyBrowsePageSizeChange}
                     onNavigateToLibraryQuery={handleSearch}
                     navidromeExistenceMap={spotifyNavidromeExistenceMap}
+                    onSearchTidalByTitle={openTidalSearchByTitle}
+                    onSearchTidalByISRC={openTidalSearchByISRC}
                 />
             </div>
         );
@@ -1247,7 +1268,7 @@ const App: React.FC = () => {
 
         return (
             <div className="h-full">
-                <TidalBrowse onOpen={playTidalSong} onNavigateToLibraryQuery={handleSearch} />
+                <TidalBrowse onOpen={playTidalSong} onNavigateToLibraryQuery={handleSearch} initialQuery={tidalInitialQuery} autoFocus={tidalAutoFocus} />
             </div>
         );
     }
@@ -1264,7 +1285,7 @@ const App: React.FC = () => {
                 </div>
             );
         }
-        return <LikedSongs onPlay={playSpotifySong} currentTrackId={currentTrack?.id} isPlaying={isPlaying} onNavigateToLibraryQuery={handleSearch} />;
+        return <LikedSongs onPlay={playSpotifySong} currentTrackId={currentTrack?.id} isPlaying={isPlaying} onNavigateToLibraryQuery={handleSearch} onSearchTidalByTitle={openTidalSearchByTitle} onSearchTidalByISRC={openTidalSearchByISRC} />;
     }
 
     if (viewMode === 'spotify_playlists') {
@@ -1363,6 +1384,8 @@ const App: React.FC = () => {
                     defaultColumns={SPOTIFY_COLUMN_CONFIG}
                     navidromeExistenceMap={spotifyNavidromeExistenceMap}
                     onNavigateToLibraryQuery={handleSearch}
+                    onSearchTidalByTitle={openTidalSearchByTitle}
+                    onSearchTidalByISRC={openTidalSearchByISRC}
                 />
             </div>
         );

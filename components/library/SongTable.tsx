@@ -43,6 +43,9 @@ interface SongTableProps {
     isTidalTable?: boolean;
   navidromeExistenceMap?: Map<string, boolean>;
     onNavigateToLibraryQuery?: (query: string) => void;
+    onSearchTidalByTitle?: (query: string) => void;
+    onSearchTidalByISRC?: (isrc: string) => void;
+    autoFocusSearch?: boolean;
     navidromeConnected?: boolean | null;
     onOpenNavidromeSettings?: () => void;
 }
@@ -94,6 +97,9 @@ const SongTable: React.FC<SongTableProps> = ({
     onQuickListChange,
     onSearch,
     activeSearchQuery = '',
+    onSearchTidalByTitle,
+    onSearchTidalByISRC,
+    autoFocusSearch,
     selectedIds = [],
     onSelect,
     onSelectAll,
@@ -142,12 +148,19 @@ const SongTable: React.FC<SongTableProps> = ({
   
   // Local state for search input to allow typing without immediate API calls if wanted, 
   // though typically we use onKeyDown Enter for search.
-  const [searchInputValue, setSearchInputValue] = useState(activeSearchQuery);
+    const [searchInputValue, setSearchInputValue] = useState(activeSearchQuery);
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   // Sync internal state with external prop if it changes (e.g. clear)
   useEffect(() => {
     setSearchInputValue(activeSearchQuery);
   }, [activeSearchQuery]);
+
+    useEffect(() => {
+        if (autoFocusSearch && searchInputRef.current) {
+            try { searchInputRef.current.focus(); searchInputRef.current.select(); } catch (e) {}
+        }
+    }, [autoFocusSearch]);
 
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -460,6 +473,26 @@ const SongTable: React.FC<SongTableProps> = ({
                   <Play className="w-4 h-4" /> Play
               </button>
 
+                            {/* Spotify -> Search on TIDAL options */}
+                            {contextMenu.song.contentType === 'audio/spotify' && (
+                                <>
+                                    <button
+                                        onClick={() => { if (onSearchTidalByTitle) onSearchTidalByTitle(`${contextMenu.song.artist.split(",")[0]} ${contextMenu.song.title}`); setContextMenu({ ...contextMenu, visible: false }); }}
+                                        className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+                                    >
+                                        <Search className="w-4 h-4" /> Buscar no TIDAL por título
+                                    </button>
+                                    <button
+                                        onClick={() => { if (onSearchTidalByISRC && contextMenu.song!.isrc) onSearchTidalByISRC(contextMenu.song!.isrc); setContextMenu({ ...contextMenu, visible: false }); }}
+                                        className={`w-full text-left px-3 py-2 text-sm ${contextMenu.song!.isrc ? 'text-zinc-300 hover:bg-zinc-800 hover:text-white' : 'text-zinc-600 cursor-not-allowed' } flex items-center gap-2`}
+                                        disabled={!contextMenu.song!.isrc}
+                                        title={contextMenu.song!.isrc ? 'Buscar por ISRC' : 'ISRC não disponível'}
+                                    >
+                                        <Search className="w-4 h-4" /> Buscar no TIDAL por ISRC
+                                    </button>
+                                </>
+                            )}
+
               <button 
                 onClick={() => { onToggleFavorite && onToggleFavorite(contextMenu.song!); setContextMenu({ ...contextMenu, visible: false }); }}
                 className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
@@ -503,6 +536,7 @@ const SongTable: React.FC<SongTableProps> = ({
             <div className="relative group ml-2">
                 <input
                     type="text"
+                    ref={searchInputRef}
                     value={searchInputValue}
                     onChange={(e) => setSearchInputValue(e.target.value)}
                     onKeyDown={handleSearchKeyDown}

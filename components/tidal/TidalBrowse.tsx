@@ -9,9 +9,11 @@ import { Search, Music, AlertCircle, Loader2 } from 'lucide-react';
 interface TidalBrowseProps {
   onOpen?: (song: NaviSong) => void;
   onNavigateToLibraryQuery?: (query: string) => void;
+  initialQuery?: string;
+  autoFocus?: boolean;
 }
 
-const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQuery }) => {
+const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQuery, initialQuery, autoFocus }) => {
   const [query, setQuery] = useState('');
   const [tracks, setTracks] = useState<NaviSong[]>([]);
   const [navidromeExistenceMap, setNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
@@ -27,6 +29,14 @@ const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQu
       setConfigured(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (initialQuery && initialQuery.trim()) {
+      setQuery(initialQuery);
+      setPage(0);
+      doSearch(initialQuery, 0, pageSize);
+    }
+  }, [initialQuery]);
 
   const doSearch = async (q: string, p = 0, size = pageSize) => {
     if (!q.trim()) {
@@ -107,13 +117,14 @@ const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQu
 
   return (
     <div className="flex flex-col h-full bg-zinc-950">
-        <SongTable
+                <SongTable
           songs={tracks}
           onPlay={(s) => { if (onOpen) onOpen(s); }}
           currentTrackId={null}
           isPlaying={false}
           onSearch={handleSearch}
-          activeSearchQuery={query}
+                  activeSearchQuery={query}
+                  autoFocusSearch={!!autoFocus}
           page={page}
           pageSize={pageSize}
           totalItems={total}
