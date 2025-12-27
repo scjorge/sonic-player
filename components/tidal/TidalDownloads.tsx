@@ -32,7 +32,6 @@ const TidalDownloads: React.FC = () => {
 
   return (
     <div className="h-full p-6 overflow-y-auto">
-      <h3 className="text-lg font-semibold mb-4">Downloads TIDAL</h3>
       {items.length === 0 && <div className="text-zinc-500">Nenhum download em andamento.</div>}
       <div className="space-y-3">
         {items.map(it => (

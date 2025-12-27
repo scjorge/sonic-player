@@ -25,7 +25,7 @@ import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_favorites' | 'tidal_playlists' | 'tidal_playlist_tracks' | 'tidal_downloads';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks' | 'tidal_downloads';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
@@ -1144,7 +1144,7 @@ const App: React.FC = () => {
         );
     }
 
-    if (viewMode === 'tidal_favorites') {
+    if (viewMode === 'tidal_liked') {
         const creds = tidalService.getCredentials();
         if (!creds?.clientId || !creds?.clientSecret) {
             return (
@@ -1624,8 +1624,8 @@ const App: React.FC = () => {
                                 {!isSidebarCollapsed && <span>Navegar</span>}
                             </button>
                             <button 
-                                onClick={() => { setViewMode('tidal_favorites'); setPage(0); }}
-                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_favorites' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                                onClick={() => { setViewMode('tidal_liked'); setPage(0); }}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_liked' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                             >
                                 <Heart className="w-4 h-4 flex-shrink-0" />
                                 {!isSidebarCollapsed && <span>Curtidas</span>}
@@ -1666,10 +1666,12 @@ const App: React.FC = () => {
                 {viewMode === 'navi_albums' && <><Library className="w-5 h-5 text-indigo-500" /> Álbuns</>}
                 {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
                 {viewMode === 'spotify_browse' && <><img src="https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png" className="w-5 h-5 object-contain" /> Navegador Spotify</>}
-                {viewMode === 'tidal_browse' && <><img src="https://tidal.com/favicon.ico" className="w-5 h-5 object-contain" /> Navegador TIDAL</>}
-                {viewMode === 'tidal_favorites' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Favoritos TIDAL</>}
                 {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
                 {viewMode === 'spotify_playlists' && <><List className="w-5 h-5 text-green-500" /> Playlists do Spotify</>}
+                {viewMode === 'tidal_browse' && <><img src="https://tidal.com/favicon.ico" className="w-5 h-5 object-contain" /> Navegador TIDAL</>}
+                {viewMode === 'tidal_liked' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Favoritos TIDAL</>}
+                {viewMode === 'tidal_playlists' && <><List className="w-5 h-5 text-yellow-500" /> Playlists do TIDAL</>}
+                {viewMode === 'tidal_downloads' && <><Download className="w-5 h-5 text-yellow-400" /> Downloads TIDAL</>}
                 {viewMode === 'settings' && (
                     <>
                         <Settings className="w-5 h-5 text-indigo-500" />
