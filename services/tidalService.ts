@@ -309,7 +309,7 @@ class TidalService {
     saveTidalCredentials({ clientId: creds.clientId || '', clientSecret: creds.clientSecret || '' });
   }
 
-  async getTidalPlaybackInfo(trackId: string, audioQuality: TidalPlayback['audioQuality']): Promise<TidalPlayback> {
+  async getTidalPlaybackInfo(creds: any, trackId: string, audioQuality: TidalPlayback['audioQuality']): Promise<TidalPlayback> {
     const parseBTSManifest = (manifestText: any, data: any) => {
         const manifest = JSON.parse(manifestText);
 
@@ -355,8 +355,8 @@ class TidalService {
     }
 
 
-    const token = this.getAccessToken();
-    const countryCode = this.getCredentials().countryCode;
+    const token = creds.accessToken;
+    const countryCode = creds.countryCode;
     if (!token) throw new Error('Not authenticated with TIDAL');
 
     const url =

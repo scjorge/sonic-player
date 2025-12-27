@@ -536,11 +536,10 @@ const SongTable: React.FC<SongTableProps> = ({
                                     onClick={async () => {
                                         setContextMenu({ ...contextMenu, visible: false });
                                         try {
-                                            const accessToken = tidalService.getAccessToken();
                                             const body = {
+                                                creds: tidalService.getCredentials(),
                                                 trackId: contextMenu.song!.id,
                                                 song: contextMenu.song,
-                                                accessToken: accessToken || undefined
                                             };
                                             const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/download`, {
                                                 method: 'POST',

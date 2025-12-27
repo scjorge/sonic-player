@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
 import cors from 'cors';
+import { tidalService } from '../services/tidalService.ts';
+import { TIDAL_QUALITY } from '../components/tidal/tidalConstants.ts';
 
 
 const app = express();
@@ -32,8 +34,8 @@ app.get('/api/tidal/downloads', (_req, res) => {
 
 app.post('/api/tidal/download', async (req, res) => {
   try {
-    const { trackId, streamUrl, song, accessToken, downloadPath } = req.body;
-    if (!streamUrl && !trackId) return res.status(400).json({ error: 'trackId or streamUrl required' });
+    const { trackId, creds, song, downloadPath } = req.body;
+    if (!trackId) return res.status(400).json({ error: 'trackId or streamUrl required' });
 
     const id = createDownloadId();
     const safeArtist = (song.artist || 'artist').replace(/[\\/:*?"<>|]/g, '_').slice(0, 60);
@@ -58,34 +60,8 @@ app.post('/api/tidal/download', async (req, res) => {
     (async () => {
       try {
         item.status = 'starting';
-        // Determine stream url: if not provided, call TIDAL playback endpoint using accessToken
-        let url = streamUrl;
-        if (!url && trackId) {
-          // Call tidal playbackinfo
-          const resp = await fetch(`https://api.tidal.com/v1/tracks/${trackId}/playbackinfopostpaywall?playbackmode=STREAM&assetpresentation=FULL&audioquality=LOSSLESS`, {
-            headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/vnd.tidal.v1+json' }
-          });
-          const data = await resp.json().catch(() => ({}));
-          if (!resp.ok) {
-            throw new Error('TIDAL playbackinfo fetch failed: ' + JSON.stringify(data));
-          }
-          if (!data || !data.manifest) {
-            throw new Error('TIDAL playbackinfo missing manifest: ' + JSON.stringify(data));
-          }
-          const manifestText = Buffer.from(String(data.manifest), 'base64').toString('utf-8');
-          let manifest;
-          try {
-            manifest = JSON.parse(manifestText);
-          } catch (e) {
-            throw new Error('Failed to parse manifest JSON: ' + String(e));
-          }
-          const first = Array.isArray(manifest.urls) ? manifest.urls.find(u => typeof u === 'string' || u.url || u.uri) || manifest.urls[0] : null;
-          if (!first) throw new Error('No urls in manifest');
-          url = typeof first === 'string' ? first : (first.url || first.uri);
-        }
-
-        if (!url) throw new Error('No stream url');
-
+        const manifest = await tidalService.getTidalPlaybackInfo(creds, trackId, TIDAL_QUALITY);
+        const url = manifest.urls[0];
         item.status = 'downloading';
 
         const resp = await fetch(url);

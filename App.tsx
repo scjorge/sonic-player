@@ -913,7 +913,8 @@ const App: React.FC = () => {
             setExclusivePlayer('tidal');
 
             // Attempt to get playback info from TIDAL
-            const info = await tidalService.getTidalPlaybackInfo(song.id, TIDAL_QUALITY);
+            const creds = tidalService.getCredentials();
+            const info = await tidalService.getTidalPlaybackInfo(creds, song.id, TIDAL_QUALITY);
             if (!info || !info.urls || info.urls.length === 0) {
                 console.warn('No playback URLs returned for TIDAL track', song.id, info);
                 return;
