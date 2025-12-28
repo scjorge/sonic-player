@@ -39,11 +39,7 @@ export async function streamDownload(req: Request, res: Response) {
     const range = req.headers.range;
 
     const ext = path.extname(filePath).toLowerCase();
-    const mimeType = ext === '.mp3'
-        ? 'audio/mpeg'
-        : ext === '.flac'
-            ? 'audio/flac'
-            : 'application/octet-stream';
+    const mimeType = ext === '.mp3' ? 'audio/mpeg' : ext === '.flac' ? 'audio/flac' : 'application/octet-stream';
 
     if (range) {
         const parts = range.replace(/bytes=/, '').split('-');
