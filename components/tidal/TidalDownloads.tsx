@@ -3,6 +3,8 @@ import { NaviSong } from '../../types';
 import SongTable from '../library/SongTable';
 import { TIDAL_COLUMN_DOWNLOAD_CONFIG, TIDAL_DOWNLOAD_BACKEND_BASE_URL } from './tidalConstants';
 import { RotateCcw } from 'lucide-react';
+import { tidalService }  from '../../services/tidalService';
+import showToast from '../utils/toast';
 
 interface TidalDownloadsProps {
   onPlayDownload?: (song: NaviSong) => void;
@@ -25,19 +27,23 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
   const [completedSongs, setCompletedSongs] = useState<NaviSong[]>([]);
   const [loadingCompleted, setLoadingCompleted] = useState(false);
 
-  const handleRetry = async (id: string) => {
-    try {
-      await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads/retry`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
+  const handleRetry = async (song: any) => {
+    const body = {
+          creds: tidalService.getCredentials(),
+          trackId: song.id,
+          song: song,
+      };
+      const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/download`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
       });
-      // Deixa o polling atualizar a UI; apenas força uma busca imediata
-      fetchDownloads();
-    } catch (e) {
-      // ignore / log se quiser
-      console.error('Failed to retry download', e);
-    }
+      if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          showToast(`Erro ao tentar novamente: ${err.error || resp.statusText}`, 'error');
+          throw new Error(err.error || 'Erro ao tentar novamente');
+      }
+      fetchDownloads()
   };
 
   const fetchDownloads = async () => {
@@ -141,7 +147,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
                       <button
                         className="p-1 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
                         title="Tentar novamente"
-                        onClick={() => handleRetry(it.id)}
+                        onClick={() => handleRetry(it)}
                       >
                         <RotateCcw className="w-4 h-4" />
                       </button>
