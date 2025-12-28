@@ -78,11 +78,11 @@ class TidalService {
     throw new Error('Timeout aguardando autorização do dispositivo');
   }
 
-  private getTidalMappedTracks(tracks: any[]) {
-    const mapped = tracks.map((t: any) => {
+  private async getTidalMappedTracks(tracks: any[]) {
+    const mapped = await Promise.all(tracks.map(async (t: any) => {
       const artist = (t.artists && t.artists.length > 0) ? t.artists.map((a: any) => a.name).join(', ') : (t.artistName || '');
       const albumName = t.album ? (t.album.title || t.album.name) : (t.albumName || '');
-      const year = t.album && t.album.releaseDate ? (t.album.releaseDate.split('-')[0] || undefined) : undefined;
+      const year = t.album && t.album.releaseDate ? t.album.releaseDate.split('-')[0] : await this.getAlbumYears(t.album.id);
       const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
 
       return {
@@ -98,8 +98,31 @@ class TidalService {
         isrc: t.isrc || undefined,
         url: t.url || t.playUrl || undefined,
       };
-    });
+    }));
     return mapped
+  }
+
+  async getAlbumYears(albumId: string[]) {
+    const token = this.getAccessToken();
+    const countryCode = this.getCredentials().countryCode;
+
+    if (!token) throw new Error('Not authenticated with TIDAL');
+      const url = `https://openapi.tidal.com/v2/albums/${albumId}?countryCode=${countryCode}&include=artists`;
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.api+json'
+        }
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error('Tidal Album Year lookup failed: ' + JSON.stringify(body));
+      }
+
+      const json = await res.json();
+      const year = json.data.attributes.releaseDate.split('-')[0];
+      return year;
   }
 
   async searchTracks(query: string, limit = 50, offset = 0) {
@@ -152,7 +175,7 @@ class TidalService {
       const total = 1;
 
       const tracks = [track];
-      const mapped = this.getTidalMappedTracks(tracks);
+      const mapped = await this.getTidalMappedTracks(tracks);
       return { items: mapped, total };
     }
 
@@ -182,7 +205,7 @@ class TidalService {
     const total = (json.tracks && json.tracks.total) ? json.tracks.total : (json.total || tracks.length);
 
     // Map to NaviSong minimal shape
-    const mapped = this.getTidalMappedTracks(tracks);
+    const mapped = await this.getTidalMappedTracks(tracks);
     return { items: mapped, total };
   }
 
@@ -213,7 +236,7 @@ class TidalService {
     const json = await res.json();
     const tracks = json.items.map((t: any) => { return t.item });
     const total = json.totalNumberOfItems;
-    const mapped = this.getTidalMappedTracks(tracks);    
+    const mapped = await this.getTidalMappedTracks(tracks);    
     return { items: mapped, total };
   }
 
@@ -279,7 +302,7 @@ class TidalService {
     const json = await res.json();
     const items = json.items || [];
     const tracks = items.map((it: any) => it.item || it.track || it);
-    const mapped = this.getTidalMappedTracks(tracks);
+    const mapped = await this.getTidalMappedTracks(tracks);
     const total = json.totalNumberOfItems;
     return { items: mapped, total };
   }
