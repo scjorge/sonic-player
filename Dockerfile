@@ -16,9 +16,9 @@ RUN npm run build
 ###########
 ## PROD ##
 ###########
-FROM node:22-alpine
+FROM node:22
 
-RUN apk update && apk add tzdata ffmpeg vim sshpass openssh
+RUN apt update && apt install -y flac exiftool
 
 ENV TZ="America/Sao_Paulo"
 ENV LANG=C.UTF-8

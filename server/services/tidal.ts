@@ -2,8 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
 import { sanitizeQuery } from '../../services/tools';
-import { tidalService } from '../../services/tidalService.ts';
-import { TIDAL_QUALITY } from '../../components/tidal/tidalConstants.ts';
+import { tidalService } from '../../services/tidalService';
+import { TIDAL_QUALITY } from '../../components/tidal/tidalConstants';
+import { AudioMetadata } from '../types.ts';
+import { audioTagger } from '../utils/tagger';
 
 
 class TidalServerService {
@@ -33,7 +35,22 @@ class TidalServerService {
         return { items: this.getdownloadsItems() };
     }
 
-    async downloadTrack(trackId, creds, song) {
+
+    async writeMetadata(destFinal: string, song: any) {
+        const metadata: AudioMetadata = {
+            title: song.title,
+            artists: song.artist,
+            album: song.album,
+            albumArtist: song.artist.split(',')[0],
+            year: song.year,
+            trackNumber: song.track,
+            isrc: song.isrc,
+            cover: await audioTagger.downloadCoverFromUrl(song.coverArt),
+        };
+        await audioTagger.write(destFinal, metadata);
+    }
+
+    async downloadTrack(trackId: string, creds: any, song: any) {
         const DOWNLOAD_DIR = process.env.TIDAL_DOWNLOAD_PATH || path.resolve(process.cwd(), 'downloads');
         if (!fs.existsSync(DOWNLOAD_DIR)) fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
 
@@ -83,6 +100,7 @@ class TidalServerService {
                     item.progress = 100;
                     item.status = 'completed';
                     item.filename = path.basename(destFinal);
+                    await this.writeMetadata(destFinal, song);
                 } catch (err) {
                     item.status = 'failed';
                     item.error = String(err);

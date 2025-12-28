@@ -86,17 +86,17 @@ class TidalService {
       const cover = t.album && t.album.cover ? t.album.cover : (t.image || undefined);
 
       return {
+        contentType: 'audio/tidal',
         id: String(t.id || t.trackId || `${artist}-${t.title}`),
         title: t.title || t.name || '',
         artist: artist,
         album: albumName,
-        coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/80x80.jpg`,
-        url: t.url || t.playUrl || undefined,
         year: year,
-        isrc: t.isrc || undefined,
-        contentType: 'audio/tidal',
+        coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/80x80.jpg`,
         duration: t.duration || undefined,
         track: t.trackNumber || undefined,
+        isrc: t.isrc || undefined,
+        url: t.url || t.playUrl || undefined,
       };
     });
     return mapped

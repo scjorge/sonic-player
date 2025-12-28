@@ -1,5 +1,7 @@
 FROM node:22
 
+RUN apt update && apt install -y flac exiftool
+
 ENV TZ="America/Sao_Paulo"
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
