@@ -92,7 +92,7 @@ class TidalService {
         artist: artist,
         album: albumName,
         year: year,
-        coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/80x80.jpg`,
+        coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/1280x1280.jpg`,
         duration: t.duration || undefined,
         track: t.trackNumber || undefined,
         isrc: t.isrc || undefined,

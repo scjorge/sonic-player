@@ -4,14 +4,14 @@ import fetch from 'node-fetch';
 import { sanitizeQuery } from '../../services/tools';
 import { tidalService } from '../../services/tidalService';
 import { TIDAL_QUALITY } from '../../components/tidal/tidalConstants';
-import { AudioMetadata } from '../types.ts';
+import { AudioMetadata, DownloadedCover } from '../types.ts';
 import { audioTagger } from '../utils/tagger';
 
 
 class TidalServerService {
     downloads: Map<string, any>;
 
-    constructor() { 
+    constructor() {
         this.downloads = new Map();
     }
 
@@ -31,8 +31,35 @@ class TidalServerService {
         this.downloads.set(item.id, item);
     }
 
-    async getdownloads(){
+    async getdownloads() {
         return { items: this.getdownloadsItems() };
+    }
+
+    async downloadCoverFromUrl(url: string): Promise<DownloadedCover> {
+        const sizes = [1280, 750, 640, 320, 160, 80];
+        const sizeRegex = /\/\d+x\d+\.(jpg|png)$/i;
+
+        for (const size of sizes) {
+            let attemptUrl = url;
+
+            if (sizeRegex.test(url)) {
+                attemptUrl = url.replace(sizeRegex, `/${size}x${size}.$1`);
+            }
+
+            try {
+                const response = await fetch(attemptUrl);
+                if (!response.ok) continue; 
+                const contentType = response.headers.get('content-type');
+                if (!contentType || (!contentType.includes('jpeg') && !contentType.includes('png'))) continue
+                const buffer = Buffer.from(await response.arrayBuffer());
+                const mime = contentType.includes('png') ? 'image/png' : 'image/jpeg';
+                return { buffer, mime };
+            } catch {
+                continue;
+            }
+        }
+
+        throw new Error('Não foi possível baixar o cover em nenhum tamanho');
     }
 
 
@@ -45,7 +72,7 @@ class TidalServerService {
             year: song.year,
             trackNumber: song.track,
             isrc: song.isrc,
-            cover: await audioTagger.downloadCoverFromUrl(song.coverArt),
+            cover: await this.downloadCoverFromUrl(song.coverArt),
         };
         await audioTagger.write(destFinal, metadata);
     }

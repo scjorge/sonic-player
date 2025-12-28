@@ -2,39 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { execFile } from 'child_process';
 import NodeID3 from 'node-id3';
-import { AudioMetadata, DownloadedCover } from '../types.ts';
+import { AudioMetadata } from '../types.ts';
 
 
 class AudioTagger {
-    async downloadCoverFromUrl(url: string): Promise<DownloadedCover> {
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`Erro ao baixar cover: ${response.status}`);
-        }
-
-        const contentType = response.headers.get('content-type');
-
-        if (!contentType) {
-            throw new Error('Content-Type não informado');
-        }
-
-       if (!contentType.includes('jpeg') && !contentType.includes('png')) {
-            throw new Error(`Formato de imagem não suportado: ${contentType}`);
-        }
-
-        const buffer = Buffer.from(await response.arrayBuffer());
-
-        const mime: 'image/jpeg' | 'image/png' =
-            contentType.includes('png') ? 'image/png' : 'image/jpeg';
-
-        return {
-            buffer,
-            mime
-        };
-    }
-
     public async write(filePath: string, metadata: AudioMetadata): Promise<void> {
         if (!fs.existsSync(filePath)) {
             throw new Error('Arquivo não encontrado');
