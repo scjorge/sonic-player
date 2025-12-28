@@ -15,3 +15,8 @@ export async function getdownloads(_req: Request, res: Response) {
     const result = await tidalServerService.getdownloads();
     return res.json(result);
 }
+
+export async function getCompletedDownloads(_req: Request, res: Response) {
+    const result = await tidalServerService.getCompletedDownloads();
+    return res.json(result);
+}

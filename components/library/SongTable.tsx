@@ -44,14 +44,15 @@ interface SongTableProps {
   onGroupEdit?: (song: NaviSong) => void; // Nova prop
   defaultColumns?: ColumnConfig[];
   isSpotifyTable?: boolean;
-    isTidalTable?: boolean;
+  isTidalTable?: boolean;
+  isTidalTableDownload?: boolean;
   navidromeExistenceMap?: Map<string, boolean>;
-    onNavigateToLibraryQuery?: (query: string) => void;
-    onSearchTidalByTitle?: (query: string) => void;
-    onSearchTidalByISRC?: (isrc: string) => void;
-    autoFocusSearch?: boolean;
-    navidromeConnected?: boolean | null;
-    onOpenNavidromeSettings?: () => void;
+  onNavigateToLibraryQuery?: (query: string) => void;
+  onSearchTidalByTitle?: (query: string) => void;
+  onSearchTidalByISRC?: (isrc: string) => void;
+  autoFocusSearch?: boolean;
+  navidromeConnected?: boolean | null;
+  onOpenNavidromeSettings?: () => void;
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
@@ -114,6 +115,7 @@ const SongTable: React.FC<SongTableProps> = ({
     defaultColumns,
     isSpotifyTable,
     isTidalTable,
+    isTidalTableDownload,
     navidromeExistenceMap,
     onNavigateToLibraryQuery,
     navidromeConnected = null,
@@ -368,7 +370,7 @@ const SongTable: React.FC<SongTableProps> = ({
             </div>
         );
       }
-      case 'title': return <span className={`font-medium ${currentTrackId === song.id ? (isSpotifyTable ? 'text-green-400' : isTidalTable ? 'text-yellow-400' : 'text-indigo-400') : 'text-zinc-100'}`}>{song.title}</span>;
+      case 'title': return <span className={`font-medium ${currentTrackId === song.id ? (isSpotifyTable ? 'text-green-400' : (isTidalTable || isTidalTableDownload) ? 'text-yellow-400' : 'text-indigo-400') : 'text-zinc-100'}`}>{song.title}</span>;
       case 'artist': return song.artist;
       case 'album': return song.album;
       case 'isrc': return song.isrc;
@@ -574,9 +576,9 @@ const SongTable: React.FC<SongTableProps> = ({
                     onChange={(e) => setSearchInputValue(e.target.value)}
                     onKeyDown={handleSearchKeyDown}
                     placeholder="Buscar..."
-                    className={`w-40 sm:w-64 bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs rounded-lg px-3 py-1.5 pl-8 focus:outline-none ${isSpotifyTable ? 'focus:border-green-500' : isTidalTable ? 'focus:border-yellow-500' : 'focus:border-indigo-500'} transition-all placeholder-zinc-600`}
+                    className={`w-40 sm:w-64 bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs rounded-lg px-3 py-1.5 pl-8 focus:outline-none ${isSpotifyTable ? 'focus:border-green-500' : (isTidalTable || isTidalTableDownload) ? 'focus:border-yellow-500' : 'focus:border-indigo-500'} transition-all placeholder-zinc-600`}
                 />
-                <Search className={`w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 transform -translate-y-1/2 ${isSpotifyTable ? 'group-focus-within:text-green-500' : isTidalTable ? 'group-focus-within:text-yellow-500' : 'group-focus-within:text-indigo-500'} transition-colors`} />
+                <Search className={`w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 transform -translate-y-1/2 ${isSpotifyTable ? 'group-focus-within:text-green-500' : (isTidalTable || isTidalTableDownload) ? 'group-focus-within:text-yellow-500' : 'group-focus-within:text-indigo-500'} transition-colors`} />
             </div>
         )}
         {/* QUICK LIST BUTTONS & FILTER */}
@@ -761,19 +763,19 @@ const SongTable: React.FC<SongTableProps> = ({
                     <div className="flex gap-1">
                         <button 
                             onClick={() => setRowDensity('compact')}
-                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'compact' ? isSpotifyTable ? 'bg-green-600 text-white' : isTidalTable ? 'bg-yellow-600 text-white' : 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'compact' ? isSpotifyTable ? 'bg-green-600 text-white' : (isTidalTable || isTidalTableDownload) ? 'bg-yellow-600 text-white' : 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
                         >
                             Peq.
                         </button>
                         <button 
                             onClick={() => setRowDensity('normal')}
-                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'normal' ? isSpotifyTable ? 'bg-green-600 text-white' : isTidalTable ? 'bg-yellow-600 text-white' : 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'normal' ? isSpotifyTable ? 'bg-green-600 text-white' : (isTidalTable || isTidalTableDownload) ? 'bg-yellow-600 text-white' : 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
                         >
                             Méd.
                         </button>
                         <button 
                             onClick={() => setRowDensity('relaxed')}
-                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'relaxed' ? isSpotifyTable ? 'bg-green-600 text-white' : isTidalTable ? 'bg-yellow-600 text-white' : 'bg-ndigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                            className={`flex-1 text-[10px] font-medium py-1.5 rounded transition-colors ${rowDensity === 'relaxed' ? isSpotifyTable ? 'bg-green-600 text-white' : (isTidalTable || isTidalTableDownload) ? 'bg-yellow-600 text-white' : 'bg-ndigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
                         >
                             Grd.
                         </button>
@@ -792,7 +794,7 @@ const SongTable: React.FC<SongTableProps> = ({
                         className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 flex items-center justify-between transition-colors"
                     >
                         {col.label || (col.id === 'select' ? 'Seleção' : col.id)}
-                        {col.visible && <Check className={isSpotifyTable ? 'w-3.5 h-3.5 text-green-500' : isTidalTable ? 'w-3.5 h-3.5 text-yellow-500' : "w-3.5 h-3.5 text-indigo-500"} />}
+                        {col.visible && <Check className={isSpotifyTable ? 'w-3.5 h-3.5 text-green-500' : (isTidalTable || isTidalTableDownload) ? 'w-3.5 h-3.5 text-yellow-500' : "w-3.5 h-3.5 text-indigo-500"} />}
                     </button>
                     ))}
                 </div>
@@ -868,7 +870,7 @@ const SongTable: React.FC<SongTableProps> = ({
                                 flex border-b border-zinc-800/50 hover:bg-zinc-900/80 transition-colors group
                                 ${index % 2 === 0 ? 'bg-zinc-950' : 'bg-zinc-950/50'}
                                 ${isSelected ? 'bg-indigo-500/10 hover:bg-indigo-500/15' : ''}
-                                ${currentTrackId === song.id ? (isSpotifyTable ? 'bg-green-600/20' : isTidalTable ? 'bg-yellow-600/20' : 'bg-indigo-500/5') : ''}
+                                ${currentTrackId === song.id ? (isSpotifyTable ? 'bg-green-600/20' : (isTidalTable || isTidalTableDownload) ? 'bg-yellow-600/20' : 'bg-indigo-500/5') : ''}
                             `}
                         >
                             {showLoginPrompt && (
@@ -916,9 +918,9 @@ const SongTable: React.FC<SongTableProps> = ({
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
-                        {!isSpotifyTable && !isTidalTable && <option value="100">100</option>}
-                        {!isSpotifyTable && !isTidalTable && <option value="200">200</option>}
-                        {!isSpotifyTable && !isTidalTable && <option value="500">500</option>}
+                        {!isSpotifyTable && !isTidalTable && !isTidalTableDownload && <option value="100">100</option>}
+                        {!isSpotifyTable && !isTidalTable && !isTidalTableDownload && <option value="200">200</option>}
+                        {!isSpotifyTable && !isTidalTable && !isTidalTableDownload && <option value="500">500</option>}
                     </select>
                 )}
 
@@ -951,7 +953,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     )}
 
                     <button
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg ${isSpotifyTable ? 'bg-green-600 shadow-lg shadow-green-500/20' : isTidalTable ? 'bg-yellow-600 shadow-lg shadow-yellow-500/20' : 'bg-indigo-600 shadow-lg shadow-indigo-500/20'} text-white text-xs font-bold pointer-events-none`}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg ${isSpotifyTable ? 'bg-green-600 shadow-lg shadow-green-500/20' : (isTidalTable || isTidalTableDownload) ? 'bg-yellow-600 shadow-lg shadow-yellow-500/20' : 'bg-indigo-600 shadow-lg shadow-indigo-500/20'} text-white text-xs font-bold pointer-events-none`}
                     >
                         {page + 1}
                     </button>

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
+import { execFile } from 'child_process';
 import { sanitizeQuery } from '../../services/tools';
 import { tidalService } from '../../services/tidalService';
 import { TIDAL_QUALITY } from '../../components/tidal/tidalConstants';
@@ -10,9 +11,12 @@ import { audioTagger } from '../utils/tagger';
 
 class TidalServerService {
     downloads: Map<string, any>;
+    download_dir: string
 
     constructor() {
         this.downloads = new Map();
+        this.download_dir = process.env.TIDAL_DOWNLOAD_PATH || path.resolve(process.cwd(), 'downloads');
+        if (!fs.existsSync(this.download_dir)) fs.mkdirSync(this.download_dir, { recursive: true });
     }
 
     getdownloadsItems() {
@@ -35,6 +39,77 @@ class TidalServerService {
         return { items: this.getdownloadsItems() };
     }
 
+    /**
+     * Lista todos os arquivos já baixados na pasta de downloads
+     * lendo os metadados via audioTagger.
+     */
+    private async getDuration(filePath: string): Promise<number> {
+        return new Promise((resolve, reject) => {
+            execFile(
+                'ffprobe',
+                [
+                    '-v', 'error',
+                    '-show_entries', 'format=duration',
+                    '-of', 'default=noprint_wrappers=1:nokey=1',
+                    filePath
+                ],
+                (err, stdout) => {
+                    if (err) return reject(err);
+
+                    const duration = parseFloat(stdout.toString());
+                    if (isNaN(duration)) {
+                        reject(new Error('Duração inválida'));
+                    } else {
+                        resolve(Math.round(duration));
+                    }
+                }
+            );
+        });
+    }
+
+    async getCompletedDownloads() {
+        if (!fs.existsSync(this.download_dir)) {
+            return { items: [] };
+        }
+
+        const entries = await fs.promises.readdir(this.download_dir);
+        const supportedExts = new Set(['.mp3', '.flac']);
+
+        const items = await Promise.all(entries
+            .filter((name) => supportedExts.has(path.extname(name).toLowerCase()))
+            .map(async (name) => {
+                const fullPath = path.join(this.download_dir, name);
+                try {
+                    const meta = await audioTagger.read(fullPath);
+                    const ext = path.extname(name).toLowerCase().replace('.', '');
+                    const baseTitle = path.basename(name, path.extname(name));
+                    const duration = await this.getDuration(fullPath);
+
+                    return {
+                        id: fullPath,
+                        title: meta.title || baseTitle,
+                        album: meta.album || '',
+                        artist: meta.artists || meta.albumArtist || '',
+                        year: meta.year,
+                        track: meta.trackNumber,
+                        discNumber: meta.discNumber,
+                        genre: meta.genre,
+                        isrc: meta.isrc,
+                        comment: meta.comments,
+                        suffix: ext || undefined,
+                        path: fullPath,
+                        contentType: 'audio/tidal-local',
+                        duration: duration,
+                    };
+                } catch (e) {
+                    console.error('Failed to read metadata for downloaded file', fullPath, e);
+                    return null;
+                }
+            }));
+
+        return { items: items.filter((it) => it !== null) };
+    }
+
     async downloadCoverFromUrl(url: string): Promise<DownloadedCover> {
         const sizes = [1280, 750, 640, 320, 160, 80];
         const sizeRegex = /\/\d+x\d+\.(jpg|png)$/i;
@@ -48,7 +123,7 @@ class TidalServerService {
 
             try {
                 const response = await fetch(attemptUrl);
-                if (!response.ok) continue; 
+                if (!response.ok) continue;
                 const contentType = response.headers.get('content-type');
                 if (!contentType || (!contentType.includes('jpeg') && !contentType.includes('png'))) continue
                 const buffer = Buffer.from(await response.arrayBuffer());
@@ -78,13 +153,10 @@ class TidalServerService {
     }
 
     async downloadTrack(trackId: string, creds: any, song: any) {
-        const DOWNLOAD_DIR = process.env.TIDAL_DOWNLOAD_PATH || path.resolve(process.cwd(), 'downloads');
-        if (!fs.existsSync(DOWNLOAD_DIR)) fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
-
         try {
             const id = Math.random().toString(36).slice(2, 10);
             const filename = sanitizeQuery(`${song.artist} - ${song.title}`);
-            const outDir = DOWNLOAD_DIR;
+            const outDir = this.download_dir;
             if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
             const item = {

@@ -4,7 +4,7 @@ import { tidalService } from '../../services/tidalService';
 import { navidromeService } from '../../services/navidromeService';
 import SongTable from '../library/SongTable';
 import { TIDAL_COLUMN_CONFIG } from './tidalConstants';
-import { Search, Music, AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 interface TidalBrowseProps {
   onOpen?: (song: NaviSong) => void;

@@ -1,6 +1,6 @@
 FROM node:22
 
-RUN apt update && apt install -y flac exiftool
+RUN apt update && apt install -y flac exiftool ffmpeg
 
 ENV TZ="America/Sao_Paulo"
 ENV LANG=C.UTF-8
