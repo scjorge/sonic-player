@@ -1,7 +1,7 @@
 
 export interface DownloadedCover {
     buffer: Buffer;
-    mime: 'image/jpeg' | 'image/png';
+    mime:  string | 'image/jpeg' | 'image/png';
 }
 
 export interface AudioMetadata {

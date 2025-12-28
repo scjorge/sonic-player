@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { execFile } from 'child_process';
 import NodeID3 from 'node-id3';
-import { AudioMetadata } from '../types';
+import { AudioMetadata, DownloadedCover } from '../types';
 
 
 class AudioTagger {
@@ -18,6 +18,23 @@ class AudioTagger {
                 return this.writeMP3(filePath, metadata);
             case '.flac':
                 return this.writeFLAC(filePath, metadata);
+            default:
+                throw new Error(`Formato não suportado: ${ext}`);
+        }
+    }
+
+    public async read(filePath: string): Promise<AudioMetadata> {
+        if (!fs.existsSync(filePath)) {
+            throw new Error('Arquivo não encontrado');
+        }
+
+        const ext = path.extname(filePath).toLowerCase();
+
+        switch (ext) {
+            case '.mp3':
+                return this.readMP3(filePath);
+            case '.flac':
+                return this.readFLAC(filePath);
             default:
                 throw new Error(`Formato não suportado: ${ext}`);
         }
@@ -61,9 +78,45 @@ class AudioTagger {
         }
     }
 
+    private async readMP3(filePath: string): Promise<AudioMetadata> {
+        const tags = NodeID3.read(filePath) || {};
+        const metadata: AudioMetadata = {};
+
+        if (tags.title) metadata.title = tags.title;
+        if (tags.artist) metadata.artists = tags.artist;
+        if (tags.album) metadata.album = tags.album;
+        if (tags.performerInfo) metadata.albumArtist = tags.performerInfo;
+        if (tags.year) metadata.year = parseInt(tags.year, 10);
+        if (tags.trackNumber) metadata.trackNumber = parseInt(tags.trackNumber, 10);
+        if (tags.partOfSet) metadata.discNumber = parseInt(tags.partOfSet, 10);
+        if (tags.genre) metadata.genre = tags.genre;
+        if (tags.publisher) metadata.label = tags.publisher;
+        if (tags.ISRC) metadata.isrc = tags.ISRC;
+        if (tags.comment && typeof tags.comment === 'object' && 'text' in tags.comment) {
+            metadata.comments = tags.comment.text;
+        }
+        if (tags.image && typeof tags.image === 'object' && 'imageBuffer' in tags.image) {
+            metadata.cover = {
+                mime: tags.image.mime,
+                buffer: tags.image.imageBuffer
+            };
+        }
+
+        return metadata;
+    }
+
     // ======================================================
     // FLAC — Vorbis Comments
     // ======================================================
+    private execMetaflac(args: string[]): Promise<void> {
+        return new Promise((resolve, reject) => {
+            execFile('metaflac', args, (err) => {
+                if (err) reject(err);
+                resolve();
+            });
+        });
+    }
+
     private async writeFLAC(filePath: string, metadata: AudioMetadata): Promise<void> {
         const updateTag = async (key: string, value?: string | number) => {
             await this.execMetaflac([`--remove-tag=${key}`, filePath]);
@@ -78,27 +131,83 @@ class AudioTagger {
             fs.unlinkSync(coverPath);
         }
 
-        if (metadata.title)       await updateTag('TITLE', metadata.title);
-        if (metadata.artists)     await updateTag('ARTIST', metadata.artists);
-        if (metadata.album)       await updateTag('ALBUM', metadata.album);
+        if (metadata.title) await updateTag('TITLE', metadata.title);
+        if (metadata.artists) await updateTag('ARTIST', metadata.artists);
+        if (metadata.album) await updateTag('ALBUM', metadata.album);
         if (metadata.albumArtist) await updateTag('ALBUMARTIST', metadata.albumArtist);
-        if (metadata.year)        await updateTag('DATE', metadata.year);
+        if (metadata.year) await updateTag('DATE', metadata.year);
         if (metadata.trackNumber) await updateTag('TRACKNUMBER', metadata.trackNumber);
-        if (metadata.discNumber)  await updateTag('DISCNUMBER', metadata.discNumber);
-        if (metadata.genre)       await updateTag('GENRE', metadata.genre);
-        if (metadata.label)       await updateTag('LABEL', metadata.label);
-        if (metadata.isrc)        await updateTag('ISRC', metadata.isrc);
-        if (metadata.comments)    await updateTag('COMMENT', metadata.comments);
-        if (metadata.cover)       await updateCover(metadata.cover);
+        if (metadata.discNumber) await updateTag('DISCNUMBER', metadata.discNumber);
+        if (metadata.genre) await updateTag('GENRE', metadata.genre);
+        if (metadata.label) await updateTag('LABEL', metadata.label);
+        if (metadata.isrc) await updateTag('ISRC', metadata.isrc);
+        if (metadata.comments) await updateTag('COMMENT', metadata.comments);
+        if (metadata.cover) await updateCover(metadata.cover);
     }
 
-    private  execMetaflac(args: string[]): Promise<void> {
+    private async readFLAC(filePath: string): Promise<AudioMetadata> {
+        const tags = await this.readFlacTags(filePath);
+        const cover = await this.readFlacCover(filePath);
+
+        return {
+            title: tags.TITLE,
+            artists: tags.ARTIST,
+            album: tags.ALBUM,
+            albumArtist: tags.ALBUMARTIST,
+            year: tags.DATE ? parseInt(tags.DATE) : undefined,
+            trackNumber: tags.TRACKNUMBER ? parseInt(tags.TRACKNUMBER) : undefined,
+            discNumber: tags.DISCNUMBER ? parseInt(tags.DISCNUMBER) : undefined,
+            genre: tags.GENRE,
+            label: tags.LABEL,
+            isrc: tags.ISRC,
+            comments: tags.COMMENT,
+            cover
+        };
+    }
+
+    private async readFlacTags(filePath: string): Promise<Record<string, string>> {
         return new Promise((resolve, reject) => {
-            execFile('metaflac', args, (err) => {
-                if (err) reject(err);
-                resolve();
-            });
+            execFile('metaflac', ['--export-tags-to=-', filePath], (err, stdout) => {
+                if (err) return reject(err);
+
+                const tags: Record<string, string> = {};
+
+                stdout
+                    .toString()
+                    .split('\n')
+                    .forEach(line => {
+                        const idx = line.indexOf('=');
+                        if (idx === -1) return;
+
+                        const key = line.slice(0, idx);
+                        const value = line.slice(idx + 1);
+
+                        if (key && value) {
+                            tags[key] = value;
+                        }
+                    });
+
+                resolve(tags);
+            }
+            );
         });
+    }
+
+    private async readFlacCover(filePath: string): Promise<DownloadedCover | undefined> {
+        const tmpCover = `${filePath}.cover`;
+
+        try {
+            await this.execMetaflac([`--export-picture-to=${tmpCover}`, filePath]);
+            const buffer = fs.readFileSync(tmpCover);
+            const mime = buffer[0] === 0x89 ? 'image/png' : 'image/jpeg';
+            return { buffer, mime };
+        } catch {
+            return undefined;
+        } finally {
+            if (fs.existsSync(tmpCover)) {
+                fs.unlinkSync(tmpCover);
+            }
+        }
     }
 }
 
