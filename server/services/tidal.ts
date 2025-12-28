@@ -81,7 +81,6 @@ class TidalServerService {
                 const fullPath = path.join(this.download_dir, name);
                 try {
                     const meta = await audioTagger.read(fullPath);
-                    const ext = path.extname(name).toLowerCase().replace('.', '');
                     const baseTitle = path.basename(name, path.extname(name));
                     const duration = await this.getDuration(fullPath);
 
@@ -96,7 +95,6 @@ class TidalServerService {
                         genre: meta.genre,
                         isrc: meta.isrc,
                         comment: meta.comments,
-                        suffix: ext || undefined,
                         path: fullPath,
                         contentType: 'audio/tidal-local',
                         duration: duration,
