@@ -108,6 +108,24 @@ class TidalServerService {
         return { items: items.filter((it) => it !== null) };
     }
 
+    resolveDownloadPath(id: string): string | null {
+        let filePath = id;
+        if (!path.isAbsolute(filePath)) {
+            filePath = path.join(this.download_dir, filePath);
+        }
+
+        const normalized = path.normalize(filePath);
+        if (!normalized.startsWith(path.normalize(this.download_dir))) {
+            return null;
+        }
+
+        if (!fs.existsSync(normalized) || !fs.statSync(normalized).isFile()) {
+            return null;
+        }
+
+        return normalized;
+    }
+
     async downloadCoverFromUrl(url: string): Promise<DownloadedCover> {
         const sizes = [1280, 750, 640, 320, 160, 80];
         const sizeRegex = /\/\d+x\d+\.(jpg|png)$/i;

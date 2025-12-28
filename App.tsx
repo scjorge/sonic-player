@@ -6,8 +6,8 @@ import { tidalService } from './services/tidalService';
 import TidalBrowse from './components/tidal/TidalBrowse.tsx';
 import TidalLiked from './components/tidal/TidalLiked';
 import TidalPlaylists from './components/tidal/TidalPlaylists';
-import TidalDownloads from './components/tidal/TidalDownloads';
-import { TIDAL_COLUMN_CONFIG } from './components/tidal/tidalConstants';
+import TidalDownloads  from './components/tidal/TidalDownloads';
+import { TIDAL_COLUMN_CONFIG, TIDAL_DOWNLOAD_BACKEND_BASE_URL } from './components/tidal/tidalConstants';
 import { getStoredGroups, getSpotifyCredentials } from './services/data';
 import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation, AlertCircle, Download } from 'lucide-react';
 import SongTable from './components/library/SongTable';
@@ -950,6 +950,29 @@ const App: React.FC = () => {
         }
     };
 
+    const playTidalDownloadedSong = (song: NaviSong) => {
+        setExclusivePlayer('tidal');
+
+        if (currentTrack?.id === song.id && currentTrack.sourceType === 'tidal') {
+            togglePlayPause();
+            return;
+        }
+
+        const streamUrl = `${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads/stream?id=${encodeURIComponent(song.id)}`;
+
+        const playerTrack: PlayerTrack = {
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            coverUrl: song.coverArt || null,
+            src: streamUrl,
+            duration: song.duration || 0,
+            sourceType: 'tidal',
+        };
+
+        loadAndPlay(playerTrack);
+    };
+
   const loadAndPlay = (track: PlayerTrack) => {
     if (audioRef.current) {
         audioRef.current.src = track.src;
@@ -1275,7 +1298,13 @@ const App: React.FC = () => {
             );
         }
 
-        return <TidalDownloads />;
+        return (
+            <TidalDownloads
+                onPlayDownload={playTidalDownloadedSong}
+                currentTrackId={currentTrack?.id}
+                isPlaying={isPlaying}
+            />
+        );
     }
 
     if (viewMode === 'tidal_playlist_tracks') {

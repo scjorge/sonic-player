@@ -3,6 +3,12 @@ import { NaviSong } from '../../types';
 import SongTable from '../library/SongTable';
 import { TIDAL_COLUMN_DOWNLOAD_CONFIG, TIDAL_DOWNLOAD_BACKEND_BASE_URL } from './tidalConstants';
 
+interface TidalDownloadsProps {
+  onPlayDownload?: (song: NaviSong) => void;
+  currentTrackId?: string | null;
+  isPlaying?: boolean;
+}
+
 interface DownloadItem {
   id: string;
   title: string;
@@ -12,7 +18,7 @@ interface DownloadItem {
   filename?: string;
 }
 
-const TidalDownloads: React.FC = () => {
+export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, currentTrackId, isPlaying }) => {
   const [items, setItems] = useState<DownloadItem[]>([]);
   const [activeTab, setActiveTab] = useState<'in_progress' | 'completed'>('in_progress');
   const [completedSongs, setCompletedSongs] = useState<NaviSong[]>([]);
@@ -138,7 +144,9 @@ const TidalDownloads: React.FC = () => {
           ) : (
             <SongTable
               songs={completedSongs}
-              onPlay={() => {}}
+              onPlay={(s) => { if (onPlayDownload) onPlayDownload(s); }}
+              currentTrackId={currentTrackId}
+              isPlaying={isPlaying}
               defaultColumns={TIDAL_COLUMN_DOWNLOAD_CONFIG}
               isTidalTableDownload={true}
             />
