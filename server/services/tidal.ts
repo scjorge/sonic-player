@@ -75,7 +75,6 @@ class TidalServerService {
 
         const entries = await fs.promises.readdir(this.download_dir);
         const supportedExts = new Set(['.mp3', '.flac']);
-
         const items = await Promise.all(entries
             .filter((name) => supportedExts.has(path.extname(name).toLowerCase()))
             .map(async (name) => {
@@ -173,7 +172,6 @@ class TidalServerService {
         try {
             const filename = sanitizeQuery(`${song.artist} - ${song.title}`);
             const outDir = this.download_dir;
-
             const item = {
                 id: song.id,
                 title: song.title,
