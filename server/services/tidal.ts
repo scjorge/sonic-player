@@ -170,7 +170,7 @@ class TidalServerService {
 
     async downloadTrack(trackId: string, creds: any, song: any) {
         try {
-            const id = Math.random().toString(36).slice(2, 10);
+            const id = `${song.artist} - ${song.title}`;
             const filename = sanitizeQuery(`${song.artist} - ${song.title}`);
             const outDir = this.download_dir;
             if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
@@ -183,6 +183,9 @@ class TidalServerService {
                 status: 'queued',
                 filename: path.basename(path.join(outDir, filename + '.tmp')),
                 error: null,
+                trackId,
+                creds,
+                song,
             };
             this.setdownloadsItems(item);
 
@@ -228,6 +231,68 @@ class TidalServerService {
             console.error(e);
             return { error: String(e) };
         }
+    }
+
+    async retryDownload(id: string) {
+        const existing = this.downloads.get(id);
+        if (!existing) {
+            return { error: 'Download not found' };
+        }
+        if (!existing.trackId || !existing.creds || !existing.song) {
+            return { error: 'Missing data to retry download' };
+        }
+
+        const trackId = existing.trackId;
+        const creds = existing.creds;
+        const song = existing.song;
+
+        const filename = sanitizeQuery(`${song.artist} - ${song.title}`);
+        const outDir = this.download_dir;
+        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
+        existing.progress = 0;
+        existing.status = 'queued';
+        existing.error = null;
+        existing.filename = path.basename(path.join(outDir, filename + '.tmp'));
+
+        // Start retry download asynchronously using the same logic
+        (async () => {
+            try {
+                existing.status = 'starting';
+                const manifest = await tidalService.getTidalPlaybackInfo(creds, trackId, TIDAL_QUALITY);
+                const url = manifest.urls[0];
+                existing.status = 'downloading';
+
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error('Failed to fetch stream: ' + resp.status);
+
+                const total = Number(resp.headers.get('content-length')) || null;
+                let downloaded = 0;
+
+                const destFinal = path.join(outDir, filename + path.extname(new URL(url).pathname) || '.bin');
+                const fileStream = fs.createWriteStream(destFinal);
+
+                const reader = resp.body;
+                for await (const chunk of reader) {
+                    fileStream.write(chunk);
+                    downloaded += chunk.length;
+                    if (total) existing.progress = Math.round((downloaded / total) * 100);
+                    else existing.progress = Math.min(99, existing.progress + Math.round(chunk.length / 100000));
+                }
+
+                fileStream.close();
+                existing.progress = 100;
+                existing.status = 'completed';
+                existing.filename = path.basename(destFinal);
+                await this.writeMetadata(destFinal, song);
+            } catch (err) {
+                existing.status = 'failed';
+                existing.error = String(err);
+                console.error('Retry download failed', err);
+            }
+        })();
+
+        return { id };
     }
 }
 

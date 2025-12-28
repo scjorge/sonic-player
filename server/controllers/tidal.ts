@@ -67,3 +67,17 @@ export async function streamDownload(req: Request, res: Response) {
         fs.createReadStream(filePath).pipe(res);
     }
 }
+
+export async function retryDownload(req: Request, res: Response) {
+    const { id } = req.body;
+    if (!id || typeof id !== 'string') {
+        return res.status(400).json({ error: 'id is required' });
+    }
+
+    const result = await tidalServerService.retryDownload(id);
+    if ('error' in result) {
+        return res.status(400).json(result);
+    }
+
+    return res.json(result);
+}

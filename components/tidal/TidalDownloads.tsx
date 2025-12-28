@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NaviSong } from '../../types';
 import SongTable from '../library/SongTable';
 import { TIDAL_COLUMN_DOWNLOAD_CONFIG, TIDAL_DOWNLOAD_BACKEND_BASE_URL } from './tidalConstants';
+import { RotateCcw } from 'lucide-react';
 
 interface TidalDownloadsProps {
   onPlayDownload?: (song: NaviSong) => void;
@@ -23,6 +24,21 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
   const [activeTab, setActiveTab] = useState<'in_progress' | 'completed'>('in_progress');
   const [completedSongs, setCompletedSongs] = useState<NaviSong[]>([]);
   const [loadingCompleted, setLoadingCompleted] = useState(false);
+
+  const handleRetry = async (id: string) => {
+    try {
+      await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads/retry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      // Deixa o polling atualizar a UI; apenas força uma busca imediata
+      fetchDownloads();
+    } catch (e) {
+      // ignore / log se quiser
+      console.error('Failed to retry download', e);
+    }
+  };
 
   const fetchDownloads = async () => {
     try {
@@ -119,7 +135,18 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
                     <div className="font-medium text-white truncate max-w-[60ch]">{it.title}</div>
                     <div className="text-xs text-zinc-500">{it.artist}</div>
                   </div>
-                  <div className="text-xs text-zinc-400">{it.status}</div>
+                  <div className="flex items-center gap-2 text-xs text-zinc-400">
+                    <span>{it.status}</span>
+                    {it.status === 'failed' && (
+                      <button
+                        className="p-1 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
+                        title="Tentar novamente"
+                        onClick={() => handleRetry(it.id)}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
                   <div className="h-full bg-yellow-400" style={{ width: `${it.progress}%` }} />
