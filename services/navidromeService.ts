@@ -1,5 +1,5 @@
 import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, SubsonicResponse } from '../types';
-import { MD5, sanitizeQuery } from './tools.ts';
+import { MD5, sanitizeQuery } from './tools';
 import { getNavidromeCredentials } from './data';
 
 const CLIENT = 'SonicTagPlayer';

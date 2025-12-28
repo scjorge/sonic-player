@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import { sanitizeQuery } from '../../services/tools';
 import { tidalService } from '../../services/tidalService';
 import { TIDAL_QUALITY } from '../../components/tidal/tidalConstants';
-import { AudioMetadata, DownloadedCover } from '../types.ts';
+import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
 
 

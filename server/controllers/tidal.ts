@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { tidalServerService } from '../services/tidal.ts';
+import { tidalServerService } from '../services/tidal';
 
 
 export async function downloadTrack(req: Request, res: Response) {

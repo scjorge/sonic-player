@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AudioMetadata, DownloadedCover } from '../types.ts';
+import { AudioMetadata, DownloadedCover } from '../types';
 
 export class MusicBrainzClient {
   private readonly mbBase = 'https://musicbrainz.org/ws/2';

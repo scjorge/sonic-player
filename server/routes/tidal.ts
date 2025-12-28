@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { downloadTrack, getdownloads } from '../controllers/tidal.ts';
+import { downloadTrack, getdownloads } from '../controllers/tidal';
 
 
 const router = Router();

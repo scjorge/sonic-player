@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { execFile } from 'child_process';
 import NodeID3 from 'node-id3';
-import { AudioMetadata } from '../types.ts';
+import { AudioMetadata } from '../types';
 
 
 class AudioTagger {
