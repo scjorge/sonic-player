@@ -173,7 +173,6 @@ class TidalServerService {
         try {
             const filename = sanitizeQuery(`${song.artist} - ${song.title}`);
             const outDir = this.download_dir;
-            if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
             const item = {
                 id: song.id,
