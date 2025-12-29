@@ -601,6 +601,7 @@ const SongTable: React.FC<SongTableProps> = ({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     source,
+                    id: currentSong.id,
                     path: currentSong.path,
                     metadata,
                 }),

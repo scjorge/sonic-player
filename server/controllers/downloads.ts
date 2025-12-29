@@ -57,10 +57,11 @@ export async function getCompletedDownloads(_req: Request, res: Response) {
 }
 
 export async function writeMetadataParts(req: Request, res: Response) {
-    const { source, path, metadata } = req.body;
+    const { id, source, path, metadata } = req.body;
+    if (!id || !source || !path || !metadata) return res.status(400).json({ error: 'id, source, path, and metadata are required' });
 
     try {
-        const result = await downloadService.writeMetadataParts(path, source, metadata);
+        const result = await downloadService.writeMetadataParts(id, path, source, metadata);
         return res.json(result);
     } catch (e: any) {
         return res.status(500).json({ error: e?.message || 'failed to write metadata parts' });

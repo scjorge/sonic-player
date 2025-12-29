@@ -159,9 +159,14 @@ class DownloadService {
         throw new Error('Não foi possível baixar o cover em nenhum tamanho');
     }
 
-    async writeMetadataParts(destFinal: string, source: "navidrome" | "download", metadata: AudioMetadata) {
+    async getFullPathNavidrome(id: string, relativePath: string): Promise<string> {
+        const fullPath = path.join(NAVIDROME_BASE_PATH, relativePath);
+        return fullPath;
+    }
+
+    async writeMetadataParts(id: string, destFinal: string, source: "navidrome" | "download", metadata: AudioMetadata) {
         if (source === "navidrome") {
-            destFinal = path.join(NAVIDROME_BASE_PATH, destFinal);
+            destFinal = await this.getFullPathNavidrome(id, destFinal);
         }
         await audioTagger.write(destFinal, metadata);
         return { status: 'updated', metadata: metadata };
