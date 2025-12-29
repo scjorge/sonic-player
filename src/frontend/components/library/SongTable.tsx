@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NaviSong } from '../../../types';
+import { NaviSong } from '../../../../types';
 import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, Filter, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
-import { sanitizeQuery } from '../../services/tools';
-import { BACKEND_BASE_URL } from '../../core/config';
+import { sanitizeQuery } from '../../../commons/tools';
+import { BACKEND_BASE_URL } from '../../../core/config';
 import { getStoredGenres } from '../../services/data';
 import { NAVI_COLUMN_CONFIG } from './NaviConstants';
 

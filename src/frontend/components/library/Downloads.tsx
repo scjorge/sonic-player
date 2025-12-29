@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { NaviSong, TagGroup } from '../../../types';
+import { NaviSong, TagGroup } from '../../../../types';
 import SongTable from './SongTable';
-import { BACKEND_BASE_URL } from '../../core/config';
+import { BACKEND_BASE_URL } from '../../../core/config';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { tidalService }  from '../../services/tidalService';
 import showToast from '../utils/toast';

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TagGroup } from '../../../types';
+import { TagGroup } from '../../../../types';
 import { Plus, Trash2, X, FolderPlus } from 'lucide-react';
 import ConfirmationModal from '../library/ConfirmationModal';
 import { addStoredGroup, deleteStoredGroup, updateStoredGroup, getStoredGenres, addStoredGenre, deleteStoredGenre } from '../../services/data';

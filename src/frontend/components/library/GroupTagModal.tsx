@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TagGroup, NaviSong } from '../../../types';
+import { TagGroup, NaviSong } from '../../../../types';
 import { X, Save, Eye, CheckSquare, Square, Tags } from 'lucide-react';
 
 interface GroupTagModalProps {

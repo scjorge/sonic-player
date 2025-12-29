@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { TidalCredentials } from '../../../types';
+import { TidalCredentials } from '../../../../types';
 import { getTidalCredentials } from '../../services/data';
 import { tidalService } from '../../services/tidalService';
-import { TIDAL_CLIENT_ID, TIDAL_CLIENT_SECRET } from '../../core/config';
+import { TIDAL_CLIENT_ID, TIDAL_CLIENT_SECRET } from '../../../core/config';
 
 
 const TidalSettings: React.FC = () => {

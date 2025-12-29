@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
 import { execFile } from 'child_process';
-import { sanitizeQuery } from '../../src/services/tools';
-import { tidalService } from '../../src/services/tidalService';
-import { NAVIDROME_BASE_PATH, NAVIDROME_SAVE_FORMAT, TIDAL_QUALITY, TIDAL_DOWNLOAD_PATH } from '../../src/core/config';
+import { sanitizeQuery } from '../../commons/tools';
+import { tidalService } from '../../frontend/services/tidalService';
+import { NAVIDROME_BASE_PATH, NAVIDROME_SAVE_FORMAT, TIDAL_QUALITY, TIDAL_DOWNLOAD_PATH } from '../../core/config';
 import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
 

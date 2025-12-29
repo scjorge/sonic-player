@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { tidalService } from '../../services/tidalService';
-import { NaviSong } from '../../../types';
+import { NaviSong } from '../../../../types';
 import SongTable from '../library/SongTable';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { TIDAL_COLUMN_CONFIG } from './tidalConstants';

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { spotifyService } from '../../services/spotifyService';
-import { NaviPlaylist } from '../../../types';
+import { tidalService } from '../../services/tidalService';
+import { NaviPlaylist } from '../../../../types';
 import { List, Loader2, AlertCircle, ChevronRight, ChevronDown } from 'lucide-react';
 
-interface SpotifyPlaylistsProps {
+interface TidalPlaylistsProps {
   onPlaylistClick: (playlist: NaviPlaylist) => void;
 }
 
@@ -82,7 +82,7 @@ const PlaylistNodeComponent: React.FC<{ name: string; node: PlaylistNode; onPlay
   );
 };
 
-const SpotifyPlaylists: React.FC<SpotifyPlaylistsProps> = ({ onPlaylistClick }) => {
+const TidalPlaylists: React.FC<TidalPlaylistsProps> = ({ onPlaylistClick }) => {
   const [nestedPlaylists, setNestedPlaylists] = useState<{ [key: string]: PlaylistNode }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,17 +92,17 @@ const SpotifyPlaylists: React.FC<SpotifyPlaylistsProps> = ({ onPlaylistClick }) 
       setLoading(true);
       setError(null);
       try {
-        if (!spotifyService.isAuthenticated()) {
-          setError("Você não está autenticado com o Spotify. Por favor, autentique-se nas configurações.");
+        if (!tidalService.isAuthenticated()) {
+          setError("Você não está autenticado com o TIDAL. Por favor, autentique-se nas configurações.");
           setLoading(false);
           return;
         }
-        const items = await spotifyService.getUserPlaylists();
-        const playlists = items.map(item => ({ id: item.id, name: item.name }));
+        const res = await tidalService.getUserPlaylists();
+        const playlists = (res.items || []).map((p: any) => ({ id: p.id, name: p.name }));
         setNestedPlaylists(nestPlaylists(playlists));
       } catch (err) {
-        console.error("Failed to fetch spotify playlists:", err);
-        setError("Não foi possível carregar as playlists do Spotify. Verifique sua conexão ou autenticação.");
+        console.error("Failed to fetch tidal playlists:", err);
+        setError("Não foi possível carregar as playlists do TIDAL. Verifique sua conexão ou autenticação.");
       } finally {
         setLoading(false);
       }
@@ -114,7 +114,7 @@ const SpotifyPlaylists: React.FC<SpotifyPlaylistsProps> = ({ onPlaylistClick }) 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full text-white">
-        <Loader2 className="w-8 h-8 animate-spin mr-2 text-green-500" /> Carregando playlists...
+        <Loader2 className="w-8 h-8 animate-spin mr-2 text-yellow-500" /> Carregando playlists...
       </div>
     );
   }
@@ -124,7 +124,7 @@ const SpotifyPlaylists: React.FC<SpotifyPlaylistsProps> = ({ onPlaylistClick }) 
       <div className="flex flex-col justify-center items-center h-full text-red-500">
         <AlertCircle className="w-10 h-10 mb-4" />
         <p className="text-lg">{error}</p>
-        <p className="text-sm text-zinc-400 mt-2">Verifique as configurações do Spotify e se você está autenticado.</p>
+        <p className="text-sm text-zinc-400 mt-2">Verifique as configurações do TIDAL e se você está autenticado.</p>
       </div>
     );
   }
@@ -138,11 +138,11 @@ const SpotifyPlaylists: React.FC<SpotifyPlaylistsProps> = ({ onPlaylistClick }) 
       </div>
       {Object.keys(nestedPlaylists).length === 0 && (
         <div className="flex justify-center items-center h-full text-zinc-400">
-          <p>Nenhuma playlist encontrada no Spotify.</p>
+          <p>Nenhuma playlist encontrada no TIDAL.</p>
         </div>
       )}
     </div>
   );
 };
 
-export default SpotifyPlaylists;
+export default TidalPlaylists;

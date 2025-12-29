@@ -1,6 +1,6 @@
 
-import { TagGroup, SpotifyCredentials } from '../../types';
-import { TIDAL_CLIENT_ID, TIDAL_CLIENT_SECRET, BACKEND_BASE_URL } from '../core/config';
+import { TagGroup, SpotifyCredentials } from '../../../types';
+import { TIDAL_CLIENT_ID, TIDAL_CLIENT_SECRET, BACKEND_BASE_URL } from '../../core/config';
 
 const NAVIDROME_KEY = 'sonictag_navidrome';
 const SPOTIFY_KEY = 'sonictag_spotify';
