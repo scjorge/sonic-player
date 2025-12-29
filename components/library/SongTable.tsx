@@ -671,20 +671,22 @@ const SongTable: React.FC<SongTableProps> = ({
                     </>
                 )}
 
-              <button 
-                onClick={() => { onToggleFavorite && onToggleFavorite(contextMenu.song!); setContextMenu({ ...contextMenu, visible: false }); }}
-                className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
-              >
-                  {contextMenu.song.starred ? (
-                      <>
-                        <Heart className="w-4 h-4 fill-red-500 text-red-500" /> Remover dos Favoritos
-                      </>
-                  ) : (
-                      <>
-                        <Heart className="w-4 h-4" /> Adicionar aos Favoritos
-                      </>
-                  )}
-              </button>
+                            {(!isSpotifyTable && !isTidalTable && !isNaviTableDownload && onToggleFavorite) && (
+                                    <button 
+                                        onClick={() => { onToggleFavorite && onToggleFavorite(contextMenu.song!); setContextMenu({ ...contextMenu, visible: false }); }}
+                                        className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+                                    >
+                                            {contextMenu.song.starred ? (
+                                                    <>
+                                                        <Heart className="w-4 h-4 fill-red-500 text-red-500" /> Remover dos Favoritos
+                                                    </>
+                                            ) : (
+                                                    <>
+                                                        <Heart className="w-4 h-4" /> Adicionar aos Favoritos
+                                                    </>
+                                            )}
+                                    </button>
+                            )}
               
               {/* Option to open Group Tag Editor */}
               {onGroupEdit && (
@@ -696,14 +698,18 @@ const SongTable: React.FC<SongTableProps> = ({
                   </button>
               )}
 
-              <div className="border-t border-zinc-800 my-1"></div>
+                            {(!isSpotifyTable && !isTidalTable && !isNaviTableDownload && onInfo) && (
+                                    <>
+                                            <div className="border-t border-zinc-800 my-1"></div>
 
-              <button 
-                onClick={() => { onInfo && onInfo(contextMenu.song!); setContextMenu({ ...contextMenu, visible: false }); }}
-                className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
-              >
-                  <Info className="w-4 h-4" /> Informações
-              </button>
+                                            <button 
+                                                onClick={() => { onInfo && onInfo(contextMenu.song!); setContextMenu({ ...contextMenu, visible: false }); }}
+                                                className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+                                            >
+                                                    <Info className="w-4 h-4" /> Informações
+                                            </button>
+                                    </>
+                            )}
                 {/* TIDAL download option */}
                 {contextMenu.song.contentType === 'audio/tidal' && (
                     <button
