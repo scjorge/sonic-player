@@ -28,6 +28,7 @@ class DownloadService {
             status: d.status,
             filename: d.filename,
             coverArt: d.coverArt,
+            contentType: d.contentType,
         }));
         return items;
     }
@@ -254,6 +255,7 @@ class DownloadService {
                 trackId,
                 creds,
                 song,
+                contentType: 'audio/tidal-local',
             };
             this.setdownloadsItems(item);
 

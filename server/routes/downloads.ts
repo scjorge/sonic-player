@@ -4,11 +4,11 @@ import { downloadTrackFromTidal, getdownloads, getCompletedDownloads, streamDown
 const downloadsRouter = Router();
 
 downloadsRouter.get('/', getdownloads);
-downloadsRouter.post('/', downloadTrackFromTidal);
 downloadsRouter.delete('/', clearDownloads);
 downloadsRouter.delete('/:id', deleteDownload);
 downloadsRouter.get('/completed', getCompletedDownloads);
 downloadsRouter.get('/stream', streamDownload);
+downloadsRouter.post('/tidal', downloadTrackFromTidal);
 downloadsRouter.post('/finalize', finalizeDownload);
 downloadsRouter.post('/metadata', writeMetadataParts);
 

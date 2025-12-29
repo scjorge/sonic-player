@@ -6,7 +6,7 @@ import { tidalService } from './services/tidalService';
 import TidalBrowse from './components/tidal/TidalBrowse.tsx';
 import TidalLiked from './components/tidal/TidalLiked';
 import TidalPlaylists from './components/tidal/TidalPlaylists';
-import TidalDownloads  from './components/tidal/TidalDownloads';
+import NaviDownloads from './components/library/Downloads.tsx';
 import { TIDAL_COLUMN_CONFIG } from './components/tidal/tidalConstants';
 import { BACKEND_BASE_URL, TIDAL_QUALITY } from './core/config';
 import { getStoredGroups, getSpotifyCredentials } from './services/data';
@@ -25,7 +25,7 @@ import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks' | 'tidal_downloads';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'navi_downloads' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general'; 
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
@@ -1285,9 +1285,9 @@ const App: React.FC = () => {
         return <TidalPlaylists onPlaylistClick={handleTidalPlaylistClick} />;
     }
 
-    if (viewMode === 'tidal_downloads') {
+    if (viewMode === 'navi_downloads') {
         return (
-            <TidalDownloads
+            <NaviDownloads
                 onPlayDownload={playTidalDownloadedSong}
                 currentTrackId={currentTrack?.id}
                 isPlaying={isPlaying}
@@ -1571,8 +1571,8 @@ const App: React.FC = () => {
                             </button>
 
                             <button 
-                                onClick={() => setViewMode('tidal_downloads')}
-                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_downloads' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                                onClick={() => setViewMode('navi_downloads')}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'navi_downloads' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                             >
                                 <Download className="w-4 h-4 flex-shrink-0" /> 
                                 {!isSidebarCollapsed && <span>Downloads</span>}
@@ -1686,6 +1686,7 @@ const App: React.FC = () => {
                 {viewMode === 'navi_albums' && <><Library className="w-5 h-5 text-indigo-500" /> Álbuns</>}
                 {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
                 {viewMode === 'navi_favorites' && <><Heart className="w-5 h-5 text-indigo-500 fill-indigo-500" /> Favoritos</>}
+                {viewMode === 'navi_downloads' && <><Download className="w-5 h-5 text-indigo-500" /> Downloads</>}
                 {viewMode === 'navi_playlist' && <><List className="w-5 h-5 text-indigo-500" /> {naviPlaylists.find(p => p.id === selectedPlaylistId)?.name || 'Playlist'}</>}
                 {viewMode === 'spotify_browse' && <><Navigation className="w-4 h-4 flex-shrink-0 text-green-500" /> Navegador</>}
                 {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
@@ -1695,7 +1696,6 @@ const App: React.FC = () => {
                 {viewMode === 'tidal_liked' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Músicas Curtidas</>}
                 {viewMode === 'tidal_playlists' && <><List className="w-5 h-5 text-yellow-500" /> Playlists</>}
                 {viewMode === 'tidal_playlist_tracks' && <><List className="w-5 h-5 text-yellow-500" /> {selectedPlaylistName || 'Playlist'}</>}
-                {viewMode === 'tidal_downloads' && <><Download className="w-5 h-5 text-indigo-500" /> Downloads</>}
                 {viewMode === 'settings' && <><Settings className="w-5 h-5 text-indigo-500" />Configurações</>}
             </h2>
         </div>

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { NaviSong } from '../../types';
-import SongTable from '../library/SongTable';
-import { TIDAL_COLUMN_DOWNLOAD_CONFIG } from './tidalConstants';
+import SongTable from './SongTable';
+import { TIDAL_COLUMN_DOWNLOAD_CONFIG } from '../tidal/tidalConstants';
 import { BACKEND_BASE_URL } from '../../core/config';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { tidalService }  from '../../services/tidalService';
 import showToast from '../utils/toast';
 
-interface TidalDownloadsProps {
+interface DownloadsProps {
   onPlayDownload?: (song: NaviSong) => void;
   currentTrackId?: string | null;
   isPlaying?: boolean;
@@ -22,7 +22,7 @@ interface DownloadItem {
   filename?: string;
 }
 
-export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, currentTrackId, isPlaying }) => {
+export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, currentTrackId, isPlaying }) => {
   const [items, setItems] = useState<DownloadItem[]>([]);
   const [activeTab, setActiveTab] = useState<'in_progress' | 'completed'>('in_progress');
   const [completedSongs, setCompletedSongs] = useState<NaviSong[]>([]);
@@ -61,22 +61,29 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
   };
 
   const handleRetry = async (song: any) => {
-    const body = {
-          creds: tidalService.getCredentials(),
-          trackId: song.id,
-          song: song,
-      };
-      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-      });
-      if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}));
-          showToast(`Erro ao tentar novamente: ${err.error || resp.statusText}`, 'error');
-          throw new Error(err.error || 'Erro ao tentar novamente');
-      }
-      fetchDownloads()
+    const downloadFromTidal = async () => {
+      const body = {
+            creds: tidalService.getCredentials(),
+            trackId: song.id,
+            song: song,
+        };
+        const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/tidal`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            showToast(`Erro ao tentar novamente: ${err.error || resp.statusText}`, 'error');
+            throw new Error(err.error || 'Erro ao tentar novamente');
+        }
+    }
+
+    if (song.contentType.includes('tidal')) {
+      await downloadFromTidal();
+    }
+
+    fetchDownloads()
   };
 
   const fetchDownloads = async () => {
@@ -162,7 +169,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
           }`}
           onClick={() => setActiveTab('completed')}
         >
-          Finalizados
+          Preparo
         </button>
       </div>
 
@@ -195,7 +202,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
                       </div>
                       <div className="flex items-center gap-2 text-xs text-zinc-400">
                         <span>{it.status}</span>
-                        {it.status === 'failed' && (
+                        {it.status !== 'failed' && (
                           <button
                             className="p-1 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
                             title="Tentar novamente"
@@ -251,4 +258,4 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
   );
 };
 
-export default TidalDownloads;
+export default NaviDownloads;

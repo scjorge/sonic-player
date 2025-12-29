@@ -735,7 +735,7 @@ const SongTable: React.FC<SongTableProps> = ({
                                                 trackId: contextMenu.song!.id,
                                                 song: contextMenu.song,
                                             };
-                                            const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads`, {
+                                            const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/tidal`, {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
                                                 body: JSON.stringify(body)
