@@ -1,7 +1,7 @@
 
 // Navidrome / Subsonic Types
 
-export interface SubsonicResponse<T> {
+export interface SubsonicResponse {
   "subsonic-response": {
     status: "ok" | "failed";
     version: string;

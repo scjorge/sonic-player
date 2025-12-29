@@ -26,7 +26,7 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = ({ onCredsChange }) 
       newErrors.baseUrl = 'URL é obrigatória.';
       ok = false;
     } else {
-      try { new URL(creds.baseUrl); } catch (_) { newErrors.baseUrl = 'URL inválida.'; ok = false; }
+      try { new URL(creds.baseUrl); } catch { newErrors.baseUrl = 'URL inválida.'; ok = false; }
     }
     if (!creds.user) { newErrors.user = 'Usuário é obrigatório.'; ok = false; }
     if (!creds.password) { newErrors.password = 'Senha é obrigatória.'; ok = false; }

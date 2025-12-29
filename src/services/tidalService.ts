@@ -48,7 +48,7 @@ class TidalService {
       });
 
       let json: any = {};
-      try { json = await res.json(); } catch (e) { json = {}; }
+      try { json = await res.json(); } catch { json = {}; }
 
       if (res.ok) {
         const expiresAt = Date.now() + (json.expires_in * 1000);

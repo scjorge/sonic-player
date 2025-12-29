@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, SpotifyTrack, SpotifyCredentials } from './types';
+import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, SpotifyCredentials } from './types';
 import { navidromeService } from './src/services/navidromeService.ts';
 import { spotifyService } from './src/services/spotifyService.ts';
 import { tidalService } from './src/services/tidalService.ts';
@@ -24,7 +24,6 @@ import NavidromeSettings from './src/components/settings/NavidromeSettings.tsx';
 import LikedSongs from './src/components/spotify/LikedSongs.tsx';
 import SpotifyPlaylists from './src/components/spotify/SpotifyPlaylists.tsx';
 import { SPOTIFY_COLUMN_CONFIG } from './src/components/spotify/spotifyConstants.ts';
-import { SimpleConsoleLogger } from 'typeorm';
 
 type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'navi_downloads' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general';
@@ -197,13 +196,13 @@ const App: React.FC = () => {
   const setExclusivePlayer = (newSource: 'navidrome' | 'spotify' | 'spotify_preview' | 'tidal') => {
     // Stop Spotify full-player if we're switching to any other source
     if (newSource !== 'spotify') {
-      try { spotifyService.stop(); } catch (e) { /* ignore */ }
+      try { spotifyService.stop(); } catch { /* ignore */ }
     }
 
     // Pause in-page audio (used by navidrome, tidal and spotify_preview) unless we're starting a preview
     if (newSource !== 'spotify_preview') {
       if (audioRef.current && !audioRef.current.paused) {
-        try { audioRef.current.pause(); } catch (e) { /* ignore */ }
+        try { audioRef.current.pause(); } catch { /* ignore */ }
       }
     }
   };
@@ -959,7 +958,7 @@ const App: React.FC = () => {
 
       // urls may be strings or objects with a url property
       const firstUrl: any = info.urls.find((u: any) => typeof u === 'string' || (u && (u.url || u.uri))) || info.urls[0];
-      let streamUrl: string | null = null;
+      let streamUrl: any | string | null = null;
       if (typeof firstUrl === 'string') streamUrl = firstUrl;
       else if (firstUrl && firstUrl.url) streamUrl = firstUrl.url;
       else if (firstUrl && firstUrl.uri) streamUrl = firstUrl.uri;

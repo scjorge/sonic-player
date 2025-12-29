@@ -67,7 +67,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
     } else {
       try {
         new URL(creds.redirectUri);
-      } catch (_) {
+      } catch {
         newErrors.redirectUri = "A Redirect URI deve ser uma URL válida.";
         isValid = false;
       }
@@ -262,9 +262,9 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
         <ol className="text-sm text-zinc-500 space-y-2 list-decimal list-inside">
           <li>Acesse o <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noreferrer" className="text-green-500 hover:underline">Spotify for Developers Dashboard</a>.</li>
           <li>Faça login com sua conta Spotify.</li>
-          <li>Clique em "Create app", dê um nome e descrição.</li>
-          <li>Vá em "Settings" no seu novo app para visualizar o Client ID e Client Secret.</li>
-          <li>Na mesma página de "Settings", adicione uma "Redirect URI":
+          <li>Clique em 'Create app', dê um nome e descrição.</li>
+          <li>Vá em 'Settings' no seu novo app para visualizar o Client ID e Client Secret.</li>
+          <li>Na mesma página de 'Settings', adicione uma 'Redirect URI':
             <div className="ml-2 flex items-center gap-2">
               <code className="bg-zinc-700/50 text-xs rounded p-1">{window.location.origin}/callback</code>
               <CopyButton />

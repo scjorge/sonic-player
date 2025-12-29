@@ -82,7 +82,7 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
           return [song.id, exists] as [string, boolean];
         }));
         setNavidromeExistenceMap(new Map(existenceChecks));
-      } catch (err) {
+      } catch {
         setError("Não foi possível carregar as músicas curtidas do Spotify. Verifique sua conexão ou autenticação.");
       } finally {
         setLoading(false);

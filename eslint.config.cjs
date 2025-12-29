@@ -45,6 +45,9 @@ module.exports = [
       'react/jsx-indent': ['error', 2],
       'react/jsx-indent-props': ['error', 2],
 
+      // Permitir uso de `any`
+      '@typescript-eslint/no-explicit-any': 'off',
+
       'react/react-in-jsx-scope': 'off',
       'react-refresh/only-export-components': 'off',
     },

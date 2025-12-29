@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NaviSong, TagGroup } from '../../../types';
 import SongTable from './SongTable';
-import { TIDAL_COLUMN_DOWNLOAD_CONFIG } from '../tidal/tidalConstants';
 import { BACKEND_BASE_URL } from '../../core/config';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { tidalService }  from '../../services/tidalService';
@@ -52,7 +51,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
       }
       setItems([]);
     } catch (e) {
-      showToast('Erro ao limpar downloads', 'error');
+      showToast(`Erro ao limpar downloads: ${e}`, 'error');
     }
   };
 
@@ -68,7 +67,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
       }
       setItems(prev => prev.filter(it => it.id !== id));
     } catch (e) {
-      showToast('Erro ao remover download', 'error');
+      showToast(`Erro ao remover download: ${e}`, 'error');
     }
   };
 
@@ -108,7 +107,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
       } 
       const json = await res.json();
       setItems(json.items.reverse() || []);
-    } catch (e) {
+    } catch {
       // ignore
     }
   };
@@ -147,7 +146,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
         ext: it.ext,
       }));
       setCompletedSongs(songs);
-    } catch (e) {
+    } catch {
       setCompletedSongs([]);
     } finally {
       setLoadingCompleted(false);

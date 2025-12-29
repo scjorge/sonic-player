@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NaviSong } from '../../../types';
-import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, Filter, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, History, CheckSquare, Square, AlignJustify, Heart, Info, BarChart2, Sparkles, TrendingUp, Award, Star, Tags, Download } from 'lucide-react';
+import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, Filter, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
@@ -145,7 +145,7 @@ const SongTable: React.FC<SongTableProps> = ({
 
   useEffect(() => {
     if (autoFocusSearch && searchInputRef.current) {
-      try { searchInputRef.current.focus(); searchInputRef.current.select(); } catch (e) { }
+      try { searchInputRef.current.focus(); searchInputRef.current.select(); } catch { }
     }
   }, [autoFocusSearch]);
 
@@ -574,7 +574,7 @@ const SongTable: React.FC<SongTableProps> = ({
       try {
         const genres = await getStoredGenres();
         setGenreSuggestions(genres);
-      } catch (e) {
+      } catch {
         // ignore storage errors
       }
     }
@@ -738,7 +738,7 @@ const SongTable: React.FC<SongTableProps> = ({
                   }
                   const json = await resp.json();
                   showToast('Download enfileirado no servidor (id: ' + json.id + ')', 'success');
-                } catch (e: any) {
+                } catch (e){
                   console.error('TIDAL download request failed', e);
                   showToast('Falha ao iniciar download no servidor: ' + (e?.message || String(e)), 'error');
                 }

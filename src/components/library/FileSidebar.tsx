@@ -1,6 +1,6 @@
 import React from 'react';
 import { MusicFile } from '../../../types';
-import { FileAudio, Music, PlusCircle, Settings, ArrowLeft } from 'lucide-react';
+import { FileAudio, Music, PlusCircle, Settings } from 'lucide-react';
 import { clsx } from 'clsx'; 
 
 interface FileSidebarProps {

@@ -37,7 +37,7 @@ const SongInfoModal: React.FC<SongInfoModalProps> = ({ song, onClose }) => {
   };
 
   // Linhas agora mais altas (py-3) e com fontes levemente ajustadas
-  const InfoRow = ({ icon: Icon, label, value, highlight = false }: { icon: any, label: string, value: string | number | undefined | React.ReactNode, highlight?: boolean }) => (
+  const InfoRow = ({ icon: Icon, label, value, highlight = false }: { icon: React.ElementType, label: string, value: string | number | undefined | React.ReactNode, highlight?: boolean }) => (
     <div className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-0 hover:bg-zinc-900/50 px-3 -mx-3 rounded transition-colors group">
       <div className="flex items-center gap-3 text-zinc-400">
         <div className="p-1.5 bg-zinc-800/50 rounded-md group-hover:bg-zinc-800 transition-colors">
