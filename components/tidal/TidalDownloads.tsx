@@ -190,6 +190,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
               isPlaying={isPlaying}
               defaultColumns={TIDAL_COLUMN_DOWNLOAD_CONFIG}
               isTidalTableDownload={true}
+              onAfterFinalize={fetchCompleted}
             />
           )}
         </div>

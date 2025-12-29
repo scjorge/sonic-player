@@ -25,4 +25,5 @@ export const TIDAL_COLUMN_DOWNLOAD_CONFIG: ColumnConfig[] = [
   { id: 'duration', label: 'Duração', width: 80, visible: true, minWidth: 60 },
   { id: 'isrc', label: 'ISRC', width: 150, visible: false, minWidth: 80 },
   { id: 'track', label: 'Track', width: 100, visible: false, minWidth: 50 },
+  { id: 'finalize', label: 'Finalizar', width: 120, visible: true, minWidth: 100 },
 ];

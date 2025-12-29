@@ -29,6 +29,19 @@ export async function writeMetadataParts(req: Request, res: Response) {
     return res.json(result);
 }
 
+export async function finalizeDownload(req: Request, res: Response) {
+    const { path: filePath } = req.body;
+    if (!filePath) return res.status(400).json({ error: 'path is required' });
+
+    try {
+        const result = await tidalServerService.finalizeDownload(filePath);
+        return res.json(result);
+    } catch (e: any) {
+        console.error('Failed to finalize TIDAL download', e);
+        return res.status(500).json({ error: e?.message || 'failed to finalize download' });
+    }
+}
+
 export async function streamDownload(req: Request, res: Response) {
     const { id } = req.query;
     if (!id || typeof id !== 'string') {

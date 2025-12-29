@@ -4,10 +4,9 @@ import fetch from 'node-fetch';
 import { execFile } from 'child_process';
 import { sanitizeQuery } from '../../services/tools';
 import { tidalService } from '../../services/tidalService';
-import { TIDAL_QUALITY } from '../../core/config';
+import { NAVIDROME_BASE_PATH, NAVIDROME_SAVE_FORMAT, TIDAL_QUALITY, TIDAL_DOWNLOAD_PATH } from '../../core/config';
 import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
-import { NAVIDROME_BASE_PATH, TIDAL_DOWNLOAD_PATH } from '../../core/config';
 
 
 class TidalServerService {
@@ -16,7 +15,7 @@ class TidalServerService {
 
     constructor() {
         this.downloads = new Map();
-        this.download_dir = TIDAL_DOWNLOAD_PATH
+        this.download_dir = TIDAL_DOWNLOAD_PATH;
         if (!fs.existsSync(this.download_dir)) fs.mkdirSync(this.download_dir, { recursive: true });
     }
 
@@ -171,6 +170,64 @@ class TidalServerService {
             cover: await this.downloadCoverFromUrl(song.coverArt),
         };
         await audioTagger.write(destFinal, metadata);
+    }
+
+    private buildNavidromeTargetPath(meta: AudioMetadata, sourcePath: string) {
+        const ext = (path.extname(sourcePath).toLowerCase().replace('.', '') || 'mp3');
+
+        const genre = meta.genre || 'Unknown';
+        const artist = meta.albumArtist || 'Unknown Artist';
+        const album = meta.album || 'Unknown Album';
+        const trackNumber = meta.trackNumber || 0;
+        const title = meta.title || path.basename(sourcePath, path.extname(sourcePath));
+        const trackStr = trackNumber ? String(trackNumber).padStart(2, '0') : '00';
+
+        const safe = (value: string) => sanitizeQuery(value || '').replace(/^\.+$/, '') || 'Unknown';
+
+        let relative = NAVIDROME_SAVE_FORMAT;
+        relative = relative.replace(/{genre}/g, safe(genre));
+        relative = relative.replace(/{artist}/g, safe(artist));
+        relative = relative.replace(/{album}/g, safe(album));
+        relative = relative.replace(/{track}/g, safe(trackStr));
+        relative = relative.replace(/{title}/g, safe(title));
+        relative = relative.replace(/{ext}/g, ext || 'mp3');
+
+        return path.join(NAVIDROME_BASE_PATH, relative);
+    }
+
+    async finalizeDownload(filePath: string) {
+        const resolved = this.resolveDownloadPath(filePath);
+        if (!resolved) {
+            throw new Error('Caminho de download inválido');
+        }
+
+        const meta = await audioTagger.read(resolved);
+        if (!meta.genre) {
+            throw new Error('Gênero é obrigatório para finalizar o download');
+        }
+
+        let target = this.buildNavidromeTargetPath(meta, resolved);
+        const targetDir = path.dirname(target);
+        await fs.promises.mkdir(targetDir, { recursive: true });
+
+        // Evita sobrescrever arquivos existentes
+        if (fs.existsSync(target)) {
+            const parsed = path.parse(target);
+            let counter = 1;
+            while (fs.existsSync(target)) {
+                target = path.join(parsed.dir, `${parsed.name} (${counter})${parsed.ext}`);
+                counter++;
+            }
+        }
+
+        await fs.promises.rename(resolved, target);
+
+        return {
+            status: 'moved',
+            from: resolved,
+            to: target,
+            relativePath: path.relative(NAVIDROME_BASE_PATH, target),
+        };
     }
 
     async downloadTrack(trackId: string, creds: any, song: any) {

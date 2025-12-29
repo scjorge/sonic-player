@@ -54,10 +54,11 @@ interface SongTableProps {
   autoFocusSearch?: boolean;
   navidromeConnected?: boolean | null;
   onOpenNavidromeSettings?: () => void;
+    onAfterFinalize?: () => void;
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
-export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate' | 'download' | 'isrc';
+export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate' | 'download' | 'isrc' | 'finalize';
 
 type RowDensity = 'compact' | 'normal' | 'relaxed';
 
@@ -120,7 +121,8 @@ const SongTable: React.FC<SongTableProps> = ({
     navidromeExistenceMap,
     onNavigateToLibraryQuery,
     navidromeConnected = null,
-    onOpenNavidromeSettings
+    onOpenNavidromeSettings,
+    onAfterFinalize,
 }) => {
   // --- STATE ---
   const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || [
@@ -449,6 +451,43 @@ const SongTable: React.FC<SongTableProps> = ({
                                     )}
                             </div>
                     );
+            }
+            case 'finalize': {
+                if (!isTidalTableDownload) return '-';
+                const disabled = !song.genre || !song.path;
+                return (
+                    <button
+                        onClick={async (e) => {
+                            e.stopPropagation();
+                            if (disabled || !song.path) return;
+                            try {
+                                const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads/finalize`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ path: song.path }),
+                                });
+                                if (!resp.ok) {
+                                    const err = await resp.json().catch(() => ({}));
+                                    showToast(`Erro ao finalizar download: ${err.error || resp.statusText}`, 'error');
+                                    return;
+                                }
+                                showToast('Música movida para a pasta do Navidrome.', 'success');
+                                if (onAfterFinalize) onAfterFinalize();
+                            } catch (e: any) {
+                                showToast(`Erro ao finalizar download: ${e?.message || String(e)}`, 'error');
+                            }
+                        }}
+                        disabled={disabled}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                            disabled
+                                ? 'border-zinc-700 text-zinc-600 cursor-not-allowed bg-zinc-900'
+                                : 'border-yellow-500 text-yellow-300 hover:bg-yellow-500 hover:text-black'
+                        }`}
+                        title={disabled ? 'Defina o gênero antes de finalizar' : 'Mover para a pasta do Navidrome'}
+                    >
+                        Finalizar
+                    </button>
+                );
       }
       default: return '-';
     }
