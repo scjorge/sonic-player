@@ -129,52 +129,41 @@ export const deleteStoredGenre = async (genre: string): Promise<void> => {
 
 // Spotify storage functions - backed by API + local cache
 export const getSpotifyCredentials = (): SpotifyCredentials => {
-  try {
-    const credsData = localStorage.getItem(SPOTIFY_KEY);
-    const authData = localStorage.getItem(SPOTIFY_AUTH_KEY);
+  const spotifyCreds: Partial<SpotifyCredentials> = {};
+  const credsData = localStorage.getItem(SPOTIFY_KEY);
+  const authData = localStorage.getItem(SPOTIFY_AUTH_KEY);
 
-    if (credsData || authData) {
-      const creds: Partial<SpotifyCredentials> = credsData ? JSON.parse(credsData) : {};
-      const auth: Partial<SpotifyCredentials> = authData ? JSON.parse(authData) : {};
-
-      return {
-        clientId: creds.clientId || '',
-        clientSecret: creds.clientSecret || '',
-        redirectUri: creds.redirectUri || '',
-        accessToken: auth.accessToken,
-        refreshToken: auth.refreshToken,
-        expiresAt: auth.expiresAt,
-      };
-    }
-  } catch (e) {
-    console.error('Erro ao carregar Spotify do LocalStorage', e);
+  if (authData) {
+    const auth: Partial<SpotifyCredentials> = authData ? JSON.parse(authData) : {};
+    spotifyCreds.accessToken = auth.accessToken;
+    spotifyCreds.refreshToken = auth.refreshToken;
+    spotifyCreds.expiresAt = auth.expiresAt;
   }
 
-  // Fallback: buscar do backend
+  if (credsData) {
+    const creds: Partial<SpotifyCredentials> = credsData ? JSON.parse(credsData) : {};
+    spotifyCreds.clientId = creds.clientId;
+    spotifyCreds.clientSecret = creds.clientSecret;
+    spotifyCreds.redirectUri = creds.redirectUri;
+  }
+
+  if (authData && credsData){
+    return spotifyCreds as SpotifyCredentials;
+  }
+
   try {
     fetch(`${BACKEND_BASE_URL}/api/spotify-settings`)
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
-        const creds: SpotifyCredentials = {
-          clientId: data.clientId || '',
-          clientSecret: data.clientSecret || '',
-          redirectUri: data.redirectUri || '',
-          accessToken: data.accessToken || undefined,
-          refreshToken: data.refreshToken || undefined,
-          expiresAt: data.expiresAt || undefined,
-        };
+        spotifyCreds.clientId = data.clientId || '';
+        spotifyCreds.clientSecret = data.clientSecret || '';
+        spotifyCreds.redirectUri = data.redirectUri || '';
 
         try {
           localStorage.setItem(
             SPOTIFY_KEY,
-            JSON.stringify({ clientId: creds.clientId, clientSecret: creds.clientSecret, redirectUri: creds.redirectUri })
+            JSON.stringify({ clientId: spotifyCreds.clientId, clientSecret: spotifyCreds.clientSecret, redirectUri: spotifyCreds.redirectUri })
           );
-          if (creds.accessToken && creds.refreshToken && creds.expiresAt) {
-            localStorage.setItem(
-              SPOTIFY_AUTH_KEY,
-              JSON.stringify({ accessToken: creds.accessToken, refreshToken: creds.refreshToken, expiresAt: creds.expiresAt })
-            );
-          }
         } catch (e) {
           console.error('Erro ao cachear Spotify no LocalStorage', e);
         }
@@ -186,7 +175,7 @@ export const getSpotifyCredentials = (): SpotifyCredentials => {
     console.error('Erro ao iniciar fetch de Spotify', e);
   }
 
-  return { clientId: '', clientSecret: '', redirectUri: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined };
+  return spotifyCreds as SpotifyCredentials;
 };
 
 export const saveSpotifyCredentials = (creds: SpotifyCredentials) => {

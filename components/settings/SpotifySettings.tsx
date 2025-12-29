@@ -43,8 +43,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
 
   useEffect(() => {
     const stored = getSpotifyCredentials();
-    setCreds(stored); // Carrega todas as credenciais, incluindo tokens se existirem
-    // A autenticação agora é gerenciada pelo App.tsx e passada via prop
+    setCreds(stored);
   }, []);
 
   const validate = (): boolean => {
