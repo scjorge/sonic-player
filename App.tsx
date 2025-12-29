@@ -1157,12 +1157,14 @@ const App: React.FC = () => {
         // NÃO pode usar await aqui:
         // const creds = await getSpotifyCredentials();
 
-        // enquanto não carregou as credenciais, mostra um loading simples
-        console.log('Rendering Spotify Browse, creds:', spotifyCreds);
-        if (!spotifyCreds) {
+        if (!isAuthenticated || !spotifyCreds) {
             return (
-                <div className="flex justify-center items-center h-full">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
+                    <div className="text-zinc-400 mb-6">Configure seu Client ID e Client Secret nas configurações do Spotify para usar este recurso.</div>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('spotify'); }} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded">Ir para Configurações</button>
+                    </div>
                 </div>
             );
         }
@@ -1181,17 +1183,7 @@ const App: React.FC = () => {
             );
         }
 
-        if (!isAuthenticated) {
-            return (
-                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
-                    <div className="text-zinc-300 mb-4">Recursos do Spotify indisponíveis.</div>
-                    <div className="text-zinc-400 mb-6">Configure seu Client ID e Client Secret nas configurações do Spotify para usar este recurso.</div>
-                    <div className="flex gap-3">
-                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('spotify'); }} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded">Ir para Configurações</button>
-                    </div>
-                </div>
-            );
-        }
+
 
         return (
             <div className="h-full">
