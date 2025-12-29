@@ -136,6 +136,7 @@ const SongTable: React.FC<SongTableProps> = ({
   const [genreSuggestions, setGenreSuggestions] = useState<string[]>([]);
   const [searchInputValue, setSearchInputValue] = useState(activeSearchQuery);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [isTagEditMode, setIsTagEditMode] = useState(false);
 
   // Sync internal state with external prop if it changes (e.g. clear)
   useEffect(() => {
@@ -273,7 +274,8 @@ const SongTable: React.FC<SongTableProps> = ({
 
   // --- RENDER HELPERS ---
   const visibleColumns = columns.filter(c => c.visible);
-  
+  const isNavidromeLibraryTable = !isSpotifyTable && !isTidalTable && !isNaviTableDownload;
+
   const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 0;
   const isLastPageDisabled = totalItems === 0 || page >= totalPages - 1;
   const isAllSelected = songs.length > 0 && songs.every(s => selectedIds.includes(s.id));
@@ -473,6 +475,7 @@ const SongTable: React.FC<SongTableProps> = ({
   };
 
     const editableTidalColumns: ColumnId[] = ['title', 'artist', 'album', 'genre', 'year', 'track', 'discNumber', 'isrc', 'comment'];
+    const editableNavidromeColumns: ColumnId[] = ['title', 'artist', 'album', 'genre', 'year', 'track', 'discNumber', 'isrc', 'comment'];
 
     const getEditableValueFromSong = (song: NaviSong, columnId: ColumnId): string => {
         switch (columnId) {
@@ -561,13 +564,15 @@ const SongTable: React.FC<SongTableProps> = ({
     };
 
     const handleStartEdit = (song: NaviSong, columnId: ColumnId) => {
-        if (!isNaviTableDownload) return;
-        if (!editableTidalColumns.includes(columnId)) return;
+        const isDownloadCell = isNaviTableDownload && editableTidalColumns.includes(columnId);
+        const isNavidromeCell = isNavidromeLibraryTable && isTagEditMode && editableNavidromeColumns.includes(columnId);
+
+        if (!isDownloadCell && !isNavidromeCell) return;
         if (!song.path) {
-            showToast('Caminho do arquivo não encontrado para este download.', 'error');
+            showToast('Caminho do arquivo não encontrado para esta música.', 'error');
             return;
         }
-        if (columnId === 'genre') {
+        if (columnId === 'genre' && isNaviTableDownload) {
             try {
                 setGenreSuggestions(getStoredGenres());
             } catch (e) {
@@ -589,13 +594,14 @@ const SongTable: React.FC<SongTableProps> = ({
 
         const valueToUse = valueOverride !== undefined ? valueOverride : editingValue;
         const metadata = buildMetadataFromEdit(editingCell.field, valueToUse);
+        const source: 'download' | 'navidrome' = isNaviTableDownload ? 'download' : isNavidromeLibraryTable ? 'navidrome' : 'download';
 
         try {
             const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    source: 'download',
+                    source,
                     path: currentSong.path,
                     metadata,
                 }),
@@ -920,7 +926,7 @@ const SongTable: React.FC<SongTableProps> = ({
             )}
         </div>
 
-                {/* COLUMNS BUTTON */}
+                {/* COLUMNS BUTTON & TAG EDIT TOGGLE */}
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <button 
@@ -984,6 +990,21 @@ const SongTable: React.FC<SongTableProps> = ({
                         </>
                         )}
                     </div>
+
+                    {isNavidromeLibraryTable && (
+                        <button
+                            onClick={() => setIsTagEditMode(!isTagEditMode)}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
+                                isTagEditMode
+                                    ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/60'
+                                    : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                            }`}
+                            title="Habilitar edição de tags diretamente na tabela"
+                        >
+                            <Tags className="w-4 h-4" />
+                            Editar tags
+                        </button>
+                    )}
         </div>
       </div>
       
@@ -1067,10 +1088,14 @@ const SongTable: React.FC<SongTableProps> = ({
                                 </div>
                             )}
                             {visibleColumns.map(col => {
-                                const isEditable = isNaviTableDownload && editableTidalColumns.includes(col.id);
+                                const isEditable =
+                                    (isNaviTableDownload && editableTidalColumns.includes(col.id)) ||
+                                    (isNavidromeLibraryTable && isTagEditMode && editableNavidromeColumns.includes(col.id));
+
+                                    const shouldEditOnClick = isNavidromeLibraryTable && isTagEditMode;
+                                    const shouldEditOnDoubleClick = isNaviTableDownload;
                                     const isEditingThisCell =
-                                        isNaviTableDownload &&
-                                        editingCell &&
+                                        !!editingCell &&
                                         editingCell.songId === song.id &&
                                         editingCell.field === col.id;
 
@@ -1089,7 +1114,12 @@ const SongTable: React.FC<SongTableProps> = ({
                                                 key={col.id}
                                                 className={`px-4 text-sm text-zinc-400 flex ${showGenreSuggestions ? 'items-start overflow-visible whitespace-normal' : 'items-center overflow-hidden whitespace-nowrap'} flex-shrink-0 ${getRowPadding()} ${isEditable ? 'cursor-text' : ''}`}
                                                 style={{ width: col.width, minWidth: col.minWidth }}
-                                                onDoubleClick={() => isEditable && handleStartEdit(song, col.id)}
+                                                onClick={() => {
+                                                    if (shouldEditOnClick && isEditable) handleStartEdit(song, col.id);
+                                                }}
+                                                onDoubleClick={() => {
+                                                    if (shouldEditOnDoubleClick && isEditable) handleStartEdit(song, col.id);
+                                                }}
                                         >
                                                 {isEditingThisCell ? (
                                                     col.id === 'genre' && isNaviTableDownload ? (

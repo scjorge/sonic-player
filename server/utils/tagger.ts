@@ -25,7 +25,7 @@ class AudioTagger {
 
     public async read(filePath: string): Promise<AudioMetadata> {
         if (!fs.existsSync(filePath)) {
-            throw new Error('Arquivo não encontrado');
+            throw new Error(`Arquivo não encontrado -> ${filePath}`);
         }
 
         const ext = path.extname(filePath).toLowerCase();

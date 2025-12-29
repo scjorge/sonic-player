@@ -205,38 +205,42 @@ class DownloadService {
     }
 
     async finalizeDownload(filePath: string) {
-        const resolved = this.resolveDownloadPath(filePath);
-        if (!resolved) {
-            throw new Error('Caminho de download inválido');
-        }
-
-        const meta = await audioTagger.read(resolved);
-        if (!meta.genre) {
-            throw new Error('Gênero é obrigatório para finalizar o download');
-        }
-
-        let target = this.buildNavidromeTargetPath(meta, resolved);
-        const targetDir = path.dirname(target);
-        await fs.promises.mkdir(targetDir, { recursive: true });
-
-        // Evita sobrescrever arquivos existentes
-        if (fs.existsSync(target)) {
-            const parsed = path.parse(target);
-            let counter = 1;
-            while (fs.existsSync(target)) {
-                target = path.join(parsed.dir, `${parsed.name} (${counter})${parsed.ext}`);
-                counter++;
+        try {
+            const resolved = this.resolveDownloadPath(filePath);
+            if (!resolved) {
+                throw new Error('Caminho de download inválido');
             }
+
+            const meta = await audioTagger.read(resolved);
+            if (!meta.genre) {
+                throw new Error('Gênero é obrigatório para finalizar o download');
+            }
+
+            let target = this.buildNavidromeTargetPath(meta, resolved);
+            const targetDir = path.dirname(target);
+            await fs.promises.mkdir(targetDir, { recursive: true });
+
+            // Evita sobrescrever arquivos existentes
+            if (fs.existsSync(target)) {
+                const parsed = path.parse(target);
+                let counter = 1;
+                while (fs.existsSync(target)) {
+                    target = path.join(parsed.dir, `${parsed.name} (${counter})${parsed.ext}`);
+                    counter++;
+                }
+            }
+
+            await fs.promises.rename(resolved, target);
+
+            return {
+                status: 'moved',
+                from: resolved,
+                to: target,
+                relativePath: path.relative(NAVIDROME_BASE_PATH, target),
+            };
+        } catch (error){
+            console.error('Failed to finalize download', error);
         }
-
-        await fs.promises.rename(resolved, target);
-
-        return {
-            status: 'moved',
-            from: resolved,
-            to: target,
-            relativePath: path.relative(NAVIDROME_BASE_PATH, target),
-        };
     }
 
     async downloadTrackFromTidal(trackId: string, creds: any, song: any) {
