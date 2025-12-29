@@ -7,6 +7,7 @@ import showToast from '../utils/toast';
 import { sanitizeQuery } from '../../services/tools';
 import { BACKEND_BASE_URL } from '../../core/config';
 import { getStoredGenres } from '../../services/data';
+import { NAVI_COLUMN_CONFIG } from './NaviConstants';
 
 interface SongTableProps {
   songs: NaviSong[];
@@ -125,34 +126,12 @@ const SongTable: React.FC<SongTableProps> = ({
     onAfterFinalize,
 }) => {
   // --- STATE ---
-  const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || [
-    { id: 'select', label: '', width: 50, visible: true, minWidth: 50 },
-    { id: 'index', label: '#', width: 40, visible: true, minWidth: 30 },
-    { id: 'cover', label: 'Capa', width: 80, visible: true, minWidth: 50 },
-    { id: 'title', label: 'Título', width: 200, visible: true, minWidth: 100 },
-    { id: 'artist', label: 'Artista', width: 150, visible: true, minWidth: 100 },
-    { id: 'album', label: 'Álbum', width: 150, visible: true, minWidth: 100 },
-    { id: 'genre', label: 'Gênero', width: 100, visible: true, minWidth: 200 },
-    { id: 'comment', label: 'Comentários', width: 400, visible: true, minWidth: 200 },
-    { id: 'userRating', label: 'Avaliação', width: 100, visible: false, minWidth: 80 },
-    { id: 'year', label: 'Ano', width: 60, visible: true, minWidth: 100 },
-    { id: 'duration', label: 'Duração', width: 70, visible: true, minWidth: 60 },
-    { id: 'track', label: 'Track', width: 50, visible: false, minWidth: 100 }, 
-    { id: 'discNumber', label: 'Disco', width: 60, visible: false, minWidth: 50 },
-    { id: 'bitRate', label: 'Bitrate', width: 80, visible: false, minWidth: 60 },
-    { id: 'samplingRate', label: 'Sample', width: 80, visible: false, minWidth: 60 },
-    { id: 'format', label: 'Fmt', width: 60, visible: true, minWidth: 50 },
-    { id: 'mood', label: 'Mood', width: 100, visible: false, minWidth: 80 },
-    { id: 'group', label: 'Grupo', width: 120, visible: false, minWidth: 100 },
-    { id: 'filename', label: 'Arquivo', width: 200, visible: false, minWidth: 100 },
-    { id: 'finalize', label: 'Finalizar', width: 120, visible: true, minWidth: 100 },
-  ]);
-  
-    const [showSettings, setShowSettings] = useState(false);
-    const [showFilter, setShowFilter] = useState(false);
-    const [draggedColumnId, setDraggedColumnId] = useState<ColumnId | null>(null);
-    const [rowDensity, setRowDensity] = useState<RowDensity>('normal');
-    const [editingCell, setEditingCell] = useState<{ songId: string; field: ColumnId } | null>(null);
+  const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || NAVI_COLUMN_CONFIG);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [draggedColumnId, setDraggedColumnId] = useState<ColumnId | null>(null);
+  const [rowDensity, setRowDensity] = useState<RowDensity>('normal');
+  const [editingCell, setEditingCell] = useState<{ songId: string; field: ColumnId } | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const [genreSuggestions, setGenreSuggestions] = useState<string[]>([]);
   const [searchInputValue, setSearchInputValue] = useState(activeSearchQuery);
