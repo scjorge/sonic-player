@@ -6,6 +6,7 @@ import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
 import { sanitizeQuery } from '../../services/tools';
 import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../../core/config';
+import { getStoredGenres } from '../../services/data';
 
 interface SongTableProps {
   songs: NaviSong[];
@@ -148,14 +149,12 @@ const SongTable: React.FC<SongTableProps> = ({
   const [showFilter, setShowFilter] = useState(false);
   const [draggedColumnId, setDraggedColumnId] = useState<ColumnId | null>(null);
   const [rowDensity, setRowDensity] = useState<RowDensity>('normal');
-    const [isEditingTags, setIsEditingTags] = useState(false);
-    const [editingCell, setEditingCell] = useState<{ songId: string; field: ColumnId } | null>(null);
-    const [editingValue, setEditingValue] = useState('');
-  
-  // Local state for search input to allow typing without immediate API calls if wanted, 
-  // though typically we use onKeyDown Enter for search.
-    const [searchInputValue, setSearchInputValue] = useState(activeSearchQuery);
-    const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [editingCell, setEditingCell] = useState<{ songId: string; field: ColumnId } | null>(null);
+  const [editingValue, setEditingValue] = useState('');
+  const [genreSuggestions, setGenreSuggestions] = useState<string[]>([]);
+  const [searchInputValue, setSearchInputValue] = useState(activeSearchQuery);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   // Sync internal state with external prop if it changes (e.g. clear)
   useEffect(() => {
@@ -550,11 +549,18 @@ const SongTable: React.FC<SongTableProps> = ({
             showToast('Caminho do arquivo não encontrado para este download.', 'error');
             return;
         }
+        if (columnId === 'genre') {
+            try {
+                setGenreSuggestions(getStoredGenres());
+            } catch (e) {
+                // ignore storage errors
+            }
+        }
         setEditingCell({ songId: song.id, field: columnId });
         setEditingValue(getEditableValueFromSong(song, columnId));
     };
 
-    const handleSaveEdit = async () => {
+    const handleSaveEdit = async (valueOverride?: string) => {
         if (!editingCell) return;
         const currentSong = songs.find((s) => s.id === editingCell.songId);
         if (!currentSong || !currentSong.path) {
@@ -563,7 +569,8 @@ const SongTable: React.FC<SongTableProps> = ({
             return;
         }
 
-        const metadata = buildMetadataFromEdit(editingCell.field, editingValue);
+        const valueToUse = valueOverride !== undefined ? valueOverride : editingValue;
+        const metadata = buildMetadataFromEdit(editingCell.field, valueToUse);
 
         try {
             const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/metadata`, {
@@ -582,7 +589,7 @@ const SongTable: React.FC<SongTableProps> = ({
                 return;
             }
 
-            applyLocalSongUpdate(currentSong, editingCell.field, editingValue);
+            applyLocalSongUpdate(currentSong, editingCell.field, valueToUse);
             showToast(`Tags atualizadas com sucesso.`, 'success');
         } catch (e: any) {
             showToast(`Erro ao salvar tags: ${e?.message || String(e)}`, 'error');
@@ -1061,22 +1068,66 @@ const SongTable: React.FC<SongTableProps> = ({
                                                                     editingCell.songId === song.id &&
                                                                     editingCell.field === col.id;
 
+                                                                const showGenreSuggestions =
+                                                                    isEditingThisCell &&
+                                                                    isTidalTableDownload &&
+                                                                    col.id === 'genre' &&
+                                                                    genreSuggestions.length > 0;
+
+                                                                const filteredSuggestions = showGenreSuggestions
+                                                                    ? genreSuggestions.filter((g) =>
+                                                                          !editingValue ||
+                                                                          g.toLowerCase().includes(editingValue.toLowerCase())
+                                                                      )
+                                                                    : [];
+
                                                                 return (
                                                                     <div 
                                                                             key={col.id}
-                                                                            className={`px-4 text-sm text-zinc-400 flex items-center overflow-hidden whitespace-nowrap flex-shrink-0 ${getRowPadding()} ${isEditable ? 'cursor-text' : ''}`}
+                                                                            className={`px-4 text-sm text-zinc-400 flex ${showGenreSuggestions ? 'items-start overflow-visible whitespace-normal' : 'items-center overflow-hidden whitespace-nowrap'} flex-shrink-0 ${getRowPadding()} ${isEditable ? 'cursor-text' : ''}`}
                                                                             style={{ width: col.width, minWidth: col.minWidth }}
                                                                             onDoubleClick={() => isEditable && handleStartEdit(song, col.id)}
                                                                     >
                                                                             {isEditingThisCell ? (
-                                                                                <input
-                                                                                    autoFocus
-                                                                                    value={editingValue}
-                                                                                    onChange={(e) => setEditingValue(e.target.value)}
-                                                                                    onBlur={handleSaveEdit}
-                                                                                    onKeyDown={handleEditKeyDown}
-                                                                                    className="w-full bg-zinc-900 border border-yellow-500 rounded px-2 py-1 text-xs text-zinc-100 focus:outline-none focus:ring-0"
-                                                                                />
+                                                                                col.id === 'genre' && isTidalTableDownload ? (
+                                                                                    <div className="relative w-full">
+                                                                                        <input
+                                                                                            autoFocus
+                                                                                            value={editingValue}
+                                                                                            onChange={(e) => setEditingValue(e.target.value)}
+                                                                                            onBlur={() => handleSaveEdit()}
+                                                                                            onKeyDown={handleEditKeyDown}
+                                                                                            className="w-full bg-zinc-900 border border-yellow-500 rounded px-2 py-1 text-xs text-zinc-100 focus:outline-none focus:ring-0"
+                                                                                        />
+                                                                                        {filteredSuggestions.length > 0 && (
+                                                                                            <div className="absolute left-0 right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-lg z-30 max-h-40 overflow-y-auto text-xs">
+                                                                                                {filteredSuggestions.map((genre) => (
+                                                                                                    <button
+                                                                                                        key={genre}
+                                                                                                        type="button"
+                                                                                                        className="w-full text-left px-3 py-1.5 hover:bg-zinc-800 text-zinc-200"
+                                                                                                        onMouseDown={(e) => {
+                                                                                                            e.preventDefault();
+                                                                                                            setEditingValue(genre);
+                                                                                                            handleSaveEdit(genre);
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        {genre}
+                                                                                                    </button>
+                                                                                                ))}
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <input
+                                                                                        autoFocus
+                                                                                        value={editingValue}
+                                                                                        onChange={(e) => setEditingValue(e.target.value)}
+                                                                                        onBlur={() => handleSaveEdit()}
+                                                                                        onKeyDown={handleEditKeyDown}
+                                                                                        className="w-full bg-zinc-900 border border-yellow-500 rounded px-2 py-1 text-xs text-zinc-100 focus:outline-none focus:ring-0"
+                                                                                    />
+                                                                                )
                                                                             ) : (
                                                                                 renderCell(song, col.id, index)
                                                                             )}
