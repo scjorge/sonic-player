@@ -4,7 +4,7 @@ export const BACKEND_BASE_URL = "http://127.0.0.1:6788";
 // NAVIDROME
 export const NAVIDROME_BASE_PATH = "/app/downloads_navidrome";
 export const NAVIDROME_SAVE_FORMAT = "{genre}/Artists/{artist}/{album}/{track} - {title}.{ext}";
-export const NAVIDROME_DATABASE_URL = "sqlite:////app/navidrome_database/navidrome.db";
+export const NAVIDROME_DATABASE_SQLITE_PATH = "/app/navidrome_database/navidrome.db";
 
 // SPOTIFY
 export const SPOTIFY_API_BASE_V1 = 'https://api.spotify.com/v1';

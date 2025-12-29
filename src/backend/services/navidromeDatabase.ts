@@ -1,14 +1,9 @@
 import sqlite3 from 'sqlite3';
-import { NAVIDROME_DATABASE_URL } from '../../core/config';
+import { NAVIDROME_DATABASE_SQLITE_PATH } from '../../core/config';
 
 
 function getDatabase() {
-    const dbPath = NAVIDROME_DATABASE_URL.startsWith('sqlite:')
-        ? NAVIDROME_DATABASE_URL.replace(/^sqlite:/, '').replace(/^\/+/, '/')
-        : NAVIDROME_DATABASE_URL;
-
-    const db = new sqlite3.Database(dbPath);
-    return db;
+    return new sqlite3.Database(NAVIDROME_DATABASE_SQLITE_PATH);
 }
 
 async function execQuery(query: string, params: string[] | null): Promise<any> {
