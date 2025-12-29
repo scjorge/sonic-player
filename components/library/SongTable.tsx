@@ -5,7 +5,7 @@ import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
 import { sanitizeQuery } from '../../services/tools';
-import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../tidal/tidalConstants';
+import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../../core/config';
 
 interface SongTableProps {
   songs: NaviSong[];

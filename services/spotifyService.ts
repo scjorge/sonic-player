@@ -1,6 +1,8 @@
 
 import { SpotifyTrack, PaginatedSpotifyTracks, NaviSong } from '../types';
-import { getSpotifyCredentials, saveSpotifyCredentials } from './data'; // Importar saveSpotifyCredentials
+import { getSpotifyCredentials, saveSpotifyCredentials } from './data';
+import { SPOTIFY_API_BASE_V1, SPOTIFY_API_BASE_ACCOUNTS } from '../core/config';
+
 
 class SpotifyService {
   private appAccessToken: string | null = null;
@@ -61,7 +63,7 @@ class SpotifyService {
     }
 
     const scopes = 'user-read-private user-read-email playlist-read-private playlist-modify-private playlist-modify-public user-library-read user-modify-playback-state user-read-playback-state user-read-currently-playing';
-    const authUrl = new URL('https://accounts.spotify.com/authorize');
+    const authUrl = new URL(`${SPOTIFY_API_BASE_ACCOUNTS}/authorize`);
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('client_id', creds.clientId);
     authUrl.searchParams.append('scope', scopes);
@@ -81,7 +83,7 @@ class SpotifyService {
 
     try {
       const auth = btoa(`${creds.clientId}:${creds.clientSecret}`);
-      const response = await fetch('https://accounts.spotify.com/api/token', {
+      const response = await fetch(`${SPOTIFY_API_BASE_ACCOUNTS}/api/token`, {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${auth}`,
@@ -135,7 +137,7 @@ class SpotifyService {
 
     try {
       const auth = btoa(`${creds.clientId}:${creds.clientSecret}`);
-      const response = await fetch('https://accounts.spotify.com/api/token', {
+      const response = await fetch(`${SPOTIFY_API_BASE_ACCOUNTS}/api/token`, {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${auth}`,
@@ -192,7 +194,7 @@ class SpotifyService {
 
     try {
       const auth = btoa(`${creds.clientId}:${creds.clientSecret}`);
-      const response = await fetch('https://accounts.spotify.com/api/token', {
+      const response = await fetch(`${SPOTIFY_API_BASE_ACCOUNTS}/api/token`, {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${auth}`,
@@ -248,7 +250,7 @@ class SpotifyService {
     if (!token) return { items: [], total: 0 };
 
     try {
-      const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}&offset=${offset}`, {
+      const response = await fetch(`${SPOTIFY_API_BASE_V1}/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}&offset=${offset}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -274,7 +276,7 @@ class SpotifyService {
       if (!token) return { items: [], total: 0 };
 
       try {
-        const response = await fetch(`https://api.spotify.com/v1/browse/new-releases?limit=${limit}&offset=${offset}`, {
+        const response = await fetch(`${SPOTIFY_API_BASE_V1}/browse/new-releases?limit=${limit}&offset=${offset}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -293,7 +295,7 @@ class SpotifyService {
         // This can be slow if there are many albums and many tracks per album
         // A more optimized approach might be needed for very large 'limit' values
         for (const album of data.albums.items) {
-            const albumTracksResponse = await fetch(`https://api.spotify.com/v1/albums/${album.id}/tracks`, { // Fetch all tracks from the album
+            const albumTracksResponse = await fetch(`${SPOTIFY_API_BASE_V1}/albums/${album.id}/tracks`, { // Fetch all tracks from the album
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (albumTracksResponse.ok) {
@@ -333,7 +335,7 @@ class SpotifyService {
     }
 
     try {
-      const response = await fetch(`https://api.spotify.com/v1/me/tracks?offset=${offset}&limit=${limit}`, {
+      const response = await fetch(`${SPOTIFY_API_BASE_V1}/me/tracks?offset=${offset}&limit=${limit}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -366,7 +368,7 @@ class SpotifyService {
     }
 
     let allPlaylists: any[] = [];
-    let nextUrl: string | null = 'https://api.spotify.com/v1/me/playlists?limit=50';
+    let nextUrl: string | null = `${SPOTIFY_API_BASE_V1}/me/playlists?limit=50`;
 
     try {
       while (nextUrl) {
@@ -402,7 +404,7 @@ class SpotifyService {
     }
 
     try {
-      const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`, {
+      const response = await fetch(`${SPOTIFY_API_BASE_V1}/playlists/${playlistId}/tracks?offset=${offset}&limit=${limit}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -433,7 +435,7 @@ class SpotifyService {
     if (!token) return null;
 
     try {
-      const response = await fetch('https://api.spotify.com/v1/me/player/devices', {
+      const response = await fetch(`${SPOTIFY_API_BASE_V1}/me/player/devices`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -457,7 +459,7 @@ class SpotifyService {
     if (!token) return [];
 
     try {
-      const response = await fetch('https://api.spotify.com/v1/me/player/devices', {
+      const response = await fetch(`${SPOTIFY_API_BASE_V1}/me/player/devices`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -481,7 +483,7 @@ class SpotifyService {
     if (!token) return false;
 
     try {
-      const response = await fetch('https://api.spotify.com/v1/me/player', {
+      const response = await fetch(`${SPOTIFY_API_BASE_V1}/me/player`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -513,7 +515,7 @@ class SpotifyService {
     }
 
     try {
-      await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+      await fetch(`${SPOTIFY_API_BASE_V1}/me/player/play?device_id=${deviceId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -530,7 +532,7 @@ class SpotifyService {
     if (!token) return null;
 
     try {
-      const response = await fetch('https://api.spotify.com/v1/me/player', {
+      const response = await fetch(`${SPOTIFY_API_BASE_V1}/me/player`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -556,7 +558,7 @@ class SpotifyService {
     if (!token) return;
 
     try {
-      await fetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${position_ms}`, {
+      await fetch(`${SPOTIFY_API_BASE_V1}/me/player/seek?position_ms=${position_ms}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -584,7 +586,7 @@ class SpotifyService {
     }
 
     try {
-      await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+      await fetch(`${SPOTIFY_API_BASE_V1}/me/player/play?device_id=${deviceId}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -604,7 +606,7 @@ class SpotifyService {
     }
 
     try {
-      await fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`, {
+      await fetch(`${SPOTIFY_API_BASE_V1}/me/player/pause?device_id=${deviceId}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -617,7 +619,7 @@ class SpotifyService {
     if (!token) return;
 
     try {
-      await fetch('https://api.spotify.com/v1/me/player/next', {
+      await fetch(`${SPOTIFY_API_BASE_V1}/me/player/next`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -631,7 +633,7 @@ class SpotifyService {
     if (!token) return;
 
     try {
-      await fetch('https://api.spotify.com/v1/me/player/previous', {
+      await fetch(`${SPOTIFY_API_BASE_V1}/me/player/previous`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -645,7 +647,7 @@ class SpotifyService {
     if (!token) return;
 
     try {
-      await fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${volume_percent}`, {
+      await fetch(`${SPOTIFY_API_BASE_V1}/me/player/volume?volume_percent=${volume_percent}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -665,7 +667,7 @@ class SpotifyService {
     }
 
     try {
-      await fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`, {
+      await fetch(`${SPOTIFY_API_BASE_V1}/me/player/pause?device_id=${deviceId}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });

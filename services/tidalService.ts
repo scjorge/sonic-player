@@ -1,7 +1,7 @@
 import { getTidalCredentials, saveTidalCredentials } from './data';
 import { TidalPlayback } from '../types';
-
-const AUTH_BASE = 'https://auth.tidal.com/v1/oauth2';
+import { TIDAL_AUTH_BASE } from '../core/config';
+import { TIDAL_API_BASE_V1, TIDAL_API_BASE_V2, TIDAL_API_BASE_RESOURCES } from '../core/config';
 
 class TidalService {
   async startDeviceAuth(scope = 'r_usr+w_usr+w_sub') {
@@ -12,7 +12,7 @@ class TidalService {
     body.append('client_id', creds.clientId);
     body.append('scope', scope);
 
-    const res = await fetch(`${AUTH_BASE}/device_authorization`, {
+    const res = await fetch(`${TIDAL_AUTH_BASE}/device_authorization`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),
@@ -38,7 +38,7 @@ class TidalService {
       body.append('grant_type', 'urn:ietf:params:oauth:grant-type:device_code');
       body.append('scope', 'r_usr+w_usr+w_sub');
 
-      const res = await fetch(`${AUTH_BASE}/token`, {
+      const res = await fetch(`${TIDAL_AUTH_BASE}/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -92,7 +92,7 @@ class TidalService {
         artist: artist,
         album: albumName,
         year: year,
-        coverArt: `https://resources.tidal.com/images/${cover.replace(/-/g, '/')}/1280x1280.jpg`,
+        coverArt: `${TIDAL_API_BASE_RESOURCES}/images/${cover.replace(/-/g, '/')}/1280x1280.jpg`,
         duration: t.duration || undefined,
         track: t.trackNumber || undefined,
         isrc: t.isrc || undefined,
@@ -107,7 +107,7 @@ class TidalService {
     const countryCode = this.getCredentials().countryCode;
 
     if (!token) throw new Error('Not authenticated with TIDAL');
-      const url = `https://openapi.tidal.com/v2/albums/${albumId}?countryCode=${countryCode}&include=artists`;
+      const url = `${TIDAL_API_BASE_V2}/albums/${albumId}?countryCode=${countryCode}&include=artists`;
       const res = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -139,7 +139,7 @@ class TidalService {
       params.append('filter[isrc]', q);
       params.append('countryCode', countryCode);
 
-      const url = `https://openapi.tidal.com/v2/tracks?${params.toString()}`;
+      const url = `${TIDAL_API_BASE_V2}/tracks?${params.toString()}`;
       const res = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -158,7 +158,7 @@ class TidalService {
       const paramsID = new URLSearchParams();
       paramsID.append('countryCode', countryCode);
 
-      const urlTracks = `https://api.tidal.com/v1/tracks/${json.data[0].id}?${params.toString()}`;
+      const urlTracks = `${TIDAL_API_BASE_V1}/tracks/${json.data[0].id}?${params.toString()}`;
       const resTracks = await fetch(urlTracks, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -187,7 +187,7 @@ class TidalService {
     params.append('types', 'TRACKS');
     if (countryCode) params.append('countryCode', countryCode);
 
-    const res = await fetch(`https://api.tidal.com/v1/search?${params.toString()}`, {
+    const res = await fetch(`${TIDAL_API_BASE_V1}/search?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
@@ -221,7 +221,7 @@ class TidalService {
     params.append('offset', String(offset));
     params.append('countryCode', countryCode);
 
-    const res = await fetch(`https://api.tidal.com/v1/users/${userID}/favorites/tracks?${params.toString()}`, {
+    const res = await fetch(`${TIDAL_API_BASE_V1}/users/${userID}/favorites/tracks?${params.toString()}`, {
         headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
@@ -252,7 +252,7 @@ class TidalService {
     params.append('offset', String(offset));
     if (countryCode) params.append('countryCode', countryCode);
 
-    const res = await fetch(`https://api.tidal.com/v1/users/${userID}/playlists?${params.toString()}`, {
+    const res = await fetch(`${TIDAL_API_BASE_V1}/users/${userID}/playlists?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
@@ -287,7 +287,7 @@ class TidalService {
     params.append('offset', String(offset));
     if (countryCode) params.append('countryCode', countryCode);
 
-    const res = await fetch(`https://api.tidal.com/v1/playlists/${playlistId}/items?${params.toString()}`, {
+    const res = await fetch(`${TIDAL_API_BASE_V1}/playlists/${playlistId}/items?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
@@ -383,7 +383,7 @@ class TidalService {
     if (!token) throw new Error('Not authenticated with TIDAL');
 
     const url =
-        `https://api.tidal.com/v1/tracks/${trackId}/playbackinfopostpaywall` +
+        `${TIDAL_API_BASE_V1}/tracks/${trackId}/playbackinfopostpaywall` +
         `?playbackmode=STREAM` +
         `&assetpresentation=FULL` +
         `&audioquality=${audioQuality}` +

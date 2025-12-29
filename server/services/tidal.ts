@@ -4,9 +4,10 @@ import fetch from 'node-fetch';
 import { execFile } from 'child_process';
 import { sanitizeQuery } from '../../services/tools';
 import { tidalService } from '../../services/tidalService';
-import { TIDAL_QUALITY } from '../../components/tidal/tidalConstants';
+import { TIDAL_QUALITY } from '../../core/config';
 import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
+import { NAVIDROME_BASE_PATH, TIDAL_DOWNLOAD_PATH } from '../../core/config';
 
 
 class TidalServerService {
@@ -15,7 +16,7 @@ class TidalServerService {
 
     constructor() {
         this.downloads = new Map();
-        this.download_dir = process.env.TIDAL_DOWNLOAD_PATH || path.resolve(process.cwd(), 'downloads');
+        this.download_dir = TIDAL_DOWNLOAD_PATH
         if (!fs.existsSync(this.download_dir)) fs.mkdirSync(this.download_dir, { recursive: true });
     }
 
@@ -40,10 +41,6 @@ class TidalServerService {
         return { items: this.getdownloadsItems() };
     }
 
-    /**
-     * Lista todos os arquivos já baixados na pasta de downloads
-     * lendo os metadados via audioTagger.
-     */
     private async getDuration(filePath: string): Promise<number> {
         return new Promise((resolve, reject) => {
             execFile(
@@ -155,11 +152,9 @@ class TidalServerService {
 
     async writeMetadataParts(destFinal: string, source: "navidrome" | "tidal", metadata: AudioMetadata) {
         if (source === "navidrome") {
-            await audioTagger.write(destFinal, metadata);
+            destFinal = path.join(NAVIDROME_BASE_PATH, destFinal);
         }
-        if (source === "tidal") {
-            await audioTagger.write(destFinal, metadata);
-        }
+        await audioTagger.write(destFinal, metadata);
         return { status: 'updated', metadata: metadata };
     }
 

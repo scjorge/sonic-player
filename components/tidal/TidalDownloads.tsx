@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { NaviSong } from '../../types';
 import SongTable from '../library/SongTable';
-import { TIDAL_COLUMN_DOWNLOAD_CONFIG, TIDAL_DOWNLOAD_BACKEND_BASE_URL } from './tidalConstants';
+import { TIDAL_COLUMN_DOWNLOAD_CONFIG } from './tidalConstants';
+import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../../core/config';
 import { RotateCcw } from 'lucide-react';
 import { tidalService }  from '../../services/tidalService';
 import showToast from '../utils/toast';
@@ -131,7 +132,9 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
       {activeTab === 'in_progress' && (
         <div className="flex-1 p-6 overflow-y-auto">
           {items.length === 0 && (
-            <div className="text-zinc-500">Nenhum download em andamento.</div>
+            <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+              Nenhum download em andamento.
+            </div>
           )}
           <div className="space-y-3">
             {items.map((it) => (

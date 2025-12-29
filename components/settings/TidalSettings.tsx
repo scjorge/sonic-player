@@ -2,34 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { TidalCredentials } from '../../types';
 import { getTidalCredentials, saveTidalCredentials } from '../../services/data';
 import { tidalService } from '../../services/tidalService';
-import { Copy } from 'lucide-react';
-import { DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET } from '../tidal/tidalConstants';
+import { TIDAL_CLIENT_ID, TIDAL_CLIENT_SECRET } from '../../core/config';
 
-const CopyButton: React.FC = () => {
-  const [copied, setCopied] = useState(false);
-  const redirect = `${window.location.origin}/callback`;
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(redirect);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (e) {
-      console.error('Copy failed', e);
-    }
-  };
-  return (
-    <button onClick={handleCopy} className="bg-zinc-700 hover:bg-zinc-600 text-white px-2 py-1 rounded text-xs flex items-center gap-2">
-      {copied ? <span className="text-green-400">Copiado!</span> : <><Copy className="w-4 h-4" /> Copiar</>}
-    </button>
-  );
-};
 
 const TidalSettings: React.FC = () => {
-  // Read environment-provided values (Vite: import.meta.env)
-  const ENV_CLIENT_ID = (import.meta as any).env?.VITE_TIDAL_CLIENT_ID || undefined;
-  const ENV_CLIENT_SECRET = (import.meta as any).env?.VITE_TIDAL_CLIENT_SECRET || undefined;
-
-  const [creds, setCreds] = useState<TidalCredentials>({ clientId: ENV_CLIENT_ID || DEFAULT_CLIENT_ID, clientSecret: ENV_CLIENT_SECRET || DEFAULT_CLIENT_SECRET });
+  const [creds, setCreds] = useState<TidalCredentials>({ clientId: TIDAL_CLIENT_ID, clientSecret: TIDAL_CLIENT_SECRET });
   const [showSaved, setShowSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof TidalCredentials, string>>>({});
   const [authStatus, setAuthStatus] = useState<string>('');
@@ -38,25 +15,16 @@ const TidalSettings: React.FC = () => {
   useEffect(() => {
     const stored: any = getTidalCredentials();
     setCreds({
-      clientId: ENV_CLIENT_ID || stored.clientId || DEFAULT_CLIENT_ID,
-      clientSecret: ENV_CLIENT_SECRET || stored.clientSecret || DEFAULT_CLIENT_SECRET,
+      clientId: stored.clientId || TIDAL_CLIENT_ID,
+      clientSecret: stored.clientSecret || TIDAL_CLIENT_SECRET,
     });
     setIsConnected(tidalService.isAuthenticated());
   }, []);
 
-  const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof TidalCredentials, string>> = {};
-    let isValid = true;
-    if (!creds.clientId) { newErrors.clientId = 'Client ID é obrigatório.'; isValid = false; }
-    setErrors(newErrors);
-    return isValid;
-  };
-
   // No manual save UI — credentials are taken from env or stored automatically before auth
   const prepareCredentialsForAuth = () => {
-    const clientId = ENV_CLIENT_ID || creds.clientId || DEFAULT_CLIENT_ID;
-    const clientSecret = ENV_CLIENT_SECRET || creds.clientSecret || DEFAULT_CLIENT_SECRET;
-    // persist chosen values so tidalService can read them
+    const clientId = creds.clientId || TIDAL_CLIENT_ID;
+    const clientSecret = creds.clientSecret || TIDAL_CLIENT_SECRET;
     saveTidalCredentials({ clientId, clientSecret });
     setCreds({ clientId, clientSecret });
   };
@@ -110,7 +78,7 @@ const TidalSettings: React.FC = () => {
       <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-8 space-y-6">
         <div className="flex flex-col gap-2">
           <div className="text-sm text-zinc-400">Usando Client ID:</div>
-          <div className="font-mono text-sm text-white select-all">{ENV_CLIENT_ID || creds.clientId}</div>
+          <div className="font-mono text-sm text-white select-all">{creds.clientId}</div>
         </div>
 
           <div className="pt-4 flex flex-wrap items-center gap-4">

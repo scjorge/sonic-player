@@ -1,13 +1,5 @@
 import { ColumnConfig } from '../library/SongTable';
 
-export const DEFAULT_CLIENT_ID = 'fX2JxdmntZWK0ixT';
-export const DEFAULT_CLIENT_SECRET = '1Nn9AfDAjxrgJFJbKNWLeAyKGVGmINuXPPLHVXAvxAg=';
-
-export const TIDAL_QUALITY = "LOSSLESS"; //"LOW" | "HIGH" | "LOSSLESS" | "HI_RES_LOSSLESS"
-export const TIDAL_DOWNLOAD_PATH = "/downloads";
-export const TIDAL_DOWNLOAD_BACKEND_BASE_URL = "http://127.0.0.1:6790";
-
-
 export const TIDAL_COLUMN_CONFIG: ColumnConfig[] = [
   { id: 'select', label: '', width: 50, visible: true, minWidth: 50 },
   { id: 'index', label: '#', width: 40, visible: true, minWidth: 30 },
