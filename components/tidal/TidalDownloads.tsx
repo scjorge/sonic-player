@@ -93,6 +93,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
         duration: it.duration,
         path: it.path,
         contentType: it.contentType,
+        ext: it.ext,
       }));
       setCompletedSongs(songs);
     } catch (e) {

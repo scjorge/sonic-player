@@ -1,5 +1,6 @@
 // NAVIDROME
-export const NAVIDROME_BASE_PATH = "./downloads_navidrome";
+export const NAVIDROME_BASE_PATH = "/app/downloads_navidrome";
+export const NAVIDROME_SAVE_FORMAT = "{genre}/Artists/{artist}/{album}/{track} - {title}.{ext}";
 
 // SPOTIFY
 export const SPOTIFY_API_BASE_V1 = 'https://api.spotify.com/v1';
