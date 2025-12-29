@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { SpotifyCredentials } from '../../types';
-import { saveSpotifyCredentials, getSpotifyCredentials } from '../../services/data';
-import { spotifyService } from '../../services/spotifyService'; // Importar spotifyService
+import { saveSpotifyCredentials, getSpotifyCredentials, deleteSpotifyCredentials } from '../../services/data';
+import { spotifyService } from '../../services/spotifyService';
 import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle, LogIn, LogOut, Copy } from 'lucide-react';
 
 const CopyButton: React.FC = () => {
@@ -42,8 +42,11 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
   const [errors, setErrors] = useState<Partial<Record<keyof SpotifyCredentials, string>>>({});
 
   useEffect(() => {
-    const stored = getSpotifyCredentials();
-    setCreds(stored);
+    const fetchCredentials = async () => {
+      const stored = await getSpotifyCredentials();
+      setCreds(stored);
+    };
+    fetchCredentials();
   }, []);
 
   const validate = (): boolean => {
@@ -74,7 +77,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
     return isValid;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (validate()) {
       // Ao salvar credenciais básicas, limpamos os tokens de usuário antigos
       // para garantir que uma nova autenticação seja necessária se as credenciais mudarem.
@@ -84,32 +87,34 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
         refreshToken: undefined,
         expiresAt: undefined,
       };
-      saveSpotifyCredentials(credsToSave);
+      await saveSpotifyCredentials(credsToSave);
       setCreds(credsToSave); // Atualiza o estado local para refletir a limpeza dos tokens
       setIsAuthenticated(false); // Garante que o estado de autenticação seja redefinido
-      spotifyService.logout(); // Limpa os tokens também no serviço
+      await spotifyService.logout(); // Limpa os tokens também no serviço
       setShowSaved(true);
       setTimeout(() => setShowSaved(false), 3000);
     }
   };
 
-  const handleDelete = () => {
-    // Limpa todas as credenciais, incluindo tokens
-    const emptyCreds = { clientId: '', clientSecret: '', redirectUri: '', accessToken: undefined, refreshToken: undefined, expiresAt: undefined };
-    setCreds(emptyCreds);
-    saveSpotifyCredentials(emptyCreds);
-    setErrors({}); // Limpa quaisquer erros de validação
-    setIsAuthenticated(false); // Reseta o estado de autenticação
-    spotifyService.logout(); // Garante que o serviço também limpe os tokens
+  const handleDelete = async () => {
+    await deleteSpotifyCredentials();
+    setCreds({
+      clientId: '',
+      clientSecret: '',
+      redirectUri: '',
+      accessToken: '',
+      refreshToken: '',
+      expiresAt: 0,
+    });
   };
 
-  const handleAuthenticate = () => {
+  const handleAuthenticate = async () => {
     if (!creds.clientId || !creds.redirectUri) {
       setAuthMessage("Preencha o Client ID e a Redirect URI antes de autenticar.");
       setTimeout(() => setAuthMessage(''), 5000);
       return;
     }
-    const authUrl = spotifyService.getAuthorizationUrl();
+    const authUrl = await spotifyService.getAuthorizationUrl();
     if (authUrl) {
       window.location.href = authUrl;
     } else {

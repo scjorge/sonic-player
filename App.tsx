@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, SpotifyTrack } from './types';
+import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, SpotifyTrack, SpotifyCredentials } from './types';
 import { navidromeService } from './services/navidromeService';
 import { spotifyService } from './services/spotifyService';
 import { tidalService } from './services/tidalService';
@@ -24,6 +24,7 @@ import NavidromeSettings from './components/settings/NavidromeSettings';
 import LikedSongs from './components/spotify/LikedSongs';
 import SpotifyPlaylists from './components/spotify/SpotifyPlaylists';
 import { SPOTIFY_COLUMN_CONFIG } from './components/spotify/spotifyConstants';
+import { SimpleConsoleLogger } from 'typeorm';
 
 type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'navi_downloads' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general'; 
@@ -83,6 +84,10 @@ const App: React.FC = () => {
   const [tidalTracks, setTidalTracks] = useState<NaviSong[]>([]);
   const [tidalTotal, setTidalTotal] = useState(0);
   const [tidalPageSize, setTidalPageSize] = useState(50);
+
+  const [spotifyCreds, setSpotifyCreds] = useState<SpotifyCredentials | null>(null);
+
+  const didInitRef = useRef(false);
 
   const loadGroupsFromStorage = async () => {
       const groups = await getStoredGroups();
@@ -211,9 +216,12 @@ const App: React.FC = () => {
 
   // Initial Load (Filters + Initial Data + Playlists)
   useEffect(() => {
+    if (didInitRef.current) return; // impede rodar duas vezes no StrictMode
+    didInitRef.current = true;
     const init = async () => {
         // Register Spotify re-authentication callback
         spotifyService.setOnAuthenticationRequiredCallback(() => {
+            console.log("999999999999")
             setAuthMessage("Sua sessão do Spotify expirou. Por favor, autentique-se novamente.");
             setViewMode('settings');
             setActiveSettingsTab('spotify');
@@ -229,11 +237,12 @@ const App: React.FC = () => {
             if (path === '/callback' && code) {
                 console.log("Código de autorização recebido em App.tsx:", code, 'state=', state);
                 const success = await spotifyService.exchangeCodeForTokens(code);
+                console.log(success, "888888888888888")
                 if (success) {
                     setIsAuthenticated(true);
-                    setAuthMessage("Autenticação com Spotify bem-sucedida!");
                 } else {
                     setAuthMessage("Falha na autenticação com Spotify.");
+                    setTimeout(() => setAuthMessage(''), 5000);
                 }
 
                 // Set view to spotify settings
@@ -356,6 +365,34 @@ const App: React.FC = () => {
     };
     loadData();
   }, [viewMode]);
+
+    useEffect(() => {
+    if (didInitRef.current) return;
+    didInitRef.current = true;
+
+    const init = async () => {
+      // ...existing code...
+
+      // depois de registrar callbacks / antes ou depois de carregar Navidrome
+      try {
+        const creds = await getSpotifyCredentials();
+        setSpotifyCreds(creds);
+      } catch (e) {
+        console.error('Failed to load spotify credentials', e);
+        setSpotifyCreds({
+          clientId: '',
+          clientSecret: '',
+          redirectUri: '',
+          accessToken: '',
+          refreshToken: '',
+          expiresAt: 0,
+        });
+      }
+
+      // ...existing code...
+    };
+    init();
+  }, []);
 
   // Clear selection when changing views or pages
   useEffect(() => {
@@ -1117,8 +1154,20 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'spotify_browse') {
-        const creds = getSpotifyCredentials();
-        if (!creds.clientId || !creds.clientSecret) {
+        // NÃO pode usar await aqui:
+        // const creds = await getSpotifyCredentials();
+
+        // enquanto não carregou as credenciais, mostra um loading simples
+        console.log('Rendering Spotify Browse, creds:', spotifyCreds);
+        if (!spotifyCreds) {
+            return (
+                <div className="flex justify-center items-center h-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
+                </div>
+            );
+        }
+
+        if (!spotifyCreds.clientId || !spotifyCreds.clientSecret) {
             return (
                 <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-4">
                     <div className="p-4 bg-yellow-500/10 rounded-full">
@@ -1131,6 +1180,7 @@ const App: React.FC = () => {
                 </div>
             );
         }
+
         if (!isAuthenticated) {
             return (
                 <div className="h-full flex flex-col items-center justify-center p-8 text-center">
@@ -1152,7 +1202,7 @@ const App: React.FC = () => {
                     isPlaying={isPlaying}
                     isSpotifyTable={true}
                     defaultColumns={SPOTIFY_COLUMN_CONFIG}
-                    onSearch={handleSpotifyBrowseSearch} // New search handler for Spotify browse
+                    onSearch={handleSpotifyBrowseSearch}
                     activeSearchQuery={activeSearchQuery}
                     page={page}
                     pageSize={spotifyBrowsePageSize}

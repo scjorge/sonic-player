@@ -128,7 +128,7 @@ export const deleteStoredGenre = async (genre: string): Promise<void> => {
 
 
 // Spotify storage functions - backed by API + local cache
-export const getSpotifyCredentials = (): SpotifyCredentials => {
+export const getSpotifyCredentials = async (): Promise<SpotifyCredentials> => {
   const spotifyCreds: Partial<SpotifyCredentials> = {};
   const credsData = localStorage.getItem(SPOTIFY_KEY);
   const authData = localStorage.getItem(SPOTIFY_AUTH_KEY);
@@ -152,7 +152,7 @@ export const getSpotifyCredentials = (): SpotifyCredentials => {
   }
 
   try {
-    fetch(`${BACKEND_BASE_URL}/api/spotify-settings`)
+    await fetch(`${BACKEND_BASE_URL}/api/spotify-settings`)
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
         spotifyCreds.clientId = data.clientId || '';
@@ -178,7 +178,7 @@ export const getSpotifyCredentials = (): SpotifyCredentials => {
   return spotifyCreds as SpotifyCredentials;
 };
 
-export const saveSpotifyCredentials = (creds: SpotifyCredentials) => {
+export const saveSpotifyCredentials = async (creds: SpotifyCredentials) => {
   try {
     const { clientId, clientSecret, redirectUri, accessToken, refreshToken, expiresAt } = creds;
 
@@ -193,7 +193,7 @@ export const saveSpotifyCredentials = (creds: SpotifyCredentials) => {
     }
 
     // Persistir no backend (fire-and-forget)
-    fetch(`${BACKEND_BASE_URL}/api/spotify-settings`, {
+    await fetch(`${BACKEND_BASE_URL}/api/spotify-settings`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ clientId, clientSecret, redirectUri, accessToken, refreshToken, expiresAt }),
@@ -203,6 +203,18 @@ export const saveSpotifyCredentials = (creds: SpotifyCredentials) => {
   }
 };
 
+export const deleteSpotifyCredentials = async () => {
+  try {
+    localStorage.removeItem(SPOTIFY_KEY);
+    localStorage.removeItem(SPOTIFY_AUTH_KEY);
+
+    await fetch(`${BACKEND_BASE_URL}/api/spotify-settings`, {
+      method: 'DELETE',
+    }).catch(() => {});
+  } catch (e) {
+    console.error('Erro ao apagar Spotify', e);
+  }
+};
 
 // Tidal storage functions (only clientId + clientSecret)
 export const getTidalCredentials = () => {

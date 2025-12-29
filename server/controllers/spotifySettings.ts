@@ -43,3 +43,8 @@ export const saveSpotifySettings = async (req: Request, res: Response) => {
     expiresAt: saved.expiresAt,
   });
 };
+
+export const clearSpotifySettings = async (_req: Request, res: Response) => {
+  await spotifySettingsService.clear();
+  return res.status(204).send();
+};

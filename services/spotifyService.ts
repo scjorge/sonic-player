@@ -23,8 +23,8 @@ class SpotifyService {
       this.onAuthenticationRequiredCallback = callback;
   }
 
-  private loadUserTokensFromStorage() {
-    const creds = getSpotifyCredentials();
+  private async loadUserTokensFromStorage() {
+    const creds = await getSpotifyCredentials();
     if (creds.accessToken && creds.refreshToken && creds.expiresAt) {
       this.userAccessToken = creds.accessToken;
       this.userRefreshToken = creds.refreshToken;
@@ -55,8 +55,8 @@ class SpotifyService {
   }
 
   // Helper para construir a URL de autorização do Spotify
-  public getAuthorizationUrl(): string | null {
-    const creds = getSpotifyCredentials();
+  public async getAuthorizationUrl() {
+    const creds = await getSpotifyCredentials();
     if (!creds.clientId || !creds.redirectUri) {
       console.error("Client ID ou Redirect URI do Spotify não configurados.");
       return null;
@@ -75,7 +75,7 @@ class SpotifyService {
 
   // Troca o código de autorização por tokens
   public async exchangeCodeForTokens(code: string): Promise<boolean> {
-    const creds = getSpotifyCredentials();
+    const creds = await getSpotifyCredentials();
     if (!creds.clientId || !creds.clientSecret || !creds.redirectUri) {
       console.error("Credenciais completas do Spotify não configuradas para troca de código.");
       return false;
@@ -103,7 +103,7 @@ class SpotifyService {
       }
 
       const data = await response.json();
-      this.setTokens(data.access_token, data.refresh_token, data.expires_in);
+      await this.setTokens(data.access_token, data.refresh_token, data.expires_in);
       return true;
     } catch (error) {
       console.error("Spotify Token Exchange Error:", error);
@@ -112,14 +112,14 @@ class SpotifyService {
   }
 
   // Define e salva os tokens do usuário
-  private setTokens(accessToken: string, refreshToken: string, expiresIn: number) {
+  private async setTokens(accessToken: string, refreshToken: string, expiresIn: number) {
     this.userAccessToken = accessToken;
     this.userRefreshToken = refreshToken;
     this.userTokenExpiresAt = Date.now() + (expiresIn * 1000) - 60000; // 1 min buffer
 
     // Salvar no armazenamento persistente
-    const creds = getSpotifyCredentials();
-    saveSpotifyCredentials({
+    const creds = await getSpotifyCredentials();
+    await saveSpotifyCredentials({
       ...creds,
       accessToken: this.userAccessToken,
       refreshToken: this.userRefreshToken,
@@ -129,7 +129,7 @@ class SpotifyService {
 
   // Renova o token de acesso usando o refresh token
   private async refreshAccessToken(): Promise<boolean> {
-    const creds = getSpotifyCredentials();
+    const creds = await getSpotifyCredentials();
     if (!creds.clientId || !creds.clientSecret || !this.userRefreshToken) {
       console.error("Credenciais ou Refresh Token ausentes para renovar o token.");
       return false;
@@ -157,7 +157,7 @@ class SpotifyService {
 
       const data = await response.json();
       // O refresh token pode ou não ser retornado. Se for, use-o.
-      this.setTokens(data.access_token, data.refresh_token || this.userRefreshToken, data.expires_in);
+      await this.setTokens(data.access_token, data.refresh_token || this.userRefreshToken, data.expires_in);
       return true;
     } catch (error) {
       console.error("Spotify Refresh Token Error:", error);
@@ -182,7 +182,7 @@ class SpotifyService {
     }
 
     // 3. Se não há token de usuário válido ou renovável, obter um app access token (client_credentials)
-    const creds = getSpotifyCredentials();
+    const creds = await getSpotifyCredentials();
     if (!creds.clientId || !creds.clientSecret) {
       console.warn("Credenciais do Spotify não configuradas para app access token.");
       return null;
@@ -225,13 +225,13 @@ class SpotifyService {
   }
 
   // Método para fazer logout (limpar tokens de usuário)
-  public logout(): void {
+  public async logout(): Promise<void> {
     this.userAccessToken = null;
     this.userRefreshToken = null;
     this.userTokenExpiresAt = 0;
 
-    const creds = getSpotifyCredentials();
-    saveSpotifyCredentials({
+    const creds = await getSpotifyCredentials();
+    await saveSpotifyCredentials({
       ...creds,
       accessToken: undefined,
       refreshToken: undefined,
@@ -243,7 +243,6 @@ class SpotifyService {
         this.onAuthenticationRequiredCallback();
     }
   }
-  
 
   async searchTracks(query: string, limit: number = 20, offset: number = 0): Promise<PaginatedSpotifyTracks> {
     const token = await this.getAccessToken();
@@ -284,7 +283,7 @@ class SpotifyService {
           const errorData = await response.json();
           console.error('Falha ao buscar novos lançamentos do Spotify:', errorData);
           if (response.status === 401) {
-            this.logout();
+            await this.logout();
           }
           return { items: [], total: 0 };
         }
@@ -344,7 +343,7 @@ class SpotifyService {
         console.error('Falha ao buscar músicas curtidas do Spotify:', errorData);
         // Se for um erro de autenticação, o token pode estar inválido/expirado
         if (response.status === 401) {
-            this.logout(); // Força o logout para o usuário reautenticar
+            await this.logout(); // Força o logout para o usuário reautenticar
         }
         return { items: [], total: 0 };
       }
@@ -380,7 +379,7 @@ class SpotifyService {
           const errorData = await response.json();
           console.error('Failed to fetch user playlists:', errorData);
           if (response.status === 401) {
-              this.logout();
+              await this.logout();
           }
           break;
         }
@@ -412,7 +411,7 @@ class SpotifyService {
         const errorData = await response.json();
         console.error('Failed to fetch playlist tracks:', errorData);
         if (response.status === 401) {
-            this.logout();
+            await this.logout();
         }
         return { items: [], total: 0 };
       }
@@ -427,8 +426,6 @@ class SpotifyService {
       return { items: [], total: 0 };
     }
   }
-
-
 
   public async getActiveDevice(): Promise<string | null> {
     const token = await this.getAccessToken();
