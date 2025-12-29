@@ -10,7 +10,7 @@ import TidalDownloads  from './components/tidal/TidalDownloads';
 import { TIDAL_COLUMN_CONFIG } from './components/tidal/tidalConstants';
 import { TIDAL_DOWNLOAD_BACKEND_BASE_URL, TIDAL_QUALITY } from './core/config';
 import { getStoredGroups, getSpotifyCredentials } from './services/data';
-import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Hash, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, LayoutGrid, ArrowLeft, Search, Navigation, AlertCircle, Download } from 'lucide-react';
+import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, ArrowLeft, Navigation, AlertCircle, Download } from 'lucide-react';
 import SongTable from './components/library/SongTable';
 import CreatePlaylistModal from './components/library/CreatePlaylistModal';
 import PlaylistSelectorModal from './components/library/PlaylistSelectorModal';
@@ -1556,7 +1556,7 @@ const App: React.FC = () => {
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'groups' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
                     >
                         <Tag className="w-4 h-4 flex-shrink-0" />
-                        {!isSidebarCollapsed && "Grupos de Tags"}
+                        {!isSidebarCollapsed && "Tags/Metadados"}
                     </button>
                 </div>
             ) : (

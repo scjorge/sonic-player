@@ -2,6 +2,7 @@
 import { TagGroup, SpotifyCredentials } from '../types';
 
 const STORAGE_KEY = 'sonictag_groups';
+const GENRES_KEY = 'sonictag_genres';
 const SPOTIFY_KEY = 'sonictag_spotify';
 const SPOTIFY_AUTH_KEY = 'sonictag_spotify_auth';
 const TIDAL_KEY = 'sonictag_tidal';
@@ -47,6 +48,40 @@ export const deleteStoredGroup = (id: string) => {
   const groups = getStoredGroups();
   const newGroups = groups.filter(g => g.id !== id);
   saveStoredGroups(newGroups);
+};
+
+// Genre list storage functions
+export const getStoredGenres = (): string[] => {
+  try {
+    const data = localStorage.getItem(GENRES_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.error('Erro ao carregar gêneros do LocalStorage', e);
+    return [];
+  }
+};
+
+export const saveStoredGenres = (genres: string[]) => {
+  try {
+    localStorage.setItem(GENRES_KEY, JSON.stringify(genres));
+  } catch (e) {
+    console.error('Erro ao salvar gêneros no LocalStorage', e);
+  }
+};
+
+export const addStoredGenre = (genre: string) => {
+  const list = getStoredGenres();
+  const value = genre.trim();
+  if (!value) return;
+  if (list.includes(value)) return;
+  list.push(value);
+  saveStoredGenres(list);
+};
+
+export const deleteStoredGenre = (genre: string) => {
+  const list = getStoredGenres();
+  const newList = list.filter(g => g !== genre);
+  saveStoredGenres(newList);
 };
 
 
