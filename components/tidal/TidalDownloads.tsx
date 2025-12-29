@@ -3,7 +3,7 @@ import { NaviSong } from '../../types';
 import SongTable from '../library/SongTable';
 import { TIDAL_COLUMN_DOWNLOAD_CONFIG } from './tidalConstants';
 import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../../core/config';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Trash2 } from 'lucide-react';
 import { tidalService }  from '../../services/tidalService';
 import showToast from '../utils/toast';
 
@@ -27,6 +27,38 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
   const [activeTab, setActiveTab] = useState<'in_progress' | 'completed'>('in_progress');
   const [completedSongs, setCompletedSongs] = useState<NaviSong[]>([]);
   const [loadingCompleted, setLoadingCompleted] = useState(false);
+
+  const handleClearAll = async () => {
+    try {
+      const res = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(`Erro ao limpar downloads: ${err.error || res.statusText}`, 'error');
+        return;
+      }
+      setItems([]);
+    } catch (e) {
+      showToast('Erro ao limpar downloads', 'error');
+    }
+  };
+
+  const handleDeleteItem = async (id: string) => {
+    try {
+      const res = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(`Erro ao remover download: ${err.error || res.statusText}`, 'error');
+        return;
+      }
+      setItems(prev => prev.filter(it => it.id !== id));
+    } catch (e) {
+      showToast('Erro ao remover download', 'error');
+    }
+  };
 
   const handleRetry = async (song: any) => {
     const body = {
@@ -135,41 +167,64 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
       </div>
 
       {activeTab === 'in_progress' && (
-        <div className="flex-1 p-6 overflow-y-auto">
-          {items.length === 0 && (
-            <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
-              Nenhum download em andamento.
+          <div className="flex-1 p-6 overflow-y-auto flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs text-zinc-500">
+                {items.length > 0 ? `${items.length} download(s) em andamento` : 'Nenhum download em andamento.'}
+              </span>
+              {items.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border border-red-500/60 text-red-400 hover:text-white hover:bg-red-600/80"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Limpar tudo
+                </button>
+              )}
             </div>
-          )}
-          <div className="space-y-3">
-            {items.map((it) => (
-              <div key={it.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <div className="font-medium text-white truncate max-w-[60ch]">{it.title}</div>
-                    <div className="text-xs text-zinc-500">{it.artist}</div>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-zinc-400">
-                    <span>{it.status}</span>
-                    {it.status === 'failed' && (
-                      <button
-                        className="p-1 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
-                        title="Tentar novamente"
-                        onClick={() => handleRetry(it)}
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
-                  <div className="h-full bg-yellow-400" style={{ width: `${it.progress}%` }} />
-                </div>
-                <div className="text-[11px] text-zinc-500 mt-1">{it.progress}% • {it.filename || ''}</div>
+
+            {items.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm">
+                Nenhum download em andamento.
               </div>
-            ))}
+            ) : (
+              <div className="space-y-3">
+                {items.map((it) => (
+                  <div key={it.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <div className="font-medium text-white truncate max-w-[60ch]">{it.title}</div>
+                        <div className="text-xs text-zinc-500">{it.artist}</div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-zinc-400">
+                        <span>{it.status}</span>
+                        {it.status === 'failed' && (
+                          <button
+                            className="p-1 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
+                            title="Tentar novamente"
+                            onClick={() => handleRetry(it)}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          className="p-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-red-300 transition-colors"
+                          title="Remover este download"
+                          onClick={() => handleDeleteItem(it.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
+                      <div className="h-full bg-yellow-400" style={{ width: `${it.progress}%` }} />
+                    </div>
+                    <div className="text-[11px] text-zinc-500 mt-1">{it.progress}% • {it.filename || ''}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
       )}
 
       {activeTab === 'completed' && (

@@ -40,6 +40,10 @@ class TidalServerService {
         this.downloads.delete(id);
     }
 
+    clearAllDownloads(): void {
+        this.downloads.clear();
+    }
+
     async getdownloads() {
         return { items: this.getdownloadsItems() };
     }

@@ -18,6 +18,19 @@ export async function getdownloads(_req: Request, res: Response) {
     return res.json(result);
 }
 
+export async function deleteDownload(req: Request, res: Response) {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'id is required' });
+
+    tidalServerService.deleteDownloadItem(id);
+    return res.json({ status: 'deleted', id });
+}
+
+export async function clearDownloads(_req: Request, res: Response) {
+    tidalServerService.clearAllDownloads();
+    return res.json({ status: 'cleared' });
+}
+
 export async function getCompletedDownloads(_req: Request, res: Response) {
     const result = await tidalServerService.getCompletedDownloads();
     return res.json(result);
