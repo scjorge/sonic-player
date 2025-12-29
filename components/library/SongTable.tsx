@@ -148,6 +148,9 @@ const SongTable: React.FC<SongTableProps> = ({
   const [showFilter, setShowFilter] = useState(false);
   const [draggedColumnId, setDraggedColumnId] = useState<ColumnId | null>(null);
   const [rowDensity, setRowDensity] = useState<RowDensity>('normal');
+    const [isEditingTags, setIsEditingTags] = useState(false);
+    const [editingCell, setEditingCell] = useState<{ songId: string; field: ColumnId } | null>(null);
+    const [editingValue, setEditingValue] = useState('');
   
   // Local state for search input to allow typing without immediate API calls if wanted, 
   // though typically we use onKeyDown Enter for search.
@@ -452,6 +455,153 @@ const SongTable: React.FC<SongTableProps> = ({
     }
   };
 
+    const editableTidalColumns: ColumnId[] = ['title', 'artist', 'album', 'genre', 'year', 'track', 'discNumber', 'isrc', 'comment'];
+
+    const getEditableValueFromSong = (song: NaviSong, columnId: ColumnId): string => {
+        switch (columnId) {
+            case 'title': return song.title || '';
+            case 'artist': return song.artist || '';
+            case 'album': return song.album || '';
+            case 'genre': return song.genre || '';
+            case 'year': return song.year != null ? String(song.year) : '';
+            case 'track': return song.track != null ? String(song.track) : '';
+            case 'discNumber': return song.discNumber != null ? String(song.discNumber) : '';
+            case 'isrc': return song.isrc || '';
+            case 'comment': return song.comment || '';
+            default: return '';
+        }
+    };
+
+    const applyLocalSongUpdate = (song: NaviSong, columnId: ColumnId, value: string) => {
+        switch (columnId) {
+            case 'title':
+                song.title = value;
+                break;
+            case 'artist':
+                song.artist = value;
+                break;
+            case 'album':
+                song.album = value;
+                break;
+            case 'genre':
+                song.genre = value;
+                break;
+            case 'year':
+                song.year = value ? Number(value) || undefined : undefined;
+                break;
+            case 'track':
+                song.track = value ? Number(value) || undefined : undefined;
+                break;
+            case 'discNumber':
+                song.discNumber = value ? Number(value) || undefined : undefined;
+                break;
+            case 'isrc':
+                song.isrc = value;
+                break;
+            case 'comment':
+                song.comment = value;
+                break;
+            default:
+                break;
+        }
+    };
+
+    const buildMetadataFromEdit = (columnId: ColumnId, value: string) => {
+        const metadata: any = {};
+        switch (columnId) {
+            case 'title':
+                metadata.title = value;
+                break;
+            case 'artist':
+                metadata.artists = value;
+                metadata.albumArtist = value.split(',')[0] || value;
+                break;
+            case 'album':
+                metadata.album = value;
+                break;
+            case 'genre':
+                metadata.genre = value;
+                break;
+            case 'year':
+                metadata.year = value ? Number(value) || undefined : undefined;
+                break;
+            case 'track':
+                metadata.trackNumber = value ? Number(value) || undefined : undefined;
+                break;
+            case 'discNumber':
+                metadata.discNumber = value ? Number(value) || undefined : undefined;
+                break;
+            case 'isrc':
+                metadata.isrc = value;
+                break;
+            case 'comment':
+                metadata.comments = value;
+                break;
+            default:
+                break;
+        }
+        return metadata;
+    };
+
+    const handleStartEdit = (song: NaviSong, columnId: ColumnId) => {
+        if (!isTidalTableDownload) return;
+        if (!editableTidalColumns.includes(columnId)) return;
+        if (!song.path) {
+            showToast('Caminho do arquivo não encontrado para este download.', 'error');
+            return;
+        }
+        setEditingCell({ songId: song.id, field: columnId });
+        setEditingValue(getEditableValueFromSong(song, columnId));
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingCell) return;
+        const currentSong = songs.find((s) => s.id === editingCell.songId);
+        if (!currentSong || !currentSong.path) {
+            showToast('Não foi possível localizar o arquivo para salvar as tags.', 'error');
+            setEditingCell(null);
+            return;
+        }
+
+        const metadata = buildMetadataFromEdit(editingCell.field, editingValue);
+
+        try {
+            const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/metadata`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    source: 'tidal',
+                    path: currentSong.path,
+                    metadata,
+                }),
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                showToast(`Erro ao salvar tags: ${err.error || resp.statusText}`, 'error');
+                return;
+            }
+
+            applyLocalSongUpdate(currentSong, editingCell.field, editingValue);
+            showToast(`Tags atualizadas com sucesso.`, 'success');
+        } catch (e: any) {
+            showToast(`Erro ao salvar tags: ${e?.message || String(e)}`, 'error');
+        } finally {
+            setEditingCell(null);
+        }
+    };
+
+    const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSaveEdit();
+        }
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            setEditingCell(null);
+        }
+    };
+
   return (
     <div className="flex flex-col h-full bg-zinc-950 relative">
       {/* Context Menu Portal/Div */}
@@ -739,20 +889,38 @@ const SongTable: React.FC<SongTableProps> = ({
             )}
         </div>
 
-        {/* COLUMNS BUTTON */}
-        <div className="relative">
-          <button 
-            onClick={() => setShowSettings(!showSettings)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors border border-zinc-700"
-          >
-            <Settings2 className="w-4 h-4" />
-            Colunas
-          </button>
+                {/* EDIT TAGS & COLUMNS BUTTONS */}
+                <div className="flex items-center gap-2">
+                    {isTidalTableDownload && (
+                        <button
+                            onClick={() => {
+                                setIsEditingTags(!isEditingTags);
+                                setEditingCell(null);
+                            }}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
+                                isEditingTags
+                                    ? 'bg-yellow-600 text-white border-yellow-500'
+                                    : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                            }`}
+                        >
+                            <Tags className="w-4 h-4" />
+                            Editar Tags
+                        </button>
+                    )}
 
-          {showSettings && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setShowSettings(false)} />
-              <div className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-20 overflow-hidden flex flex-col">
+                    <div className="relative">
+                        <button 
+                            onClick={() => setShowSettings(!showSettings)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors border border-zinc-700"
+                        >
+                            <Settings2 className="w-4 h-4" />
+                            Colunas
+                        </button>
+
+                        {showSettings && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setShowSettings(false)} />
+                                <div className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-20 overflow-hidden flex flex-col">
                 
                 {/* Density Settings */}
                 <div className="p-3 border-b border-zinc-800 bg-zinc-900/50">
@@ -787,20 +955,21 @@ const SongTable: React.FC<SongTableProps> = ({
                     <div className="px-3 py-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
                         Visibilidade
                     </div>
-                    {columns.map(col => (
-                    <button
-                        key={col.id}
-                        onClick={() => toggleColumn(col.id)}
-                        className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 flex items-center justify-between transition-colors"
-                    >
-                        {col.label || (col.id === 'select' ? 'Seleção' : col.id)}
-                        {col.visible && <Check className={isSpotifyTable ? 'w-3.5 h-3.5 text-green-500' : (isTidalTable || isTidalTableDownload) ? 'w-3.5 h-3.5 text-yellow-500' : "w-3.5 h-3.5 text-indigo-500"} />}
-                    </button>
-                    ))}
+                                        {columns.map(col => (
+                                            <button
+                                                    key={col.id}
+                                                    onClick={() => toggleColumn(col.id)}
+                                                    className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 flex items-center justify-between transition-colors"
+                                            >
+                                                    {col.label || (col.id === 'select' ? 'Seleção' : col.id)}
+                                                    {col.visible && <Check className={isSpotifyTable ? 'w-3.5 h-3.5 text-green-500' : (isTidalTable || isTidalTableDownload) ? 'w-3.5 h-3.5 text-yellow-500' : "w-3.5 h-3.5 text-indigo-500"} />}
+                                            </button>
+                                        ))}
                 </div>
-              </div>
-            </>
-          )}
+                            </div>
+                        </>
+                        )}
+                    </div>
         </div>
       </div>
       
@@ -883,15 +1052,37 @@ const SongTable: React.FC<SongTableProps> = ({
                                     </div>
                                 </div>
                             )}
-                            {visibleColumns.map(col => (
-                                <div 
-                                    key={col.id}
-                                    className={`px-4 text-sm text-zinc-400 flex items-center overflow-hidden whitespace-nowrap flex-shrink-0 ${getRowPadding()}`}
-                                    style={{ width: col.width, minWidth: col.minWidth }}
-                                >
-                                    {renderCell(song, col.id, index)}
-                                </div>
-                            ))}
+                                                        {visibleColumns.map(col => {
+                                                                const isEditable = isTidalTableDownload && isEditingTags && editableTidalColumns.includes(col.id);
+                                                                const isEditingThisCell =
+                                                                    isTidalTableDownload &&
+                                                                    isEditingTags &&
+                                                                    editingCell &&
+                                                                    editingCell.songId === song.id &&
+                                                                    editingCell.field === col.id;
+
+                                                                return (
+                                                                    <div 
+                                                                            key={col.id}
+                                                                            className={`px-4 text-sm text-zinc-400 flex items-center overflow-hidden whitespace-nowrap flex-shrink-0 ${getRowPadding()} ${isEditable ? 'cursor-text' : ''}`}
+                                                                            style={{ width: col.width, minWidth: col.minWidth }}
+                                                                            onDoubleClick={() => isEditable && handleStartEdit(song, col.id)}
+                                                                    >
+                                                                            {isEditingThisCell ? (
+                                                                                <input
+                                                                                    autoFocus
+                                                                                    value={editingValue}
+                                                                                    onChange={(e) => setEditingValue(e.target.value)}
+                                                                                    onBlur={handleSaveEdit}
+                                                                                    onKeyDown={handleEditKeyDown}
+                                                                                    className="w-full bg-zinc-900 border border-yellow-500 rounded px-2 py-1 text-xs text-zinc-100 focus:outline-none focus:ring-0"
+                                                                                />
+                                                                            ) : (
+                                                                                renderCell(song, col.id, index)
+                                                                            )}
+                                                                    </div>
+                                                                );
+                                                        })}
                         </div>
                     );
                 })}
