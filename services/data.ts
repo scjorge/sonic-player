@@ -6,7 +6,6 @@ const STORAGE_KEY = 'sonictag_groups';
 const GENRES_KEY = 'sonictag_genres';
 const SPOTIFY_KEY = 'sonictag_spotify';
 const SPOTIFY_AUTH_KEY = 'sonictag_spotify_auth';
-const TIDAL_KEY = 'sonictag_tidal';
 const TIDAL_AUTH_KEY = 'sonictag_tidal_auth';
 const NAVIDROME_KEY = 'sonictag_navidrome';
 
