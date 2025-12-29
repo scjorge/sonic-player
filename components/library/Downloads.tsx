@@ -247,8 +247,8 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
               onPlay={(s) => { if (onPlayDownload) onPlayDownload(s); }}
               currentTrackId={currentTrackId}
               isPlaying={isPlaying}
-              defaultColumns={TIDAL_COLUMN_DOWNLOAD_CONFIG}
-              isTidalTableDownload={true}
+              //defaultColumns={TIDAL_COLUMN_DOWNLOAD_CONFIG}
+              isNaviTableDownload={true}
               onAfterFinalize={fetchCompleted}
             />
           )}

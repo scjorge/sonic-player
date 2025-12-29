@@ -46,7 +46,7 @@ interface SongTableProps {
   defaultColumns?: ColumnConfig[];
   isSpotifyTable?: boolean;
   isTidalTable?: boolean;
-  isTidalTableDownload?: boolean;
+  isNaviTableDownload?: boolean;
   navidromeExistenceMap?: Map<string, boolean>;
   onNavigateToLibraryQuery?: (query: string) => void;
   onSearchTidalByTitle?: (query: string) => void;
@@ -117,7 +117,7 @@ const SongTable: React.FC<SongTableProps> = ({
     defaultColumns,
     isSpotifyTable,
     isTidalTable,
-    isTidalTableDownload,
+    isNaviTableDownload,
     navidromeExistenceMap,
     onNavigateToLibraryQuery,
     navidromeConnected = null,
@@ -452,7 +452,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     );
             }
             case 'finalize': {
-                if (!isTidalTableDownload) return '-';
+                if (!isNaviTableDownload) return '-';
                 const disabled = !song.genre || !song.path;
                 return (
                     <button
@@ -581,7 +581,7 @@ const SongTable: React.FC<SongTableProps> = ({
     };
 
     const handleStartEdit = (song: NaviSong, columnId: ColumnId) => {
-        if (!isTidalTableDownload) return;
+        if (!isNaviTableDownload) return;
         if (!editableTidalColumns.includes(columnId)) return;
         if (!song.path) {
             showToast('Caminho do arquivo não encontrado para este download.', 'error');
@@ -724,38 +724,38 @@ const SongTable: React.FC<SongTableProps> = ({
               >
                   <Info className="w-4 h-4" /> Informações
               </button>
-                            {/* TIDAL download option */}
-                            {contextMenu.song.contentType === 'audio/tidal' && (
-                                <button
-                                    onClick={async () => {
-                                        setContextMenu({ ...contextMenu, visible: false });
-                                        try {
-                                            const body = {
-                                                creds: tidalService.getCredentials(),
-                                                trackId: contextMenu.song!.id,
-                                                song: contextMenu.song,
-                                            };
-                                            const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/tidal`, {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify(body)
-                                            });
-                                            if (!resp.ok) {
-                                                const err = await resp.json().catch(() => ({}));
-                                                throw new Error(err.error || 'Failed to queue download');
-                                            }
-                                            const json = await resp.json();
-                                            showToast('Download enfileirado no servidor (id: ' + json.id + ')', 'success');
-                                        } catch (e: any) {
-                                            console.error('TIDAL download request failed', e);
-                                            showToast('Falha ao iniciar download no servidor: ' + (e?.message || String(e)), 'error');
-                                        }
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
-                                >
-                                    <Download className="w-4 h-4" /> Download
-                                </button>
-                            )}
+                {/* TIDAL download option */}
+                {contextMenu.song.contentType === 'audio/tidal' && (
+                    <button
+                        onClick={async () => {
+                            setContextMenu({ ...contextMenu, visible: false });
+                            try {
+                                const body = {
+                                    creds: tidalService.getCredentials(),
+                                    trackId: contextMenu.song!.id,
+                                    song: contextMenu.song,
+                                };
+                                const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/tidal`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(body)
+                                });
+                                if (!resp.ok) {
+                                    const err = await resp.json().catch(() => ({}));
+                                    throw new Error(err.error || 'Failed to queue download');
+                                }
+                                const json = await resp.json();
+                                showToast('Download enfileirado no servidor (id: ' + json.id + ')', 'success');
+                            } catch (e: any) {
+                                console.error('TIDAL download request failed', e);
+                                showToast('Falha ao iniciar download no servidor: ' + (e?.message || String(e)), 'error');
+                            }
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+                    >
+                        <Download className="w-4 h-4" /> Download
+                    </button>
+                )}
           </div>
       )}
 
@@ -1081,16 +1081,16 @@ const SongTable: React.FC<SongTableProps> = ({
                                 </div>
                             )}
                             {visibleColumns.map(col => {
-                                const isEditable = isTidalTableDownload && editableTidalColumns.includes(col.id);
+                                const isEditable = isNaviTableDownload && editableTidalColumns.includes(col.id);
                                     const isEditingThisCell =
-                                        isTidalTableDownload &&
+                                        isNaviTableDownload &&
                                         editingCell &&
                                         editingCell.songId === song.id &&
                                         editingCell.field === col.id;
 
                                     const showGenreSuggestions =
                                         isEditingThisCell &&
-                                        isTidalTableDownload &&
+                                        isNaviTableDownload &&
                                         col.id === 'genre' &&
                                         genreSuggestions.length > 0;
 
@@ -1106,7 +1106,7 @@ const SongTable: React.FC<SongTableProps> = ({
                                                 onDoubleClick={() => isEditable && handleStartEdit(song, col.id)}
                                         >
                                                 {isEditingThisCell ? (
-                                                    col.id === 'genre' && isTidalTableDownload ? (
+                                                    col.id === 'genre' && isNaviTableDownload ? (
                                                         <div className="relative w-full">
                                                             <input
                                                                 autoFocus
@@ -1177,9 +1177,9 @@ const SongTable: React.FC<SongTableProps> = ({
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
-                        {!isSpotifyTable && !isTidalTable && !isTidalTableDownload && <option value="100">100</option>}
-                        {!isSpotifyTable && !isTidalTable && !isTidalTableDownload && <option value="200">200</option>}
-                        {!isSpotifyTable && !isTidalTable && !isTidalTableDownload && <option value="500">500</option>}
+                        {!isSpotifyTable && !isTidalTable && !isNaviTableDownload && <option value="100">100</option>}
+                        {!isSpotifyTable && !isTidalTable && !isNaviTableDownload && <option value="200">200</option>}
+                        {!isSpotifyTable && !isTidalTable && !isNaviTableDownload && <option value="500">500</option>}
                     </select>
                 )}
 
