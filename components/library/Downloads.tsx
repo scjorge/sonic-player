@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { NaviSong } from '../../types';
+import { NaviSong, TagGroup } from '../../types';
 import SongTable from './SongTable';
 import { TIDAL_COLUMN_DOWNLOAD_CONFIG } from '../tidal/tidalConstants';
 import { BACKEND_BASE_URL } from '../../core/config';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { tidalService }  from '../../services/tidalService';
 import showToast from '../utils/toast';
+import GroupTagModal from './GroupTagModal';
+import { getStoredGroups } from '../../services/data';
 
 interface DownloadsProps {
   onPlayDownload?: (song: NaviSong) => void;
@@ -27,6 +29,11 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
   const [activeTab, setActiveTab] = useState<'in_progress' | 'completed'>('in_progress');
   const [completedSongs, setCompletedSongs] = useState<NaviSong[]>([]);
   const [loadingCompleted, setLoadingCompleted] = useState(false);
+  const [groupModalSong, setGroupModalSong] = useState<NaviSong | null>(null);
+
+  const loadGroups = (): TagGroup[] => {
+    return getStoredGroups();
+  };
 
   const handleClearAll = async () => {
     try {
@@ -249,10 +256,22 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
               isPlaying={isPlaying}
               //defaultColumns={TIDAL_COLUMN_DOWNLOAD_CONFIG}
               isNaviTableDownload={true}
+              onGroupEdit={(song) => setGroupModalSong(song)}
               onAfterFinalize={fetchCompleted}
             />
           )}
         </div>
+      )}
+
+      {groupModalSong && (
+        <GroupTagModal
+          song={groupModalSong}
+          groups={loadGroups()}
+          onClose={() => setGroupModalSong(null)}
+          onUpdateComments={(newComments) => {
+            setCompletedSongs(prev => prev.map(s => s.id === groupModalSong.id ? { ...s, comment: newComments } : s));
+          }}
+        />
       )}
     </div>
   );

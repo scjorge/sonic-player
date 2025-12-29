@@ -90,8 +90,8 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-      loadGroupsFromStorage();
-            checkNavidromeConnection();
+    loadGroupsFromStorage();
+    checkNavidromeConnection();
   }, []);
 
     const checkNavidromeConnection = async () => {
