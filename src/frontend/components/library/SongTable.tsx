@@ -695,7 +695,7 @@ const SongTable: React.FC<SongTableProps> = ({
           )}
 
           {/* Option to open Group Tag Editor */}
-          {onGroupEdit && (
+          {onGroupEdit && (!isNavidromeLibraryTable || isTagEditMode) && (
             <button
               onClick={() => { onGroupEdit(contextMenu.song!); setContextMenu({ ...contextMenu, visible: false }); }}
               className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
