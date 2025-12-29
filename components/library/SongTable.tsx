@@ -1075,10 +1075,7 @@ const SongTable: React.FC<SongTableProps> = ({
                                                                     genreSuggestions.length > 0;
 
                                                                 const filteredSuggestions = showGenreSuggestions
-                                                                    ? genreSuggestions.filter((g) =>
-                                                                          !editingValue ||
-                                                                          g.toLowerCase().includes(editingValue.toLowerCase())
-                                                                      )
+                                                                    ? genreSuggestions
                                                                     : [];
 
                                                                 return (
