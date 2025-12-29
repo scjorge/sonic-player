@@ -50,7 +50,11 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
   const fetchDownloads = async () => {
     try {
       const res = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads`);
-      if (!res.ok) return;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(`Erro ao buscar downloads: ${err.error || res.statusText}`, 'error');
+        return;
+      } 
       const json = await res.json();
       setItems(json.items.reverse() || []);
     } catch (e) {
