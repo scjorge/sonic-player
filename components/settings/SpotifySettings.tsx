@@ -138,7 +138,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
             Spotify API
         </h2>
         <p className="text-zinc-400 text-base max-w-2xl">
-            Configure suas credenciais da API do Spotify para habilitar recursos como busca automática de capas em alta resolução e sincronização de metadados. Para funcionalidades que exigem acesso à sua conta (e.g., criação de playlists), uma autenticação adicional é necessária.
+            Configure suas credenciais da API do Spotify.
         </p>
       </div>
 
