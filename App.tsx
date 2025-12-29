@@ -11,6 +11,7 @@ import { TIDAL_COLUMN_CONFIG } from './src/frontend/components/tidal/tidalConsta
 import { BACKEND_BASE_URL, TIDAL_QUALITY } from './src/core/config.ts';
 import { getSpotifyCredentials } from './src/frontend/repository/spotify';
 import { getStoredGroups } from './src/frontend/repository/metadata.ts';
+import showToast from './src/frontend/components/utils/toast.ts';
 import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, ArrowLeft, Navigation, AlertCircle, Download } from 'lucide-react';
 import SongTable from './src/frontend/components/library/SongTable.tsx';
 import CreatePlaylistModal from './src/frontend/components/library/CreatePlaylistModal.tsx';
@@ -872,11 +873,41 @@ const App: React.FC = () => {
     setShowGroupTagModal(true);
   };
 
-  const handleUpdateSongComments = (newComments: string) => {
-    if (groupTagSong) {
+  const handleUpdateSongComments = async (newComments: string) => {
+    if (!groupTagSong) return;
+
+    // Se não tivermos o path, atualizamos apenas em memória
+    if (!groupTagSong.path) {
       setNaviSongs(prev => prev.map(s =>
         s.id === groupTagSong.id ? { ...s, comment: newComments } : s
       ));
+      return;
+    }
+
+    try {
+      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: groupTagSong.id,
+          source: 'navidrome',
+          path: groupTagSong.path,
+          metadata: { comments: newComments },
+        }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        showToast(`Erro ao salvar tags: ${err.error || resp.statusText}`, 'error');
+        return;
+      }
+
+      setNaviSongs(prev => prev.map(s =>
+        s.id === groupTagSong.id ? { ...s, comment: newComments } : s
+      ));
+      showToast('Tags atualizadas com sucesso.', 'success');
+    } catch (e: any) {
+      showToast(`Erro ao salvar tags: ${e?.message || String(e)}`, 'error');
     }
   };
 
