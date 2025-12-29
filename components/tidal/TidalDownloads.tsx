@@ -169,9 +169,6 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
       {activeTab === 'in_progress' && (
           <div className="flex-1 p-6 overflow-y-auto flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs text-zinc-500">
-                {items.length > 0 ? `${items.length} download(s) em andamento` : 'Nenhum download em andamento.'}
-              </span>
               {items.length > 0 && (
                 <button
                   onClick={handleClearAll}
