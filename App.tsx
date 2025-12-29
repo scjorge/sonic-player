@@ -958,7 +958,7 @@ const App: React.FC = () => {
             return;
         }
 
-        const streamUrl = `${BACKEND_BASE_URL}/api/tidal/downloads/stream?id=${encodeURIComponent(song.id)}`;
+        const streamUrl = `${BACKEND_BASE_URL}/api/downloads/stream?id=${encodeURIComponent(song.id)}`;
 
         const playerTrack: PlayerTrack = {
             id: song.id,

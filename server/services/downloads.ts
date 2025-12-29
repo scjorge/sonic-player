@@ -9,7 +9,7 @@ import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
 
 
-class TidalServerService {
+class DownloadService {
     downloads: Map<string, any>;
     download_dir: string
 
@@ -238,7 +238,7 @@ class TidalServerService {
         };
     }
 
-    async downloadTrack(trackId: string, creds: any, song: any) {
+    async downloadTrackFromTidal(trackId: string, creds: any, song: any) {
         try {
             const filename = sanitizeQuery(`${song.artist} - ${song.title}`);
             const outDir = this.download_dir;
@@ -302,4 +302,4 @@ class TidalServerService {
     }
 }
 
-export const tidalServerService = new TidalServerService();
+export const downloadService = new DownloadService();

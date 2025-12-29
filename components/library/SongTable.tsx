@@ -460,7 +460,7 @@ const SongTable: React.FC<SongTableProps> = ({
                             e.stopPropagation();
                             if (disabled || !song.path) return;
                             try {
-                                const resp = await fetch(`${BACKEND_BASE_URL}/api/tidal/downloads/finalize`, {
+                                const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/finalize`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ path: song.path }),
@@ -611,7 +611,7 @@ const SongTable: React.FC<SongTableProps> = ({
         const metadata = buildMetadataFromEdit(editingCell.field, valueToUse);
 
         try {
-            const resp = await fetch(`${BACKEND_BASE_URL}/api/tidal/metadata`, {
+            const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -735,7 +735,7 @@ const SongTable: React.FC<SongTableProps> = ({
                                                 trackId: contextMenu.song!.id,
                                                 song: contextMenu.song,
                                             };
-                                            const resp = await fetch(`${BACKEND_BASE_URL}/api/tidal/downloads`, {
+                                            const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads`, {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
                                                 body: JSON.stringify(body)

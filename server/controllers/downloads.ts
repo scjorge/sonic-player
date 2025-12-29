@@ -1,20 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 import { Request, Response } from 'express';
-import { tidalServerService } from '../services/tidal';
+import { downloadService } from '../services/downloads';
 
 
-export async function downloadTrack(req: Request, res: Response) {
+export async function downloadTrackFromTidal(req: Request, res: Response) {
     const { trackId, creds, song } = req.body;
     if (!trackId || !creds || !song) return res.status(400).json({ error: 'trackId creds and song are required' });
 
-    const result = await tidalServerService.downloadTrack(trackId, creds, song);
+    const result = await downloadService.downloadTrackFromTidal(trackId, creds, song);
 
     return res.json(result);
 }
 
 export async function getdownloads(_req: Request, res: Response) {
-    const result = await tidalServerService.getdownloads();
+    const result = await downloadService.getdownloads();
     return res.json(result);
 }
 
@@ -22,23 +22,23 @@ export async function deleteDownload(req: Request, res: Response) {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: 'id is required' });
 
-    tidalServerService.deleteDownloadItem(id);
+    downloadService.deleteDownloadItem(id);
     return res.json({ status: 'deleted', id });
 }
 
 export async function clearDownloads(_req: Request, res: Response) {
-    tidalServerService.clearAllDownloads();
+    downloadService.clearAllDownloads();
     return res.json({ status: 'cleared' });
 }
 
 export async function getCompletedDownloads(_req: Request, res: Response) {
-const result = await tidalServerService.getCompletedDownloads();
+const result = await downloadService.getCompletedDownloads();
     return res.json(result);
 }
 
 export async function writeMetadataParts(req: Request, res: Response) {
     const { source, path, metadata } = req.body;
-    const result = await tidalServerService.writeMetadataParts(path, source, metadata);
+    const result = await downloadService.writeMetadataParts(path, source, metadata);
     return res.json(result);
 }
 
@@ -47,7 +47,7 @@ export async function finalizeDownload(req: Request, res: Response) {
     if (!filePath) return res.status(400).json({ error: 'path is required' });
 
     try {
-        const result = await tidalServerService.finalizeDownload(filePath);
+        const result = await downloadService.finalizeDownload(filePath);
         return res.json(result);
     } catch (e: any) {
         console.error('Failed to finalize TIDAL download', e);
@@ -61,7 +61,7 @@ export async function streamDownload(req: Request, res: Response) {
         return res.status(400).json({ error: 'id is required' });
     }
 
-    const filePath = tidalServerService.resolveDownloadPath(id);
+    const filePath = downloadService.resolveDownloadPath(id);
     if (!filePath) {
         return res.status(404).json({ error: 'File not found' });
     }

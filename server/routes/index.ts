@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import tidalRoutes from './tidal';
+import downloadsRouter from './downloads';
 
 const router = Router();
 
-router.use('/tidal', tidalRoutes);
+router.use('/downloads', downloadsRouter);
 
 export default router;
