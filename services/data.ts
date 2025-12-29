@@ -3,7 +3,6 @@ import { TagGroup, SpotifyCredentials } from '../types';
 import { TIDAL_CLIENT_ID, TIDAL_CLIENT_SECRET, BACKEND_BASE_URL } from '../core/config';
 
 const NAVIDROME_KEY = 'sonictag_navidrome';
-const GENRES_KEY = 'sonictag_genres';
 const SPOTIFY_KEY = 'sonictag_spotify';
 const SPOTIFY_AUTH_KEY = 'sonictag_spotify_auth';
 const TIDAL_AUTH_KEY = 'sonictag_tidal_auth';
@@ -77,73 +76,53 @@ export const deleteStoredGroup = async (id: string): Promise<void> => {
 };
 
 
-// Genre list storage functions - backed by API + local cache
-export const getStoredGenres = (): string[] => {
+// Genre list storage functions - only via backend requests
+export const getStoredGenres = async (): Promise<string[]> => {
   try {
-    const data = localStorage.getItem(GENRES_KEY);
-    if (data) return JSON.parse(data);
+    const res = await fetch(`${BACKEND_BASE_URL}/api/genres`);
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error('Erro ao buscar gêneros do backend', res.status, errText);
+      return [];
+    }
+    const genres: string[] = await res.json();
+    return genres;
   } catch (e) {
-    console.error('Erro ao carregar gêneros do LocalStorage', e);
-  }
-
-  try {
-    fetch(`${BACKEND_BASE_URL}/api/genres`)
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((genres: string[]) => {
-        try {
-          localStorage.setItem(GENRES_KEY, JSON.stringify(genres));
-        } catch (e) {
-          console.error('Erro ao salvar gêneros no LocalStorage', e);
-        }
-      })
-      .catch((e) => {
-        console.error('Erro ao buscar gêneros do backend', e);
-      });
-  } catch (e) {
-    console.error('Erro ao iniciar fetch de gêneros', e);
-  }
-
-  return [];
-};
-
-export const saveStoredGenres = (genres: string[]) => {
-  try {
-    localStorage.setItem(GENRES_KEY, JSON.stringify(genres));
-  } catch (e) {
-    console.error('Erro ao salvar gêneros no LocalStorage', e);
+    console.error('Erro ao buscar gêneros do backend', e);
+    return [];
   }
 };
 
-export const addStoredGenre = (genre: string) => {
-  const list = getStoredGenres();
+export const addStoredGenre = async (genre: string): Promise<void> => {
   const value = genre.trim();
   if (!value) return;
-  if (list.includes(value)) return;
-  list.push(value);
-  saveStoredGenres(list);
 
   try {
-    fetch(`${BACKEND_BASE_URL}/api/genres`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/genres`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: value }),
-    }).catch(() => {});
-  } catch {
-    // ignore
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error('Erro ao criar gênero', res.status, errText);
+    }
+  } catch (e) {
+    console.error('Erro de rede ao criar gênero', e);
   }
 };
 
-export const deleteStoredGenre = (genre: string) => {
-  const list = getStoredGenres();
-  const newList = list.filter((g) => g !== genre);
-  saveStoredGenres(newList);
-
+export const deleteStoredGenre = async (genre: string): Promise<void> => {
   try {
-    fetch(`${BACKEND_BASE_URL}/api/genres/${encodeURIComponent(genre)}`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/genres/${encodeURIComponent(genre)}`, {
       method: 'DELETE',
-    }).catch(() => {});
-  } catch {
-    // ignore
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error('Erro ao apagar gênero', res.status, errText);
+    }
+  } catch (e) {
+    console.error('Erro de rede ao apagar gênero', e);
   }
 };
 

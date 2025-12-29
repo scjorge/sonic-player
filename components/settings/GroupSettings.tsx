@@ -25,7 +25,10 @@ const GroupSettings: React.FC<GroupSettingsProps> = ({ groups, onGroupsChange })
     const [newGenre, setNewGenre] = useState('');
 
     useEffect(() => {
-        setGenres(getStoredGenres());
+        (async () => {
+            const list = await getStoredGenres();
+            setGenres(list);
+        })();
     }, []);
 
     const handleAddGroup = async () => {
@@ -82,16 +85,18 @@ const GroupSettings: React.FC<GroupSettingsProps> = ({ groups, onGroupsChange })
     }
   };
 
-    const handleAddGenre = () => {
+    const handleAddGenre = async () => {
         if (!newGenre.trim()) return;
-        addStoredGenre(newGenre);
-        setGenres(getStoredGenres());
+        await addStoredGenre(newGenre);
+        const list = await getStoredGenres();
+        setGenres(list);
         setNewGenre('');
     };
 
-    const handleDeleteGenre = (genre: string) => {
-        deleteStoredGenre(genre);
-        setGenres(getStoredGenres());
+    const handleDeleteGenre = async (genre: string) => {
+        await deleteStoredGenre(genre);
+        const list = await getStoredGenres();
+        setGenres(list);
     };
 
   return (

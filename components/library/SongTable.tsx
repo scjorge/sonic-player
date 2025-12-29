@@ -563,7 +563,7 @@ const SongTable: React.FC<SongTableProps> = ({
         return metadata;
     };
 
-    const handleStartEdit = (song: NaviSong, columnId: ColumnId) => {
+    const handleStartEdit = async (song: NaviSong, columnId: ColumnId) => {
         const isDownloadCell = isNaviTableDownload && editableTidalColumns.includes(columnId);
         const isNavidromeCell = isNavidromeLibraryTable && isTagEditMode && editableNavidromeColumns.includes(columnId);
 
@@ -574,7 +574,8 @@ const SongTable: React.FC<SongTableProps> = ({
         }
         if (columnId === 'genre') {
             try {
-                setGenreSuggestions(getStoredGenres());
+                const genres = await getStoredGenres();
+                setGenreSuggestions(genres);
             } catch (e) {
                 // ignore storage errors
             }
