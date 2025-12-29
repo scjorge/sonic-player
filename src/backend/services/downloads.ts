@@ -7,6 +7,7 @@ import { tidalService } from '../../frontend/services/tidalService';
 import { NAVIDROME_BASE_PATH, NAVIDROME_SAVE_FORMAT, TIDAL_QUALITY, TIDAL_DOWNLOAD_PATH } from '../../core/config';
 import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
+import { getPathById } from './navidromeDatabase';
 
 
 class DownloadService {
@@ -159,14 +160,20 @@ class DownloadService {
     throw new Error('Não foi possível baixar o cover em nenhum tamanho');
   }
 
-  async getFullPathNavidrome(id: string, relativePath: string): Promise<string> {
-    const fullPath = path.join(NAVIDROME_BASE_PATH, relativePath);
+  async getFullPathNavidrome(id: string): Promise<string> {
+    const trackPath = await getPathById(id);
+
+    if (!trackPath) {
+      throw new Error('Media file path not found in Navidrome database');
+    }
+
+    const fullPath = path.join(NAVIDROME_BASE_PATH, trackPath);
     return fullPath;
   }
 
   async writeMetadataParts(id: string, destFinal: string, source: "navidrome" | "download", metadata: AudioMetadata) {
     if (source === "navidrome") {
-      destFinal = await this.getFullPathNavidrome(id, destFinal);
+      destFinal = await this.getFullPathNavidrome(id);
     }
     await audioTagger.write(destFinal, metadata);
     return { status: 'updated', metadata: metadata };
@@ -243,7 +250,7 @@ class DownloadService {
         to: target,
         relativePath: path.relative(NAVIDROME_BASE_PATH, target),
       };
-    } catch (error){
+    } catch (error) {
       console.error('Failed to finalize download', error);
     }
   }
