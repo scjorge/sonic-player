@@ -147,12 +147,11 @@ const SongTable: React.FC<SongTableProps> = ({
     { id: 'filename', label: 'Arquivo', width: 200, visible: false, minWidth: 100 },
   ]);
   
-  const [showSettings, setShowSettings] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
-  const [draggedColumnId, setDraggedColumnId] = useState<ColumnId | null>(null);
-  const [rowDensity, setRowDensity] = useState<RowDensity>('normal');
-  const [isEditingTags, setIsEditingTags] = useState(false);
-  const [editingCell, setEditingCell] = useState<{ songId: string; field: ColumnId } | null>(null);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showFilter, setShowFilter] = useState(false);
+    const [draggedColumnId, setDraggedColumnId] = useState<ColumnId | null>(null);
+    const [rowDensity, setRowDensity] = useState<RowDensity>('normal');
+    const [editingCell, setEditingCell] = useState<{ songId: string; field: ColumnId } | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const [genreSuggestions, setGenreSuggestions] = useState<string[]>([]);
   const [searchInputValue, setSearchInputValue] = useState(activeSearchQuery);
@@ -935,25 +934,8 @@ const SongTable: React.FC<SongTableProps> = ({
             )}
         </div>
 
-                {/* EDIT TAGS & COLUMNS BUTTONS */}
+                {/* COLUMNS BUTTON */}
                 <div className="flex items-center gap-2">
-                    {isTidalTableDownload && (
-                        <button
-                            onClick={() => {
-                                setIsEditingTags(!isEditingTags);
-                                setEditingCell(null);
-                            }}
-                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
-                                isEditingTags
-                                    ? 'bg-yellow-600 text-white border-yellow-500'
-                                    : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-                            }`}
-                        >
-                            <Tags className="w-4 h-4" />
-                            Editar Tags
-                        </button>
-                    )}
-
                     <div className="relative">
                         <button 
                             onClick={() => setShowSettings(!showSettings)}
@@ -1099,10 +1081,9 @@ const SongTable: React.FC<SongTableProps> = ({
                                 </div>
                             )}
                                                         {visibleColumns.map(col => {
-                                                                const isEditable = isTidalTableDownload && isEditingTags && editableTidalColumns.includes(col.id);
+                                                            const isEditable = isTidalTableDownload && editableTidalColumns.includes(col.id);
                                                                 const isEditingThisCell =
                                                                     isTidalTableDownload &&
-                                                                    isEditingTags &&
                                                                     editingCell &&
                                                                     editingCell.songId === song.id &&
                                                                     editingCell.field === col.id;
