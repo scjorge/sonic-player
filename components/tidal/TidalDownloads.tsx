@@ -147,7 +147,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
         <button
           className={`px-4 py-2 text-sm rounded-t-lg border-b-2 transition-colors ${
             activeTab === 'in_progress'
-              ? 'text-yellow-400 border-yellow-500'
+              ? 'text-indigo-400 border-indigo-500'
               : 'text-zinc-400 border-transparent hover:text-zinc-200'
           }`}
           onClick={() => setActiveTab('in_progress')}
@@ -157,7 +157,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
         <button
           className={`px-4 py-2 text-sm rounded-t-lg border-b-2 transition-colors ${
             activeTab === 'completed'
-              ? 'text-yellow-400 border-yellow-500'
+              ? 'text-indigo-400 border-indigo-500'
               : 'text-zinc-400 border-transparent hover:text-zinc-200'
           }`}
           onClick={() => setActiveTab('completed')}
@@ -214,7 +214,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
                       </div>
                     </div>
                     <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
-                      <div className="h-full bg-yellow-400" style={{ width: `${it.progress}%` }} />
+                      <div className="h-full bg-indigo-400" style={{ width: `${it.progress}%` }} />
                     </div>
                     <div className="text-[11px] text-zinc-500 mt-1">{it.progress}% • {it.filename || ''}</div>
                   </div>

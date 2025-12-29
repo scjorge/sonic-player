@@ -1286,18 +1286,6 @@ const App: React.FC = () => {
     }
 
     if (viewMode === 'tidal_downloads') {
-        if (!tidalService.isAuthenticated()) {
-            return (
-                <div className="h-full flex flex-col items-center justify-center p-8 text-center">
-                    <div className="text-zinc-300 mb-4">Sessão TIDAL não autenticada.</div>
-                    <div className="text-zinc-400 mb-6">Autentique-se nas configurações do TIDAL para visualizar downloads.</div>
-                    <div className="flex gap-3">
-                        <button onClick={() => { setViewMode('settings'); setActiveSettingsTab('tidal'); }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded">Ir para Configurações</button>
-                    </div>
-                </div>
-            );
-        }
-
         return (
             <TidalDownloads
                 onPlayDownload={playTidalDownloadedSong}
@@ -1582,6 +1570,14 @@ const App: React.FC = () => {
                                 {!isSidebarCollapsed && <span>Favoritos</span>}
                             </button>
 
+                            <button 
+                                onClick={() => setViewMode('tidal_downloads')}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_downloads' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                            >
+                                <Download className="w-4 h-4 flex-shrink-0" /> 
+                                {!isSidebarCollapsed && <span>Downloads</span>}
+                            </button>
+
                     {!isSidebarCollapsed && (
                         <div className="animate-fade-in !mt-3">
                             <div className="flex items-center justify-between px-3 mb-2 group">
@@ -1667,13 +1663,7 @@ const App: React.FC = () => {
                                 <List className="w-4 h-4 flex-shrink-0" />
                                 {!isSidebarCollapsed && <span>Playlists</span>}
                             </button>
-                            <button 
-                                onClick={() => setViewMode('tidal_downloads')}
-                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_downloads' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
-                            >
-                                <Download className="w-4 h-4 flex-shrink-0" />
-                                {!isSidebarCollapsed && <span>Downloads</span>}
-                            </button>
+                            {/* Downloads moved to Navidrome section */}
                         </div>
                     </div>
                 </>
@@ -1705,7 +1695,7 @@ const App: React.FC = () => {
                 {viewMode === 'tidal_liked' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Músicas Curtidas</>}
                 {viewMode === 'tidal_playlists' && <><List className="w-5 h-5 text-yellow-500" /> Playlists</>}
                 {viewMode === 'tidal_playlist_tracks' && <><List className="w-5 h-5 text-yellow-500" /> {selectedPlaylistName || 'Playlist'}</>}
-                {viewMode === 'tidal_downloads' && <><Download className="w-5 h-5 text-yellow-400" /> Downloads</>}
+                {viewMode === 'tidal_downloads' && <><Download className="w-5 h-5 text-indigo-500" /> Downloads</>}
                 {viewMode === 'settings' && <><Settings className="w-5 h-5 text-indigo-500" />Configurações</>}
             </h2>
         </div>
