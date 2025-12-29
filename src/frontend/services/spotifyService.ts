@@ -1,6 +1,6 @@
 
 import { SpotifyTrack, PaginatedSpotifyTracks, NaviSong } from '../../../types';
-import { getSpotifyCredentials, saveSpotifyCredentials } from './data';
+import { getSpotifyCredentials, saveSpotifyCredentials } from '../repository/spotify';
 import { SPOTIFY_API_BASE_V1, SPOTIFY_API_BASE_ACCOUNTS } from '../../core/config';
 
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavidromeCredentials } from '../../../../types';
-import { getNavidromeCredentials, saveNavidromeCredentials } from '../../services/data';
+import { getNavidromeCredentials, saveNavidromeCredentials } from '../../repository/navidrome';
 import { Save, Link, Key, User, CheckCircle2, AlertCircle, Server, Trash2 } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 

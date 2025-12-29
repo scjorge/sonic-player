@@ -6,7 +6,7 @@ import { RotateCcw, Trash2 } from 'lucide-react';
 import { tidalService }  from '../../services/tidalService';
 import showToast from '../utils/toast';
 import GroupTagModal from './GroupTagModal';
-import { getStoredGroups } from '../../services/data';
+import { getStoredGroups } from '../../repository/metadata';
 
 
 interface DownloadsProps {

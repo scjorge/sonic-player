@@ -6,7 +6,7 @@ import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
 import { sanitizeQuery } from '../../../commons/tools';
 import { BACKEND_BASE_URL } from '../../../core/config';
-import { getStoredGenres } from '../../services/data';
+import { getStoredGenres } from '../../repository/metadata';
 import { NAVI_COLUMN_CONFIG } from './NaviConstants';
 
 interface SongTableProps {

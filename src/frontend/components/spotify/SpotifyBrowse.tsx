@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { SpotifyTrack, SpotifyCredentials } from '../../../../types';
 import { spotifyService } from '../../services/spotifyService';
-import { getSpotifyCredentials } from '../../services/data';
+import { getSpotifyCredentials } from '../../repository/spotify';
 import { Search, Music, Play, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
 
 interface SpotifyBrowseProps {

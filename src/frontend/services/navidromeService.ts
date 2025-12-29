@@ -1,6 +1,6 @@
 import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, SubsonicResponse } from '../../../types';
 import { MD5, sanitizeQuery } from '../../commons/tools';
-import { getNavidromeCredentials } from './data';
+import { getNavidromeCredentials } from '../repository/navidrome';
 
 const CLIENT = 'SonicTagPlayer';
 const VERSION = '1.16.1';
@@ -48,7 +48,7 @@ class NavidromeService {
 
   async ping(): Promise<{ ok: boolean; message?: string }> {
     try {
-      const data: SubsonicResponse<any> = await this.fetchData('ping.view');
+      const data: any = await this.fetchData('ping.view');
       const status = data['subsonic-response'].status === 'ok';
       const msg = status ? undefined : (data['subsonic-response'].error?.message || 'Unknown error');
       return { ok: status, message: msg };

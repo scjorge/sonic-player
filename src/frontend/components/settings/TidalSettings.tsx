@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { TidalCredentials } from '../../../../types';
-import { getTidalCredentials } from '../../services/data';
+import { getTidalCredentials } from '../../repository/tidal';
 import { tidalService } from '../../services/tidalService';
 import { TIDAL_CLIENT_ID, TIDAL_CLIENT_SECRET } from '../../../core/config';
 
