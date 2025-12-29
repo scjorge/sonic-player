@@ -5,7 +5,7 @@ import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
 import { sanitizeQuery } from '../../services/tools';
-import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../../core/config';
+import { BACKEND_BASE_URL } from '../../core/config';
 import { getStoredGenres } from '../../services/data';
 
 interface SongTableProps {
@@ -460,7 +460,7 @@ const SongTable: React.FC<SongTableProps> = ({
                             e.stopPropagation();
                             if (disabled || !song.path) return;
                             try {
-                                const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads/finalize`, {
+                                const resp = await fetch(`${BACKEND_BASE_URL}/api/tidal/downloads/finalize`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ path: song.path }),
@@ -611,7 +611,7 @@ const SongTable: React.FC<SongTableProps> = ({
         const metadata = buildMetadataFromEdit(editingCell.field, valueToUse);
 
         try {
-            const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/metadata`, {
+            const resp = await fetch(`${BACKEND_BASE_URL}/api/tidal/metadata`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -735,7 +735,7 @@ const SongTable: React.FC<SongTableProps> = ({
                                                 trackId: contextMenu.song!.id,
                                                 song: contextMenu.song,
                                             };
-                                            const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/download`, {
+                                            const resp = await fetch(`${BACKEND_BASE_URL}/api/tidal/download`, {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
                                                 body: JSON.stringify(body)

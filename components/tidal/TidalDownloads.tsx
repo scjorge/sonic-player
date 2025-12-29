@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NaviSong } from '../../types';
 import SongTable from '../library/SongTable';
 import { TIDAL_COLUMN_DOWNLOAD_CONFIG } from './tidalConstants';
-import { TIDAL_DOWNLOAD_BACKEND_BASE_URL } from '../../core/config';
+import { BACKEND_BASE_URL } from '../../core/config';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { tidalService }  from '../../services/tidalService';
 import showToast from '../utils/toast';
@@ -30,7 +30,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
 
   const handleClearAll = async () => {
     try {
-      const res = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/api/tidal/downloads`, {
         method: 'DELETE',
       });
       if (!res.ok) {
@@ -46,7 +46,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
 
   const handleDeleteItem = async (id: string) => {
     try {
-      const res = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads/${encodeURIComponent(id)}`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/api/tidal/downloads/${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
       if (!res.ok) {
@@ -66,7 +66,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
           trackId: song.id,
           song: song,
       };
-      const resp = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/download`, {
+      const resp = await fetch(`${BACKEND_BASE_URL}/api/tidal/download`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
@@ -81,7 +81,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
 
   const fetchDownloads = async () => {
     try {
-      const res = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads`);
+      const res = await fetch(`${BACKEND_BASE_URL}/api/tidal/downloads`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         showToast(`Erro ao buscar downloads: ${err.error || res.statusText}`, 'error');
@@ -103,7 +103,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
   const fetchCompleted = async () => {
     setLoadingCompleted(true);
     try {
-      const res = await fetch(`${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads/completed`);
+      const res = await fetch(`${BACKEND_BASE_URL}/api/tidal/downloads/completed`);
       if (!res.ok) {
         setCompletedSongs([]);
         return;

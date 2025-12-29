@@ -8,7 +8,7 @@ import TidalLiked from './components/tidal/TidalLiked';
 import TidalPlaylists from './components/tidal/TidalPlaylists';
 import TidalDownloads  from './components/tidal/TidalDownloads';
 import { TIDAL_COLUMN_CONFIG } from './components/tidal/tidalConstants';
-import { TIDAL_DOWNLOAD_BACKEND_BASE_URL, TIDAL_QUALITY } from './core/config';
+import { BACKEND_BASE_URL, TIDAL_QUALITY } from './core/config';
 import { getStoredGroups, getSpotifyCredentials } from './services/data';
 import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, ArrowLeft, Navigation, AlertCircle, Download } from 'lucide-react';
 import SongTable from './components/library/SongTable';
@@ -958,7 +958,7 @@ const App: React.FC = () => {
             return;
         }
 
-        const streamUrl = `${TIDAL_DOWNLOAD_BACKEND_BASE_URL}/api/tidal/downloads/stream?id=${encodeURIComponent(song.id)}`;
+        const streamUrl = `${BACKEND_BASE_URL}/api/tidal/downloads/stream?id=${encodeURIComponent(song.id)}`;
 
         const playerTrack: PlayerTrack = {
             id: song.id,

@@ -32,7 +32,7 @@ export async function clearDownloads(_req: Request, res: Response) {
 }
 
 export async function getCompletedDownloads(_req: Request, res: Response) {
-    const result = await tidalServerService.getCompletedDownloads();
+const result = await tidalServerService.getCompletedDownloads();
     return res.json(result);
 }
 
