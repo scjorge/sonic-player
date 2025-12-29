@@ -285,6 +285,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
+                    id: groupModalSong.id,
                     source: 'download',
                     path: groupModalSong.path,
                     metadata: { comments: newComments },

@@ -6,7 +6,7 @@ import { getSpotifyCredentials } from '../../services/data';
 import { Search, Music, Play, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
 
 interface SpotifyBrowseProps {
-    onPreview: (track: SpotifyTrack) => void;
+  onPreview: (track: SpotifyTrack) => void;
 }
 
 const SpotifyBrowse: React.FC<SpotifyBrowseProps> = ({ onPreview }) => {
@@ -16,11 +16,16 @@ const SpotifyBrowse: React.FC<SpotifyBrowseProps> = ({ onPreview }) => {
   const [creds, setCreds] = useState<SpotifyCredentials | null>(null);
 
   useEffect(() => {
-    const c = getSpotifyCredentials();
-    if (c.clientId && c.clientSecret) {
-      setCreds(c);
-      loadInitial();
-    }
+    const init = async () => {
+      const c = await getSpotifyCredentials();
+
+      if (c?.clientId && c?.clientSecret) {
+        setCreds(c);
+        await loadInitial();
+      }
+    };
+
+    init();
   }, []);
 
   const loadInitial = async () => {
@@ -59,8 +64,8 @@ const SpotifyBrowse: React.FC<SpotifyBrowseProps> = ({ onPreview }) => {
       {/* Header / Search */}
       <div className="p-6 border-b border-zinc-800 bg-zinc-900/30">
         <form onSubmit={handleSearch} className="max-w-2xl relative group">
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="O que você quer ouvir no Spotify?"
@@ -83,12 +88,12 @@ const SpotifyBrowse: React.FC<SpotifyBrowseProps> = ({ onPreview }) => {
             {tracks.map(track => (
               <div key={track.id} className="group bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 hover:bg-zinc-800/60 transition-all hover:border-green-500/30 flex flex-col">
                 <div className="relative aspect-square rounded-lg overflow-hidden mb-4 shadow-lg">
-                  <img 
-                    src={track.album.images[0]?.url} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  <img
+                    src={track.album.images[0]?.url}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     alt={track.name}
                   />
-                  <button 
+                  <button
                     onClick={() => track.preview_url && onPreview(track)}
                     disabled={!track.preview_url}
                     className={`absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity ${!track.preview_url ? 'cursor-not-allowed' : ''}`}
@@ -98,7 +103,7 @@ const SpotifyBrowse: React.FC<SpotifyBrowseProps> = ({ onPreview }) => {
                     </div>
                   </button>
                 </div>
-                          
+
                 <div className="flex-1 min-w-0">
                   <h4 className="text-white font-bold truncate text-sm" title={track.name}>{track.name}</h4>
                   <p className="text-zinc-500 text-xs truncate mb-1">{track.artists.map(a => a.name).join(', ')}</p>
@@ -106,9 +111,9 @@ const SpotifyBrowse: React.FC<SpotifyBrowseProps> = ({ onPreview }) => {
                     <span className="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700">
                       {track.album.release_date?.split('-')[0]}
                     </span>
-                    <a 
-                      href={track.external_urls.spotify} 
-                      target="_blank" 
+                    <a
+                      href={track.external_urls.spotify}
+                      target="_blank"
                       rel="noreferrer"
                       className="ml-auto text-zinc-500 hover:text-green-500 transition-colors"
                       title="Abrir no Spotify"
