@@ -145,6 +145,7 @@ const SongTable: React.FC<SongTableProps> = ({
     { id: 'mood', label: 'Mood', width: 100, visible: false, minWidth: 80 },
     { id: 'group', label: 'Grupo', width: 120, visible: false, minWidth: 100 },
     { id: 'filename', label: 'Arquivo', width: 200, visible: false, minWidth: 100 },
+    { id: 'finalize', label: 'Finalizar', width: 120, visible: true, minWidth: 100 },
   ]);
   
     const [showSettings, setShowSettings] = useState(false);

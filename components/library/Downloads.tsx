@@ -202,7 +202,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
                       </div>
                       <div className="flex items-center gap-2 text-xs text-zinc-400">
                         <span>{it.status}</span>
-                        {it.status !== 'failed' && (
+                        {it.status === 'failed' && (
                           <button
                             className="p-1 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
                             title="Tentar novamente"
