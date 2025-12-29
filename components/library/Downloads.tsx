@@ -270,7 +270,36 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
           groups={loadGroups()}
           onClose={() => setGroupModalSong(null)}
           onUpdateComments={(newComments) => {
-            setCompletedSongs(prev => prev.map(s => s.id === groupModalSong.id ? { ...s, comment: newComments } : s));
+            // Atualiza comentário/grupo como o handleSaveEdit faz
+            if (!groupModalSong.path) {
+              setCompletedSongs(prev => prev.map(s => s.id === groupModalSong.id ? { ...s, comment: newComments } : s));
+              return;
+            }
+
+            (async () => {
+              try {
+                const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    source: 'download',
+                    path: groupModalSong.path,
+                    metadata: { comments: newComments },
+                  }),
+                });
+
+                if (!resp.ok) {
+                  const err = await resp.json().catch(() => ({}));
+                  showToast(`Erro ao salvar tags: ${err.error || resp.statusText}`, 'error');
+                  return;
+                }
+
+                setCompletedSongs(prev => prev.map(s => s.id === groupModalSong.id ? { ...s, comment: newComments } : s));
+                showToast('Tags atualizadas com sucesso.', 'success');
+              } catch (e: any) {
+                showToast(`Erro ao salvar tags: ${e?.message || String(e)}`, 'error');
+              }
+            })();
           }}
         />
       )}

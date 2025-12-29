@@ -595,7 +595,7 @@ const SongTable: React.FC<SongTableProps> = ({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    source: 'tidal',
+                    source: 'download',
                     path: currentSong.path,
                     metadata,
                 }),

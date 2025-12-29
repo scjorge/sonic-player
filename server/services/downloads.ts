@@ -159,7 +159,7 @@ class DownloadService {
         throw new Error('Não foi possível baixar o cover em nenhum tamanho');
     }
 
-    async writeMetadataParts(destFinal: string, source: "navidrome" | "tidal", metadata: AudioMetadata) {
+    async writeMetadataParts(destFinal: string, source: "navidrome" | "download", metadata: AudioMetadata) {
         if (source === "navidrome") {
             destFinal = path.join(NAVIDROME_BASE_PATH, destFinal);
         }
