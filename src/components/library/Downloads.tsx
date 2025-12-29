@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NaviSong, TagGroup } from '../../types';
+import { NaviSong, TagGroup } from '../../../types';
 import SongTable from './SongTable';
 import { TIDAL_COLUMN_DOWNLOAD_CONFIG } from '../tidal/tidalConstants';
 import { BACKEND_BASE_URL } from '../../core/config';

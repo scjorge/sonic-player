@@ -1,4 +1,4 @@
-import { ColumnConfig } from '../library/SongTable';
+import { ColumnConfig } from './SongTable';
 
 export const NAVI_COLUMN_CONFIG: ColumnConfig[] = [
     { id: 'select', label: '', width: 50, visible: true, minWidth: 50 },

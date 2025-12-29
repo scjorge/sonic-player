@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, Upload } from 'lucide-react';
-import { MusicMetadata } from '../../types';
+import { MusicMetadata } from '../../../types';
 
 interface CoverArtProps {
   currentCoverUrl: string | null;

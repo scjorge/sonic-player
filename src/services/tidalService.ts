@@ -1,5 +1,5 @@
 import { getTidalCredentials, saveTidalCredentials } from './data';
-import { TidalPlayback } from '../types';
+import { TidalPlayback } from '../../types';
 import { TIDAL_AUTH_BASE } from '../core/config';
 import { TIDAL_API_BASE_V1, TIDAL_API_BASE_V2, TIDAL_API_BASE_RESOURCES } from '../core/config';
 
