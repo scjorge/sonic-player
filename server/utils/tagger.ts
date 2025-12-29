@@ -8,7 +8,7 @@ import { AudioMetadata, DownloadedCover } from '../types';
 class AudioTagger {
     public async write(filePath: string, metadata: AudioMetadata): Promise<void> {
         if (!fs.existsSync(filePath)) {
-            throw new Error('Arquivo não encontrado');
+            throw new Error(`Arquivo não encontrado -> ${filePath}`);
         }
 
         const ext = path.extname(filePath).toLowerCase();
@@ -19,7 +19,7 @@ class AudioTagger {
             case '.flac':
                 return this.writeFLAC(filePath, metadata);
             default:
-                throw new Error(`Formato não suportado: ${ext}`);
+                throw new Error(`Formato não suportado: ${ext}, arquivo -> ${filePath}`);
         }
     }
 
@@ -36,7 +36,7 @@ class AudioTagger {
             case '.flac':
                 return this.readFLAC(filePath);
             default:
-                throw new Error(`Formato não suportado: ${ext}`);
+                throw new Error(`Formato não suportado: ${ext}, arquivo -> ${filePath}`);
         }
     }
 
@@ -74,7 +74,7 @@ class AudioTagger {
 
         const success = NodeID3.write(tags, filePath);
         if (!success) {
-            throw new Error('Falha ao escrever tags MP3');
+            throw new Error(`Falha ao escrever tags MP3 -> ${filePath}`);
         }
     }
 
@@ -148,6 +148,10 @@ class AudioTagger {
     private async readFLAC(filePath: string): Promise<AudioMetadata> {
         const tags = await this.readFlacTags(filePath);
         const cover = await this.readFlacCover(filePath);
+
+        if (!tags) {
+            throw new Error(`Falha ao Ler tags FLAC -> ${filePath}`);
+        }
 
         return {
             title: tags.TITLE,

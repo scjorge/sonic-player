@@ -572,7 +572,7 @@ const SongTable: React.FC<SongTableProps> = ({
             showToast('Caminho do arquivo não encontrado para esta música.', 'error');
             return;
         }
-        if (columnId === 'genre' && isNaviTableDownload) {
+        if (columnId === 'genre') {
             try {
                 setGenreSuggestions(getStoredGenres());
             } catch (e) {
@@ -1101,7 +1101,6 @@ const SongTable: React.FC<SongTableProps> = ({
 
                                     const showGenreSuggestions =
                                         isEditingThisCell &&
-                                        isNaviTableDownload &&
                                         col.id === 'genre' &&
                                         genreSuggestions.length > 0;
 
@@ -1122,7 +1121,7 @@ const SongTable: React.FC<SongTableProps> = ({
                                                 }}
                                         >
                                                 {isEditingThisCell ? (
-                                                    col.id === 'genre' && isNaviTableDownload ? (
+                                                    col.id === 'genre' ? (
                                                         <div className="relative w-full">
                                                             <input
                                                                 autoFocus
