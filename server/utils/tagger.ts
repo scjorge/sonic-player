@@ -84,8 +84,8 @@ class AudioTagger {
 
         if (tags.title) metadata.title = tags.title;
         if (tags.artist) metadata.artists = tags.artist;
+        if (tags.artist) metadata.albumArtist = tags.artist.split(',')[0 || ''];
         if (tags.album) metadata.album = tags.album;
-        if (tags.performerInfo) metadata.albumArtist = tags.performerInfo;
         if (tags.year) metadata.year = parseInt(tags.year, 10);
         if (tags.trackNumber) metadata.trackNumber = parseInt(tags.trackNumber, 10);
         if (tags.partOfSet) metadata.discNumber = parseInt(tags.partOfSet, 10);
