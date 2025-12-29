@@ -20,7 +20,7 @@ class SpotifyService {
   }
 
   public setOnAuthenticationRequiredCallback(callback: () => void): void {
-      this.onAuthenticationRequiredCallback = callback;
+    this.onAuthenticationRequiredCallback = callback;
   }
 
   private async loadUserTokensFromStorage() {
@@ -240,7 +240,7 @@ class SpotifyService {
     console.log("Logout do Spotify realizado.");
 
     if (this.onAuthenticationRequiredCallback) {
-        this.onAuthenticationRequiredCallback();
+      this.onAuthenticationRequiredCallback();
     }
   }
 
@@ -271,59 +271,59 @@ class SpotifyService {
   }
 
   async getNewReleases(limit: number = 20, offset: number = 0): Promise<PaginatedSpotifyTracks> {
-      const token = await this.getAccessToken();
-      if (!token) return { items: [], total: 0 };
+    const token = await this.getAccessToken();
+    if (!token) return { items: [], total: 0 };
 
-      try {
-        const response = await fetch(`${SPOTIFY_API_BASE_V1}/browse/new-releases?limit=${limit}&offset=${offset}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+    try {
+      const response = await fetch(`${SPOTIFY_API_BASE_V1}/browse/new-releases?limit=${limit}&offset=${offset}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Falha ao buscar novos lançamentos do Spotify:', errorData);
-          if (response.status === 401) {
-            await this.logout();
-          }
-          return { items: [], total: 0 };
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Falha ao buscar novos lançamentos do Spotify:', errorData);
+        if (response.status === 401) {
+          await this.logout();
         }
-        const data = await response.json();
-
-        let allTracks: SpotifyTrack[] = [];
-        // Fetch all tracks for each album and combine them
-        // This can be slow if there are many albums and many tracks per album
-        // A more optimized approach might be needed for very large 'limit' values
-        for (const album of data.albums.items) {
-            const albumTracksResponse = await fetch(`${SPOTIFY_API_BASE_V1}/albums/${album.id}/tracks`, { // Fetch all tracks from the album
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (albumTracksResponse.ok) {
-                const albumTracksData = await albumTracksResponse.json();
-                for (const track of albumTracksData.items) {
-                    track.album = { // Enrich track with album details
-                        id: album.id,
-                        name: album.name,
-                        images: album.images,
-                        release_date: album.release_date
-                    };
-                    allTracks.push(track);
-                }
-            }
-        }
-        // Spotify's New Releases API returns total albums, not total tracks.
-        // We are fetching tracks from each album.
-        // For 'total', we can use the length of allTracks, or the total of albums (less accurate for tracks).
-        // Let's use the actual number of tracks fetched for `total` for now,
-        // which means pagination will only work for this current batch of tracks.
-        // A more robust solution would involve fetching all pages of albums and their tracks.
-        return {
-            items: allTracks,
-            total: allTracks.length // Total tracks fetched in this request
-        };
-      } catch (e) {
-        console.error("Spotify Get New Releases Error:", e);
         return { items: [], total: 0 };
       }
+      const data = await response.json();
+
+      let allTracks: SpotifyTrack[] = [];
+      // Fetch all tracks for each album and combine them
+      // This can be slow if there are many albums and many tracks per album
+      // A more optimized approach might be needed for very large 'limit' values
+      for (const album of data.albums.items) {
+        const albumTracksResponse = await fetch(`${SPOTIFY_API_BASE_V1}/albums/${album.id}/tracks`, { // Fetch all tracks from the album
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (albumTracksResponse.ok) {
+          const albumTracksData = await albumTracksResponse.json();
+          for (const track of albumTracksData.items) {
+            track.album = { // Enrich track with album details
+              id: album.id,
+              name: album.name,
+              images: album.images,
+              release_date: album.release_date
+            };
+            allTracks.push(track);
+          }
+        }
+      }
+      // Spotify's New Releases API returns total albums, not total tracks.
+      // We are fetching tracks from each album.
+      // For 'total', we can use the length of allTracks, or the total of albums (less accurate for tracks).
+      // Let's use the actual number of tracks fetched for `total` for now,
+      // which means pagination will only work for this current batch of tracks.
+      // A more robust solution would involve fetching all pages of albums and their tracks.
+      return {
+        items: allTracks,
+        total: allTracks.length // Total tracks fetched in this request
+      };
+    } catch (e) {
+      console.error("Spotify Get New Releases Error:", e);
+      return { items: [], total: 0 };
+    }
   }
 
   async getLikedSongs(offset: number = 0, limit: number = 50): Promise<PaginatedSpotifyTracks> {
@@ -343,7 +343,7 @@ class SpotifyService {
         console.error('Falha ao buscar músicas curtidas do Spotify:', errorData);
         // Se for um erro de autenticação, o token pode estar inválido/expirado
         if (response.status === 401) {
-            await this.logout(); // Força o logout para o usuário reautenticar
+          await this.logout(); // Força o logout para o usuário reautenticar
         }
         return { items: [], total: 0 };
       }
@@ -379,7 +379,7 @@ class SpotifyService {
           const errorData = await response.json();
           console.error('Failed to fetch user playlists:', errorData);
           if (response.status === 401) {
-              await this.logout();
+            await this.logout();
           }
           break;
         }
@@ -411,7 +411,7 @@ class SpotifyService {
         const errorData = await response.json();
         console.error('Failed to fetch playlist tracks:', errorData);
         if (response.status === 401) {
-            await this.logout();
+          await this.logout();
         }
         return { items: [], total: 0 };
       }

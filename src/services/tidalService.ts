@@ -54,11 +54,11 @@ class TidalService {
         const expiresAt = Date.now() + (json.expires_in * 1000);
         // Save tokens
         saveTidalCredentials({
-            accessToken: json.access_token,
-            refreshToken: json.refresh_token,
-            expiresAt: expiresAt,
-            countryCode: json.user.countryCode,
-            userId: json.user.userId,
+          accessToken: json.access_token,
+          refreshToken: json.refresh_token,
+          expiresAt: expiresAt,
+          countryCode: json.user.countryCode,
+          userId: json.user.userId,
         });
         return json;
       }
@@ -105,22 +105,22 @@ class TidalService {
     const countryCode = this.getCredentials().countryCode;
 
     if (!token) throw new Error('Not authenticated with TIDAL');
-      const url = `${TIDAL_API_BASE_V2}/albums/${albumId}?countryCode=${countryCode}&include=artists`;
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.api+json'
-        }
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error('Tidal Album Year lookup failed: ' + JSON.stringify(body));
+    const url = `${TIDAL_API_BASE_V2}/albums/${albumId}?countryCode=${countryCode}&include=artists`;
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.api+json'
       }
+    });
 
-      const json = await res.json();
-      const year = json.data.attributes.releaseDate.split('-')[0];
-      return year;
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error('Tidal Album Year lookup failed: ' + JSON.stringify(body));
+    }
+
+    const json = await res.json();
+    const year = json.data.attributes.releaseDate.split('-')[0];
+    return year;
   }
 
   async searchTracks(query: string, limit = 50, offset = 0) {
@@ -220,15 +220,15 @@ class TidalService {
     params.append('countryCode', countryCode);
 
     const res = await fetch(`${TIDAL_API_BASE_V1}/users/${userID}/favorites/tracks?${params.toString()}`, {
-        headers: {
+      headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
-        }
+      }
     });
 
     if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error('Tidal favorites fetch failed: ' + JSON.stringify(body));
+      const body = await res.json().catch(() => ({}));
+      throw new Error('Tidal favorites fetch failed: ' + JSON.stringify(body));
     }
 
     const json = await res.json();
@@ -325,47 +325,47 @@ class TidalService {
 
   async getTidalPlaybackInfo(creds: any, trackId: string, audioQuality: TidalPlayback['audioQuality']): Promise<TidalPlayback> {
     const parseBTSManifest = (manifestText: any, data: any) => {
-        const manifest = JSON.parse(manifestText);
+      const manifest = JSON.parse(manifestText);
 
-        return {
-            trackId: data.trackId,
-            audioQuality: data.audioQuality,
-            mimeType: manifest.mimeType || null,
-            codecs: manifest.codecs || null,
-            encryptionType: manifest.encryptionType || null,
-            urls: Array.isArray(manifest.urls) ? manifest.urls : []
-        };
+      return {
+        trackId: data.trackId,
+        audioQuality: data.audioQuality,
+        mimeType: manifest.mimeType || null,
+        codecs: manifest.codecs || null,
+        encryptionType: manifest.encryptionType || null,
+        urls: Array.isArray(manifest.urls) ? manifest.urls : []
+      };
     }
 
     const parseDASHManifest = (manifestText: any, data: any) => {
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(manifestText, "application/xml");
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(manifestText, "application/xml");
 
-        const adaptationSet = xml.querySelector("AdaptationSet");
-        const representation = xml.querySelector("Representation");
-        const segmentTemplate = xml.querySelector("SegmentTemplate");
+      const adaptationSet = xml.querySelector("AdaptationSet");
+      const representation = xml.querySelector("Representation");
+      const segmentTemplate = xml.querySelector("SegmentTemplate");
 
-        const mimeType =
+      const mimeType =
             adaptationSet?.getAttribute("mimeType") || null;
 
-        const codecs =
+      const codecs =
             representation?.getAttribute("codecs") || null;
 
-        const baseUrls = [...xml.querySelectorAll("BaseURL")]
-            .map(el => el.textContent)
-            .filter(Boolean);
+      const baseUrls = [...xml.querySelectorAll("BaseURL")]
+        .map(el => el.textContent)
+        .filter(Boolean);
 
-        // DASH normalmente não expõe uma URL única,
-        // mas sim segmentos. Aqui padronizamos
-        // retornando os BaseURL disponíveis.
-        return {
-            trackId: data.trackId,
-            audioQuality: data.audioQuality,
-            mimeType,
-            codecs,
-            encryptionType: "DASH",
-            urls: baseUrls
-        };
+      // DASH normalmente não expõe uma URL única,
+      // mas sim segmentos. Aqui padronizamos
+      // retornando os BaseURL disponíveis.
+      return {
+        trackId: data.trackId,
+        audioQuality: data.audioQuality,
+        mimeType,
+        codecs,
+        encryptionType: "DASH",
+        urls: baseUrls
+      };
     }
 
 
@@ -381,15 +381,15 @@ class TidalService {
         `&countryCode=${countryCode}`;
 
     const res = await fetch(url, {
-        headers: {
+      headers: {
         "Authorization": `Bearer ${token}`,
         "Accept": "application/vnd.tidal.v1+json"
-        }
+      }
     });
 
     if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`TIDAL error ${res.status}: ${err}`);
+      const err = await res.text();
+      throw new Error(`TIDAL error ${res.status}: ${err}`);
     }
 
     const data = await res.json();
@@ -399,11 +399,11 @@ class TidalService {
     const mimeType = data.manifestMimeType;
 
     if (mimeType === "application/vnd.tidal.bts") {
-        return parseBTSManifest(manifestText, data);
+      return parseBTSManifest(manifestText, data);
     }
 
     if (mimeType === "application/dash+xml") {
-        return parseDASHManifest(manifestText, data);
+      return parseDASHManifest(manifestText, data);
     }
 
     throw new Error(`Unsupported manifest type: ${mimeType}`);

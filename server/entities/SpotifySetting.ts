@@ -3,23 +3,23 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity({ name: 'spotify_settings' })
 export class SpotifySetting {
   @PrimaryGeneratedColumn()
-  id!: number;
+    id!: number;
 
   @Column({ type: 'text', nullable: true })
-  clientId!: string | null;
+    clientId!: string | null;
 
   @Column({ type: 'text', nullable: true })
-  clientSecret!: string | null;
+    clientSecret!: string | null;
 
   @Column({ type: 'text', nullable: true })
-  redirectUri!: string | null;
+    redirectUri!: string | null;
 
   @Column({ type: 'text', nullable: true })
-  accessToken!: string | null;
+    accessToken!: string | null;
 
   @Column({ type: 'text', nullable: true })
-  refreshToken!: string | null;
+    refreshToken!: string | null;
 
   @Column({ type: 'bigint', nullable: true })
-  expiresAt!: number | null;
+    expiresAt!: number | null;
 }

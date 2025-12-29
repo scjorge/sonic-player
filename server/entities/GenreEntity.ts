@@ -3,9 +3,9 @@ import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 @Entity({ name: 'genres' })
 export class GenreEntity {
   @PrimaryGeneratedColumn()
-  id!: number;
+    id!: number;
 
   @Index({ unique: true })
   @Column({ type: 'text' })
-  name!: string;
+    name!: string;
 }

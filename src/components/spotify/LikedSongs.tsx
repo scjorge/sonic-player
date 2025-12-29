@@ -78,8 +78,8 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
 
         // Check Navidrome existence for each song
         const existenceChecks = await Promise.all(mappedSongs.map(async song => {
-            const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
-            return [song.id, exists] as [string, boolean];
+          const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
+          return [song.id, exists] as [string, boolean];
         }));
         setNavidromeExistenceMap(new Map(existenceChecks));
       } catch (err) {

@@ -18,7 +18,7 @@ const CoverArt: React.FC<CoverArtProps> = ({ currentCoverUrl, onCoverChange, com
   if (compact) {
     return (
       <div className="relative group w-12 h-12 bg-zinc-800 rounded overflow-hidden flex-shrink-0 border border-zinc-700 hover:border-indigo-500 transition-colors">
-         {currentCoverUrl ? (
+        {currentCoverUrl ? (
           <img src={currentCoverUrl} alt="Cover" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-zinc-600">
@@ -26,8 +26,8 @@ const CoverArt: React.FC<CoverArtProps> = ({ currentCoverUrl, onCoverChange, com
           </div>
         )}
         <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-            <Upload className="w-4 h-4 text-white" />
-            <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          <Upload className="w-4 h-4 text-white" />
+          <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
         </label>
       </div>
     );
@@ -51,10 +51,10 @@ const CoverArt: React.FC<CoverArtProps> = ({ currentCoverUrl, onCoverChange, com
         
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-           <label className="cursor-pointer p-3 bg-zinc-200 text-zinc-900 rounded-full hover:bg-white transition-transform hover:scale-105" title="Carregar imagem">
-              <Upload className="w-5 h-5" />
-              <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-           </label>
+          <label className="cursor-pointer p-3 bg-zinc-200 text-zinc-900 rounded-full hover:bg-white transition-transform hover:scale-105" title="Carregar imagem">
+            <Upload className="w-5 h-5" />
+            <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          </label>
         </div>
       </div>
     </div>

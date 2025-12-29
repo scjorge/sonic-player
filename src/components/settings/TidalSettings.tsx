@@ -52,8 +52,8 @@ const TidalSettings: React.FC = () => {
     <div className="max-w-4xl mx-auto p-8 space-y-8 animate-fade-in relative">
       <div className="flex flex-col gap-2 border-b border-zinc-800 pb-6">
         <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <img src="https://tidal.com/favicon.ico" className="w-8 h-8 object-contain" alt="Tidal" />
-            TIDAL API
+          <img src="https://tidal.com/favicon.ico" className="w-8 h-8 object-contain" alt="Tidal" />
+          TIDAL API
         </h2>
         <p className="text-zinc-400 text-base max-w-2xl">Conecte sua conta do TIDAL.</p>
       </div>
@@ -64,15 +64,15 @@ const TidalSettings: React.FC = () => {
           <div className="font-mono text-sm text-white select-all">{creds.clientId}</div>
         </div>
 
-          <div className="pt-4 flex flex-wrap items-center gap-4">
-              {!isConnected ? (
-                <button onClick={() => { handleAuthenticate(); }} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 active:scale-95">Conectar</button>
-              ) : (
-                <button onClick={() => { tidalService.logout(); setIsConnected(false); setAuthStatus('Desconectado'); setTimeout(() => setAuthStatus(''), 3000); }} className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-red-500/20 active:scale-95">Desconectar</button>
-              )}
+        <div className="pt-4 flex flex-wrap items-center gap-4">
+          {!isConnected ? (
+            <button onClick={() => { handleAuthenticate(); }} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 active:scale-95">Conectar</button>
+          ) : (
+            <button onClick={() => { tidalService.logout(); setIsConnected(false); setAuthStatus('Desconectado'); setTimeout(() => setAuthStatus(''), 3000); }} className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-red-500/20 active:scale-95">Desconectar</button>
+          )}
 
-              {authStatus && (<div className="flex items-center gap-2 text-sm font-medium animate-fade-in text-zinc-300">{authStatus}</div>)}
-          </div>
+          {authStatus && (<div className="flex items-center gap-2 text-sm font-medium animate-fade-in text-zinc-300">{authStatus}</div>)}
+        </div>
       </div>
     </div>
   );

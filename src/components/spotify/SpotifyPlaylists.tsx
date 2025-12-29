@@ -13,20 +13,20 @@ interface PlaylistNode {
 }
 
 const nestPlaylists = (playlists: NaviPlaylist[]): { [key: string]: PlaylistNode } => {
-    const root: PlaylistNode = { children: {} };
+  const root: PlaylistNode = { children: {} };
 
-    playlists.forEach(p => {
-        let current = root;
-        p.name.split('/').forEach((part, i, arr) => {
-            current.children[part] = current.children[part] || { children: {} };
-            current = current.children[part];
-            if (i === arr.length - 1) {
-                current.playlist = p;
-            }
-        });
+  playlists.forEach(p => {
+    let current = root;
+    p.name.split('/').forEach((part, i, arr) => {
+      current.children[part] = current.children[part] || { children: {} };
+      current = current.children[part];
+      if (i === arr.length - 1) {
+        current.playlist = p;
+      }
     });
+  });
 
-    return root.children;
+  return root.children;
 };
 
 const PlaylistNodeComponent: React.FC<{ name: string; node: PlaylistNode; onPlaylistClick: (playlist: NaviPlaylist) => void; level: number }> = ({ name, node, onPlaylistClick, level }) => {

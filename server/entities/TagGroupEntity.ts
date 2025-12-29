@@ -3,15 +3,15 @@ import { Entity, PrimaryColumn, Column } from 'typeorm';
 @Entity({ name: 'tag_groups' })
 export class TagGroupEntity {
   @PrimaryColumn({ type: 'text' })
-  id!: string;
+    id!: string;
 
   @Column({ type: 'text' })
-  name!: string;
+    name!: string;
 
   @Column({ type: 'text' })
-  prefix!: string;
+    prefix!: string;
 
   // JSON-encoded array of items (strings)
   @Column({ type: 'text' })
-  items!: string;
+    items!: string;
 }
