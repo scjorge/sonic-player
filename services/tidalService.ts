@@ -54,8 +54,6 @@ class TidalService {
         const expiresAt = Date.now() + (json.expires_in * 1000);
         // Save tokens
         saveTidalCredentials({
-            clientId: creds.clientId,
-            clientSecret: creds.clientSecret,
             accessToken: json.access_token,
             refreshToken: json.refresh_token,
             expiresAt: expiresAt,
@@ -311,10 +309,6 @@ class TidalService {
     return getTidalCredentials();
   }
 
-  clearCredentials() {
-    saveTidalCredentials({ clientId: '', clientSecret: '' });
-  }
-
   isAuthenticated() {
     const creds: any = getTidalCredentials();
     return !!creds.accessToken && creds.expiresAt && creds.expiresAt > Date.now();
@@ -327,10 +321,7 @@ class TidalService {
   }
 
   // Logout: remove only auth tokens (keep clientId/secret)
-  logout() {
-    const creds: any = getTidalCredentials();
-    saveTidalCredentials({ clientId: creds.clientId || '', clientSecret: creds.clientSecret || '' });
-  }
+  logout() {}
 
   async getTidalPlaybackInfo(creds: any, trackId: string, audioQuality: TidalPlayback['audioQuality']): Promise<TidalPlayback> {
     const parseBTSManifest = (manifestText: any, data: any) => {

@@ -1,5 +1,6 @@
 
 import { TagGroup, SpotifyCredentials } from '../types';
+import { TIDAL_CLIENT_ID, TIDAL_CLIENT_SECRET } from '../core/config';
 
 const STORAGE_KEY = 'sonictag_groups';
 const GENRES_KEY = 'sonictag_genres';
@@ -130,15 +131,13 @@ export const saveSpotifyCredentials = (creds: SpotifyCredentials) => {
 // Tidal storage functions (only clientId + clientSecret)
 export const getTidalCredentials = () => {
   try {
-    const credsData = localStorage.getItem(TIDAL_KEY);
     const authData = localStorage.getItem(TIDAL_AUTH_KEY);
 
-    const creds: any = credsData ? JSON.parse(credsData) : {};
     const auth: any = authData ? JSON.parse(authData) : {};
 
     return {
-      clientId: creds.clientId || '',
-      clientSecret: creds.clientSecret || '',
+      clientId: TIDAL_CLIENT_ID,
+      clientSecret: TIDAL_CLIENT_SECRET,
       userId: auth.userId || '',
       countryCode: auth.countryCode || 'BR',
       accessToken: auth.accessToken,
@@ -153,9 +152,7 @@ export const getTidalCredentials = () => {
 
 export const saveTidalCredentials = (creds: any) => {
   try {
-    const { clientId, clientSecret, accessToken, refreshToken, expiresAt, countryCode, userId} = creds;
-    // Save basic credentials
-    localStorage.setItem(TIDAL_KEY, JSON.stringify({ clientId, clientSecret }));
+    const { accessToken, refreshToken, expiresAt, countryCode, userId} = creds;
 
     // Save auth tokens separately
     if (accessToken && refreshToken && expiresAt) {

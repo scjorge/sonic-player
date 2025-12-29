@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { TidalCredentials } from '../../types';
-import { getTidalCredentials, saveTidalCredentials } from '../../services/data';
+import { getTidalCredentials } from '../../services/data';
 import { tidalService } from '../../services/tidalService';
 import { TIDAL_CLIENT_ID, TIDAL_CLIENT_SECRET } from '../../core/config';
 
@@ -13,21 +13,12 @@ const TidalSettings: React.FC = () => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
-    const stored: any = getTidalCredentials();
     setCreds({
-      clientId: stored.clientId || TIDAL_CLIENT_ID,
-      clientSecret: stored.clientSecret || TIDAL_CLIENT_SECRET,
+      clientId: TIDAL_CLIENT_ID,
+      clientSecret: TIDAL_CLIENT_SECRET,
     });
     setIsConnected(tidalService.isAuthenticated());
   }, []);
-
-  // No manual save UI — credentials are taken from env or stored automatically before auth
-  const prepareCredentialsForAuth = () => {
-    const clientId = creds.clientId || TIDAL_CLIENT_ID;
-    const clientSecret = creds.clientSecret || TIDAL_CLIENT_SECRET;
-    saveTidalCredentials({ clientId, clientSecret });
-    setCreds({ clientId, clientSecret });
-  };
 
   const handleAuthenticate = async () => {
     try {
@@ -57,14 +48,6 @@ const TidalSettings: React.FC = () => {
     }
   };
 
-  const handleDelete = () => {
-    const empty: any = { clientId: '', clientSecret: '' };
-    setCreds(empty);
-    saveTidalCredentials(empty);
-    setErrors({});
-    tidalService.clearCredentials();
-  };
-
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-8 animate-fade-in relative">
       <div className="flex flex-col gap-2 border-b border-zinc-800 pb-6">
@@ -83,7 +66,7 @@ const TidalSettings: React.FC = () => {
 
           <div className="pt-4 flex flex-wrap items-center gap-4">
               {!isConnected ? (
-                <button onClick={() => { prepareCredentialsForAuth(); handleAuthenticate(); }} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 active:scale-95">Conectar</button>
+                <button onClick={() => { handleAuthenticate(); }} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 active:scale-95">Conectar</button>
               ) : (
                 <button onClick={() => { tidalService.logout(); setIsConnected(false); setAuthStatus('Desconectado'); setTimeout(() => setAuthStatus(''), 3000); }} className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-red-500/20 active:scale-95">Desconectar</button>
               )}
