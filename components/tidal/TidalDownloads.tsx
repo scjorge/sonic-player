@@ -66,7 +66,7 @@ export const TidalDownloads: React.FC<TidalDownloadsProps> = ({ onPlayDownload, 
           trackId: song.id,
           song: song,
       };
-      const resp = await fetch(`${BACKEND_BASE_URL}/api/tidal/download`, {
+      const resp = await fetch(`${BACKEND_BASE_URL}/api/tidal/downloads`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)

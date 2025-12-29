@@ -1,5 +1,5 @@
 // BACKEND
-export const BACKEND_BASE_URL = "http://127.0.0.1:6790";
+export const BACKEND_BASE_URL = "http://127.0.0.1:6788";
 
 // NAVIDROME
 export const NAVIDROME_BASE_PATH = "/app/downloads_navidrome";

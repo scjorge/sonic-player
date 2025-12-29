@@ -3,16 +3,18 @@ import { downloadTrack, getdownloads, getCompletedDownloads, streamDownload, wri
 
 
 const router = Router();
+const downloadsRouter = Router();
 
-router.get('/downloads', getdownloads);
-router.get('/downloads/completed', getCompletedDownloads);
-router.get('/downloads/stream', streamDownload);
-router.post('/download', downloadTrack);
-router.post('/downloads/finalize', finalizeDownload);
-router.delete('/downloads/:id', deleteDownload);
-router.delete('/downloads', clearDownloads);
+downloadsRouter.get('/', getdownloads);
+downloadsRouter.post('/', downloadTrack);
+downloadsRouter.delete('/', clearDownloads);
+downloadsRouter.delete('/:id', deleteDownload);
+downloadsRouter.get('/completed', getCompletedDownloads);
+downloadsRouter.get('/stream', streamDownload);
+downloadsRouter.post('/finalize', finalizeDownload);
+downloadsRouter.post('/metadata', writeMetadataParts);
 
-router.post('/metadata', writeMetadataParts);
+router.use('/downloads', downloadsRouter);
 
 
 export default router;
