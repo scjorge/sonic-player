@@ -289,19 +289,19 @@ const SongTable: React.FC<SongTableProps> = ({
   const renderCell = (song: NaviSong, columnId: ColumnId, index: number) => {
     switch (columnId) {
       case 'select': {
-          const isSelected = selectedIds.includes(song.id);
-          return (
-              <button 
-                onClick={(e) => { e.stopPropagation(); onSelect && onSelect(song.id, !isSelected); }}
-                className="w-full h-full flex items-center justify-center cursor-pointer"
-              >
-                  {isSelected ? (
-                      <CheckSquare className="w-4 h-4 text-indigo-500" />
-                  ) : (
-                      <Square className="w-4 h-4 text-zinc-700 hover:text-zinc-500" />
-                  )}
-              </button>
-          )
+        const isSelected = selectedIds.includes(song.id);
+        return (
+            <button 
+            onClick={(e) => { e.stopPropagation(); onSelect && onSelect(song.id, !isSelected); }}
+            className="w-full h-full flex items-center justify-center cursor-pointer"
+            >
+                {isSelected ? (
+                    <CheckSquare className="w-4 h-4 text-indigo-500" />
+                ) : (
+                    <Square className="w-4 h-4 text-zinc-700 hover:text-zinc-500" />
+                )}
+            </button>
+        )
       }
       case 'index': 
         return <span className="text-zinc-500 font-mono text-xs w-full text-center block">{(page * pageSize) + index + 1}</span>;
