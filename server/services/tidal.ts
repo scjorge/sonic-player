@@ -32,8 +32,12 @@ class TidalServerService {
         return items;
     }
 
-    setdownloadsItems(item: any) {
+    setdownloadsItems(item: any): void {
         this.downloads.set(item.id, item);
+    }
+
+    deleteDownloadItem(id: string): void {
+        this.downloads.delete(id);
     }
 
     async getdownloads() {
