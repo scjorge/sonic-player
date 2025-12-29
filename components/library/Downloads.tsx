@@ -175,7 +175,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
 
       {activeTab === 'in_progress' && (
           <div className="flex-1 p-6 overflow-y-auto flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-end mb-4">
               {items.length > 0 && (
                 <button
                   onClick={handleClearAll}
