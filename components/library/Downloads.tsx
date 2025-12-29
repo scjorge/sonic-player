@@ -31,10 +31,14 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
   const [completedSongs, setCompletedSongs] = useState<NaviSong[]>([]);
   const [loadingCompleted, setLoadingCompleted] = useState(false);
   const [groupModalSong, setGroupModalSong] = useState<NaviSong | null>(null);
+  const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
 
-  const loadGroups = (): TagGroup[] => {
-    return getStoredGroups();
-  };
+  useEffect(() => {
+    (async () => {
+      const groups = await getStoredGroups();
+      setTagGroups(groups);
+    })();
+  }, []);
 
   const handleClearAll = async () => {
     try {
@@ -267,7 +271,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
       {groupModalSong && (
         <GroupTagModal
           song={groupModalSong}
-          groups={loadGroups()}
+          groups={tagGroups}
           onClose={() => setGroupModalSong(null)}
           onUpdateComments={(newComments) => {
             // Atualiza comentário/grupo como o handleSaveEdit faz

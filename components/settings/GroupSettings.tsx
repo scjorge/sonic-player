@@ -5,8 +5,8 @@ import ConfirmationModal from '../library/ConfirmationModal';
 import { addStoredGroup, deleteStoredGroup, updateStoredGroup, getStoredGenres, addStoredGenre, deleteStoredGenre } from '../../services/data';
 
 interface GroupSettingsProps {
-  groups: TagGroup[];
-  onGroupsChange: () => void;
+    groups: TagGroup[];
+    onGroupsChange: () => void | Promise<void>;
 }
 
 const GroupSettings: React.FC<GroupSettingsProps> = ({ groups, onGroupsChange }) => {
@@ -28,7 +28,7 @@ const GroupSettings: React.FC<GroupSettingsProps> = ({ groups, onGroupsChange })
         setGenres(getStoredGenres());
     }, []);
 
-  const handleAddGroup = () => {
+    const handleAddGroup = async () => {
     if (!newGroupName.trim() || !newGroupPrefix.trim()) return;
     
     const newGroup: TagGroup = {
@@ -38,7 +38,7 @@ const GroupSettings: React.FC<GroupSettingsProps> = ({ groups, onGroupsChange })
       items: []
     };
 
-    addStoredGroup(newGroup);
+    await addStoredGroup(newGroup);
     onGroupsChange();
     
     setNewGroupName('');
@@ -49,35 +49,35 @@ const GroupSettings: React.FC<GroupSettingsProps> = ({ groups, onGroupsChange })
     setGroupToDelete({ id, name });
   };
 
-  const confirmDeleteGroup = () => {
+    const confirmDeleteGroup = async () => {
     if (groupToDelete) {
-        deleteStoredGroup(groupToDelete.id);
-        onGroupsChange();
+                await deleteStoredGroup(groupToDelete.id);
+                onGroupsChange();
         setGroupToDelete(null);
     }
   };
 
-  const handleAddItem = (groupId: string) => {
+    const handleAddItem = async (groupId: string) => {
     const value = itemInputs[groupId];
     if (!value?.trim()) return;
 
     const group = groups.find(g => g.id === groupId);
     if (group) {
       const updatedGroup = { ...group, items: [...group.items, value.trim()] };
-      updateStoredGroup(updatedGroup);
-      onGroupsChange();
+            await updateStoredGroup(updatedGroup);
+            onGroupsChange();
     }
 
     setItemInputs(prev => ({ ...prev, [groupId]: '' }));
   };
 
-  const handleDeleteItem = (groupId: string, itemIndex: number) => {
+    const handleDeleteItem = async (groupId: string, itemIndex: number) => {
     const group = groups.find(g => g.id === groupId);
     if (group) {
         const newItems = [...group.items];
         newItems.splice(itemIndex, 1);
         const updatedGroup = { ...group, items: newItems };
-        updateStoredGroup(updatedGroup);
+        await updateStoredGroup(updatedGroup);
         onGroupsChange();
     }
   };

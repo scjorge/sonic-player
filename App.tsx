@@ -84,8 +84,8 @@ const App: React.FC = () => {
   const [tidalTotal, setTidalTotal] = useState(0);
   const [tidalPageSize, setTidalPageSize] = useState(50);
 
-  const loadGroupsFromStorage = () => {
-      const groups = getStoredGroups();
+  const loadGroupsFromStorage = async () => {
+      const groups = await getStoredGroups();
       setTagGroups(groups);
   };
 
