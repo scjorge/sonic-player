@@ -23,6 +23,12 @@ export async function getCompletedDownloads(_req: Request, res: Response) {
     return res.json(result);
 }
 
+export async function writeMetadataParts(req: Request, res: Response) {
+    const { source, path, metadata } = req.body;
+    const result = await tidalServerService.writeMetadataParts(path, source, metadata);
+    return res.json(result);
+}
+
 export async function streamDownload(req: Request, res: Response) {
     const { id } = req.query;
     if (!id || typeof id !== 'string') {

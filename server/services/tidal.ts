@@ -153,6 +153,15 @@ class TidalServerService {
         throw new Error('Não foi possível baixar o cover em nenhum tamanho');
     }
 
+    async writeMetadataParts(destFinal: string, source: "navidrome" | "tidal", metadata: AudioMetadata) {
+        if (source === "navidrome") {
+            await audioTagger.write(destFinal, metadata);
+        }
+        if (source === "tidal") {
+            await audioTagger.write(destFinal, metadata);
+        }
+        return { status: 'updated', metadata: metadata };
+    }
 
     async writeMetadata(destFinal: string, song: any) {
         const metadata: AudioMetadata = {
