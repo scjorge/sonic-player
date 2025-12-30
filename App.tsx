@@ -362,7 +362,7 @@ const App: React.FC = () => {
 
         // Initial Songs Load
         if (viewMode === 'navi_songs') {
-          // Se houver filtro de grupos salvo, re-aplica busca por grupos
+          // 1) Filtro de grupos salvo
           if (groupFilterSelection.length > 0) {
             const params = groupFilterSelection
               .map(c => `comment=${encodeURIComponent(c)}`)
@@ -380,8 +380,20 @@ const App: React.FC = () => {
               // Em modo filtro por grupos, usamos apenas hasMore; mantém total em 0
               setTotalSongs(0);
             }
-          } else {
-            // Respeita estado salvo (filtros/página) para a tela de músicas
+          }
+          // 2) Busca de texto salva
+          else if (naviSearchQuery.trim()) {
+            const offset = page * pageSize;
+            try {
+              const { songs, total } = await navidromeService.searchSongs(naviSearchQuery, pageSize, offset);
+              setNaviSongs(songs);
+              setTotalSongs(total);
+            } catch (e) {
+              console.error('Failed to restore Navidrome search', e);
+            }
+          }
+          // 3) Filtros padrão salvos
+          else {
             const initialPage = page;
             const initialPageSize = pageSize;
             fetchSongs(initialPage, initialPageSize, activeArtist, activeGenre, activeYear, activeQuickList || undefined);
@@ -1013,7 +1025,7 @@ const App: React.FC = () => {
   const handleLibrarySongsClick = () => {
     setViewMode('navi_songs');
     setSelectedPlaylistId(null);
-    // Se houver filtro de grupos ativo, re-aplica busca por grupos; caso contrário, respeita filtros/busca da biblioteca
+    // 1) Se houver filtro de grupos ativo, re-aplica busca por grupos
     if (groupFilterSelection.length > 0) {
       (async () => {
         try {
@@ -1036,8 +1048,22 @@ const App: React.FC = () => {
           showToast(`Erro ao buscar por grupos: ${e?.message || String(e)}`, 'error');
         }
       })();
-    } else {
-      // Mantém filtros, busca e paginação atuais da biblioteca
+    }
+    // 2) Caso contrário, se houver busca de texto salva, re-aplica a busca
+    else if (naviSearchQuery.trim()) {
+      (async () => {
+        try {
+          const offset = page * pageSize;
+          const { songs, total } = await navidromeService.searchSongs(naviSearchQuery, pageSize, offset);
+          setNaviSongs(songs);
+          setTotalSongs(total);
+        } catch (e) {
+          console.error('Failed to restore Navidrome search on library click', e);
+        }
+      })();
+    }
+    // 3) Senão, respeita filtros/página atuais da biblioteca
+    else {
       fetchSongs(page, pageSize, activeArtist, activeGenre, activeYear, activeQuickList);
     }
   };
