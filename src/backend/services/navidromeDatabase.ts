@@ -17,24 +17,63 @@ export async function getPathById(id: string): Promise<string | null> {
 }
 
 
-export function getTrackByComment(comments: string[], limit: number = 50, offset: number = 0): any {
-  const commentList = Array.isArray(comments) ? comments : [comments];
-  const where = commentList.map(() => `CAST(comment AS TEXT) LIKE ?`).join(' OR ');
-  const params = [
-    ...commentList.map(c => `%${c}%`),
-    limit,
-    offset
-  ];
+export function getTrackByComment(comments: string[], genres: string[], artists: string[], years: string[], limit: number = 50, offset: number = 0): any {
+  if(!comments.length && !genres.length && !artists.length && !years.length){
+    return [];
+  }
+
+  const whereParts: string[] = [];
+  const params: any[] = [];
+
+  // 🔹 filtro por comment
+  if (comments.length){
+    whereParts.push(
+      comments.map(() => `CAST(comment AS TEXT) LIKE ?`).join(' OR ')
+    );
+    params.push(...comments.map(c => `%${c}%`));
+  }
+
+  // 🔹 filtro por artists
+  if (artists.length){
+    whereParts.push(
+      artists.map(() => `CAST(artist AS TEXT) LIKE ?`).join(' OR ')
+    );
+    params.push(...artists.map(a => `%${a}%`));
+  }
+
+  // 🔹 filtro por years
+  if (years.length){
+    whereParts.push(
+      years.map(() => `CAST(year AS TEXT) LIKE ?`).join(' OR ')
+    );
+    params.push(...years.map(y => `%${y}%`));
+  }
+
+  // 🔹 filtro por genre (JSON)
+  if (genres.length) {
+    const genreWhere = genres.map(() => `
+      EXISTS (
+        SELECT 1
+        FROM json_each(media_file.tags, '$.genre')
+        WHERE json_each.value ->> '$.value' LIKE ?
+      )
+    `).join(' OR ');
+
+    whereParts.push(`(${genreWhere})`);
+    params.push(...genres.map(g => `%${g}%`));
+  }
 
   const sql = `
-        SELECT
-            *
-        FROM
-            media_file
-        WHERE 
-            ${where}
-        ORDER BY id LIMIT ? OFFSET ?
+    SELECT
+      *
+    FROM media_file
+    WHERE
+      (${whereParts.join(' AND ')})
+    LIMIT ? OFFSET ?
   `;
+  params.push(limit, offset);
+
   const rows = db.prepare(sql).all(params);
   return rows;
 }
+

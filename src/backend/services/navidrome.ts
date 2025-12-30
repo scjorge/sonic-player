@@ -121,8 +121,8 @@ export const navidromeTrackService = {
     };
   },
 
-  get(comments: string[], limit: number = 50, offset: number = 0) {
-    const rows = getTrackByComment(comments, limit, offset);
+  get(comments: string[], genreList: string[], artistList: string[], yearList: string[], limit: number = 50, offset: number = 0) {
+    const rows = getTrackByComment(comments, genreList, artistList, yearList, limit, offset);
     return this.toSubsonicSearchResult(rows);
   }
 }
