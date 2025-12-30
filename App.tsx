@@ -542,7 +542,6 @@ const App: React.FC = () => {
     setLoadingNavi(true);
     setViewMode('navi_playlist');
     setSelectedPlaylistId(playlist.id);
-    setNaviSearchQuery('');
     setNaviPlaylistPage(0);
     try {
       const songs = await navidromeService.getPlaylist(playlist.id);
@@ -620,7 +619,6 @@ const App: React.FC = () => {
     setLoadingNavi(true);
     setViewMode('navi_favorites');
     setSelectedPlaylistId(null);
-    setNaviSearchQuery('');
     setNaviFavoritesPage(0);
     try {
       const songs = await navidromeService.getStarredSongs();
