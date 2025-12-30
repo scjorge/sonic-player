@@ -507,7 +507,8 @@ const App: React.FC = () => {
       const songs = await navidromeService.getStarredSongs();
       setNaviSongs(songs);
       setTotalSongs(songs.length);
-      setPageSize(Math.max(songs.length, 10));
+      // Paginação padrão para favoritos do Navidrome: 100 por página
+      setPageSize(100);
     } catch (e) {
       console.error("Fetch favorites failed", e);
     } finally {
