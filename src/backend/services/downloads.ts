@@ -200,6 +200,7 @@ class DownloadService {
     const artist = meta.albumArtist || 'Unknown Artist';
     const album = meta.album || 'Unknown Album';
     const trackNumber = meta.trackNumber || 0;
+    const year = meta.year || 'Unknown Year';
     const title = meta.title || path.basename(sourcePath, path.extname(sourcePath));
     const trackStr = trackNumber ? String(trackNumber).padStart(2, '0') : '00';
 
@@ -211,6 +212,7 @@ class DownloadService {
     relative = relative.replace(/{album}/g, safe(album));
     relative = relative.replace(/{track}/g, safe(trackStr));
     relative = relative.replace(/{title}/g, safe(title));
+    relative = relative.replace(/{year}/g, safe(year.toString()));
     relative = relative.replace(/{ext}/g, ext || 'mp3');
 
     return path.join(NAVIDROME_BASE_PATH, relative);
