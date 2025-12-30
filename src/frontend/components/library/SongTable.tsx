@@ -778,46 +778,33 @@ const SongTable: React.FC<SongTableProps> = ({
             <>
               {/* FILTER BUTTON (Moved Here) */}
               {onFilter && (
-                <div className="relative flex items-center gap-2">
-                  <button
-                    onClick={() => setShowFilter(!showFilter)}
-                    className={`
-                                    flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border
-                                    ${activeFilterCount > 0
-                  ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
-                  : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-                }
-                                `}
-                  >
-                    <Filter className="w-4 h-4" />
-                    Filtros
-                    {activeFilterCount > 0 && (
-                      <span className="bg-indigo-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Group Filter Button - Navidrome Only */}
-                  {isNavidromeLibraryTable && onOpenGroupFilter && (
+                <div className="flex items-center gap-2">
+                  {/* Filtro padrão (artista/gênero/ano) */}
+                  <div className="relative">
                     <button
-                      onClick={onOpenGroupFilter}
-                      className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isGroupFilterActive
-                        ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
-                        : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-                      }`}
-                      title="Filtrar por grupos (comentários DJ)"
+                      onClick={() => setShowFilter(!showFilter)}
+                      className={`
+                                      flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border
+                                      ${activeFilterCount > 0
+                    ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
+                    : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                  }
+                                  `}
                     >
-                      <Tags className="w-4 h-4" />
-                      Filtro por grupos
+                      <Filter className="w-4 h-4" />
+                      Filtros
+                      {activeFilterCount > 0 && (
+                        <span className="bg-indigo-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                          {activeFilterCount}
+                        </span>
+                      )}
                     </button>
-                  )}
 
-                  {showFilter && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setShowFilter(false)} />
-                      {/* Dropdown Aligned to Left */}
-                      <div className="absolute left-0 mt-2 w-72 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-20 overflow-hidden">
+                    {showFilter && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setShowFilter(false)} />
+                        {/* Dropdown Alinhado à Esquerda do botão */}
+                        <div className="absolute left-0 mt-2 w-72 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-20 overflow-hidden">
                         <div className="p-3 border-b border-zinc-800 flex items-center justify-between">
                           <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Filtrar Biblioteca</span>
                           <button
@@ -888,6 +875,22 @@ const SongTable: React.FC<SongTableProps> = ({
                         </div>
                       </div>
                     </>
+                  )}
+                  </div>
+
+                  {/* Group Filter Button - Navidrome Only */}
+                  {isNavidromeLibraryTable && onOpenGroupFilter && (
+                    <button
+                      onClick={onOpenGroupFilter}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isGroupFilterActive
+                        ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
+                        : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                      }`}
+                      title="Filtrar por grupos (comentários DJ)"
+                    >
+                      <Tags className="w-4 h-4" />
+                      Filtro por grupos
+                    </button>
                   )}
                 </div>
               )}
