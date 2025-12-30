@@ -22,6 +22,7 @@ export function search4(comments: string[], genres: string[], artists: string[],
     return [];
   }
 
+  console.log('Search4 called with:', { comments, genres, artists, years, limit, offset });
   const whereParts: string[] = [];
   const params: any[] = [];
 
@@ -29,6 +30,7 @@ export function search4(comments: string[], genres: string[], artists: string[],
     whereParts.push(
       comments.map(() => `CAST(comment AS TEXT) LIKE ?`).join(' OR ')
     );
+    whereParts[whereParts.length - 1] = `(${whereParts[whereParts.length - 1]})`;
     params.push(...comments.map(c => `%${c}%`));
   }
 
@@ -36,6 +38,7 @@ export function search4(comments: string[], genres: string[], artists: string[],
     whereParts.push(
       artists.map(() => `CAST(artist AS TEXT) LIKE ? OR CAST(title AS TEXT) LIKE ?`).join(' OR ')
     );
+    whereParts[whereParts.length - 1] = `(${whereParts[whereParts.length - 1]})`;
     params.push(...artists.map(a => `%${a}%`));
     params.push(...artists.map(a => `%${a}%`));
   }
@@ -44,6 +47,7 @@ export function search4(comments: string[], genres: string[], artists: string[],
     whereParts.push(
       years.map(() => `CAST(year AS TEXT) LIKE ?`).join(' OR ')
     );
+    whereParts[whereParts.length - 1] = `(${whereParts[whereParts.length - 1]})`;
     params.push(...years.map(y => `%${y}%`));
   }
 
@@ -55,8 +59,8 @@ export function search4(comments: string[], genres: string[], artists: string[],
         WHERE json_each.value ->> '$.value' LIKE ?
       )
     `).join(' OR ');
-
     whereParts.push(`(${genreWhere})`);
+    whereParts[whereParts.length - 1] = `(${whereParts[whereParts.length - 1]})`;
     params.push(...genres.map(g => `%${g}%`));
   }
 
