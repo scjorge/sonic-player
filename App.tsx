@@ -27,6 +27,7 @@ import NavidromeSettings from './src/frontend/components/settings/NavidromeSetti
 import LikedSongs from './src/frontend/components/spotify/LikedSongs.tsx';
 import SpotifyPlaylists from './src/frontend/components/spotify/SpotifyPlaylists.tsx';
 import { SPOTIFY_COLUMN_CONFIG } from './src/frontend/components/spotify/spotifyConstants.ts';
+import { getUserState, getLastViewMode, setLastViewMode, setUserState } from './src/frontend/repository/userStates.ts';
 
 type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'navi_downloads' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general';
@@ -44,23 +45,58 @@ const App: React.FC = () => {
   const [availableGenres, setAvailableGenres] = useState<string[]>([]);
   const [availableArtistNames, setAvailableArtistNames] = useState<string[]>([]);
 
-  const [activeArtist, setActiveArtist] = useState<string>('');
-  const [activeGenre, setActiveGenre] = useState<string>('');
-  const [activeYear, setActiveYear] = useState<string>('');
-  const [activeQuickList, setActiveQuickList] = useState<QuickListType>(null);
+  const [activeArtist, setActiveArtist] = useState<string>(() => {
+    const saved = getUserState<any>('navi_songs');
+    return saved?.activeArtist ?? '';
+  });
+  const [activeGenre, setActiveGenre] = useState<string>(() => {
+    const saved = getUserState<any>('navi_songs');
+    return saved?.activeGenre ?? '';
+  });
+  const [activeYear, setActiveYear] = useState<string>(() => {
+    const saved = getUserState<any>('navi_songs');
+    return saved?.activeYear ?? '';
+  });
+  const [activeQuickList, setActiveQuickList] = useState<QuickListType>(() => {
+    const saved = getUserState<any>('navi_songs');
+    return (saved?.activeQuickList ?? null) as QuickListType;
+  });
 
-  // Search State
-  const [activeSearchQuery, setActiveSearchQuery] = useState<string>('');
+  // Search State (Navidrome Músicas)
+  const [naviSearchQuery, setNaviSearchQuery] = useState<string>(() => {
+    const saved = getUserState<any>('navi_songs');
+    return saved?.searchQuery ?? '';
+  });
 
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(100);
+  const [page, setPage] = useState(() => {
+    const saved = getUserState<any>('navi_songs');
+    return typeof saved?.page === 'number' ? saved.page : 0;
+  });
+  const [pageSize, setPageSize] = useState(() => {
+    const saved = getUserState<any>('navi_songs');
+    return typeof saved?.pageSize === 'number' ? saved.pageSize : 100;
+  });
   const [totalSongs, setTotalSongs] = useState(0);
 
   const [totalSpotifyBrowseItems, setTotalSpotifyBrowseItems] = useState(0);
-  const [spotifyBrowsePageSize, setSpotifyBrowsePageSize] = useState(50);
+  const [spotifyBrowsePageSize, setSpotifyBrowsePageSize] = useState(() => {
+    const saved = getUserState<any>('spotify_browse');
+    return typeof saved?.pageSize === 'number' ? Math.min(saved.pageSize, 50) : 50;
+  });
+  const [spotifyBrowseSearchQuery, setSpotifyBrowseSearchQuery] = useState<string>(() => {
+    const saved = getUserState<any>('spotify_browse');
+    return saved?.searchQuery ?? '';
+  });
+  const [spotifyBrowsePage, setSpotifyBrowsePage] = useState(() => {
+    const saved = getUserState<any>('spotify_browse');
+    return typeof saved?.page === 'number' ? saved.page : 0;
+  });
 
   // --- STATE: VIEW & MODALS ---
-  const [viewMode, setViewMode] = useState<ViewMode>('navi_songs');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const last = getLastViewMode<ViewMode>();
+    return last || 'navi_songs';
+  });
   const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('navidrome');
   const [navidromeConnected, setNavidromeConnected] = useState<boolean | null>(null);
   const [navidromeStatusMessage, setNavidromeStatusMessage] = useState<string | null>(null);
@@ -81,13 +117,17 @@ const App: React.FC = () => {
   // TIDAL cross-search state (used when triggering TIDAL search from other views)
   const [tidalInitialQuery, setTidalInitialQuery] = useState<string>('');
   const [showGroupFilterModal, setShowGroupFilterModal] = useState(false);
-  const [groupFilterSelection, setGroupFilterSelection] = useState<string[]>([]);
+  const [groupFilterSelection, setGroupFilterSelection] = useState<string[]>(() => {
+    const saved = getUserState<any>('navi_songs');
+    return saved?.groupFilterSelection ?? [];
+  });
   const [tidalAutoFocus, setTidalAutoFocus] = useState<boolean>(false);
 
   // Tidal search state
   const [tidalTracks, setTidalTracks] = useState<NaviSong[]>([]);
   const [tidalTotal, setTidalTotal] = useState(0);
   const [tidalPageSize, setTidalPageSize] = useState(50);
+  const [tidalSearchQuery, setTidalSearchQuery] = useState<string>('');
 
   const [spotifyCreds, setSpotifyCreds] = useState<SpotifyCredentials | null>(null);
 
@@ -113,6 +153,34 @@ const App: React.FC = () => {
       setNavidromeStatusMessage(e?.message || String(e));
     }
   };
+
+  // Persist last selected view in localStorage
+  useEffect(() => {
+    setLastViewMode(viewMode);
+  }, [viewMode]);
+
+  // Persist Navidrome library (Músicas) filters, busca e paginação
+  useEffect(() => {
+    setUserState('navi_songs', {
+      activeArtist,
+      activeGenre,
+      activeYear,
+      activeQuickList,
+      searchQuery: naviSearchQuery,
+      page,
+      pageSize,
+      groupFilterSelection,
+    });
+  }, [activeArtist, activeGenre, activeYear, activeQuickList, naviSearchQuery, page, pageSize, groupFilterSelection]);
+
+  // Persist Spotify Browse (Navegar) busca e paginação
+  useEffect(() => {
+    setUserState('spotify_browse', {
+      searchQuery: spotifyBrowseSearchQuery,
+      page: spotifyBrowsePage,
+      pageSize: spotifyBrowsePageSize,
+    });
+  }, [spotifyBrowseSearchQuery, spotifyBrowsePage, spotifyBrowsePageSize]);
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -272,9 +340,19 @@ const App: React.FC = () => {
 
         // Initial Songs Load
         if (viewMode === 'navi_songs') {
-          fetchSongs(0, 100, '', '', '', undefined);
+          // Respeita estado salvo (filtros/página) para a tela de músicas
+          const initialPage = page;
+          const initialPageSize = pageSize;
+          fetchSongs(initialPage, initialPageSize, activeArtist, activeGenre, activeYear, activeQuickList || undefined);
         } else if (viewMode === 'spotify_browse') {
-          handleSpotifyBrowseClick(0, spotifyBrowsePageSize);
+          const savedSpotify = getUserState<any>('spotify_browse');
+          const savedPage = typeof savedSpotify?.page === 'number' ? savedSpotify.page : spotifyBrowsePage;
+          const savedSize = typeof savedSpotify?.pageSize === 'number' ? savedSpotify.pageSize : spotifyBrowsePageSize;
+          if (savedSpotify?.searchQuery) {
+            await handleSpotifyBrowseSearch(savedSpotify.searchQuery, savedPage, savedSize);
+          } else {
+            await handleSpotifyBrowseClick(savedPage, savedSize);
+          }
         }
         // if tidal_browse was default, nothing to do until user searches
       } catch (e) {
@@ -401,7 +479,7 @@ const App: React.FC = () => {
   // Clear selection when changing views or pages
   useEffect(() => {
     setSelectedSongIds([]);
-  }, [viewMode, page, activeArtist, activeGenre, activeYear, selectedPlaylistId, activeSearchQuery]);
+  }, [viewMode, page, activeArtist, activeGenre, activeYear, selectedPlaylistId, naviSearchQuery]);
 
   // --- FETCH LOGIC ---
   const fetchSongs = async (pageNum: number, size: number, artist: string, genre: string, year: string, quickList?: QuickListType) => {
@@ -422,7 +500,7 @@ const App: React.FC = () => {
     setLoadingNavi(true);
     setViewMode('navi_playlist');
     setSelectedPlaylistId(playlist.id);
-    setActiveSearchQuery('');
+    setNaviSearchQuery('');
     setPage(0);
     try {
       const songs = await navidromeService.getPlaylist(playlist.id);
@@ -441,7 +519,6 @@ const App: React.FC = () => {
     setViewMode('spotify_playlist_tracks');
     setSelectedPlaylistId(playlist.id);
     setselectedPlaylistName(playlist.name);
-    setActiveSearchQuery('');
     setPage(0);
 
     const currentSize = pageSize > 50 ? 50 : pageSize;
@@ -473,7 +550,7 @@ const App: React.FC = () => {
     setViewMode('tidal_playlist_tracks');
     setSelectedPlaylistId(playlist.id);
     setselectedPlaylistName(playlist.name); // reuse field for display
-    setActiveSearchQuery('');
+    setNaviSearchQuery('');
     setPage(0);
 
     const currentSize = pageSize > 100 ? 100 : pageSize;
@@ -501,7 +578,7 @@ const App: React.FC = () => {
     setLoadingNavi(true);
     setViewMode('navi_favorites');
     setSelectedPlaylistId(null);
-    setActiveSearchQuery('');
+    setNaviSearchQuery('');
     setPage(0);
     try {
       const songs = await navidromeService.getStarredSongs();
@@ -594,7 +671,7 @@ const App: React.FC = () => {
     setActiveGenre(genre);
     setActiveYear(year);
     setActiveQuickList(null);
-    setActiveSearchQuery('');
+    setNaviSearchQuery('');
     setPage(0);
     if (viewMode !== 'navi_songs') {
       setViewMode('navi_songs');
@@ -609,6 +686,7 @@ const App: React.FC = () => {
     if (activeQuickList === type) {
       setActiveQuickList(null);
       setPage(0);
+      setNaviSearchQuery('');
       fetchSongs(0, pageSize, '', '', '', undefined);
     } else {
       setActiveQuickList(type);
@@ -619,7 +697,7 @@ const App: React.FC = () => {
       setActiveArtist('');
       setActiveGenre('');
       setActiveYear('');
-      setActiveSearchQuery('');
+      setNaviSearchQuery('');
       setPage(0);
       fetchSongs(0, pageSize, '', '', '', type);
     }
@@ -628,7 +706,7 @@ const App: React.FC = () => {
   const handleSearch = async (query: string) => {
     // Busca de texto limpa o filtro de grupos
     setGroupFilterSelection([]);
-    setActiveSearchQuery(query);
+    setNaviSearchQuery(query);
     if (!query.trim()) {
       handleLibrarySongsClick();
       return;
@@ -653,14 +731,14 @@ const App: React.FC = () => {
   };
 
   const handleSpotifyBrowseSearch = async (query: string, pageNum: number = 0, size: number = spotifyBrowsePageSize) => {
-    setActiveSearchQuery(query);
+    setSpotifyBrowseSearchQuery(query);
     if (!query.trim()) {
       // If query is empty, load new releases instead
       handleSpotifyBrowseClick(pageNum, size);
       return;
     }
     setLoadingNavi(true);
-    setPage(pageNum);
+    setSpotifyBrowsePage(pageNum);
     setSpotifyBrowsePageSize(size);
     try {
       const offset = pageNum * size;
@@ -685,7 +763,7 @@ const App: React.FC = () => {
   };
 
   const handleTidalSearch = async (query: string, pageNum: number = 0, size: number = tidalPageSize) => {
-    setActiveSearchQuery(query);
+    setTidalSearchQuery(query);
     if (!query.trim()) {
       // clear results
       setTidalTracks([]);
@@ -710,8 +788,9 @@ const App: React.FC = () => {
   };
 
   const handleSpotifyBrowsePageChange = (newPage: number) => {
-    if (activeSearchQuery) {
-      handleSpotifyBrowseSearch(activeSearchQuery, newPage, spotifyBrowsePageSize);
+    setSpotifyBrowsePage(newPage);
+    if (spotifyBrowseSearchQuery) {
+      handleSpotifyBrowseSearch(spotifyBrowseSearchQuery, newPage, spotifyBrowsePageSize);
     } else {
       handleSpotifyBrowseClick(newPage, spotifyBrowsePageSize);
     }
@@ -722,8 +801,9 @@ const App: React.FC = () => {
     // New releases might also have a limit.
     const effectiveSize = Math.min(newSize, 50);
     setSpotifyBrowsePageSize(effectiveSize);
-    if (activeSearchQuery) {
-      handleSpotifyBrowseSearch(activeSearchQuery, 0, effectiveSize);
+    setSpotifyBrowsePage(0);
+    if (spotifyBrowseSearchQuery) {
+      handleSpotifyBrowseSearch(spotifyBrowseSearchQuery, 0, effectiveSize);
     } else {
       handleSpotifyBrowseClick(0, effectiveSize);
     }
@@ -757,9 +837,9 @@ const App: React.FC = () => {
         } finally {
           setLoadingNavi(false);
         }
-      } else if (activeSearchQuery) {
+      } else if (naviSearchQuery) {
         setLoadingNavi(true);
-        const { songs, total } = await navidromeService.searchSongs(activeSearchQuery, pageSize, newPage * pageSize);
+        const { songs, total } = await navidromeService.searchSongs(naviSearchQuery, pageSize, newPage * pageSize);
         setNaviSongs(songs);
         setTotalSongs(total);
         setLoadingNavi(false);
@@ -788,7 +868,7 @@ const App: React.FC = () => {
     }
     else if (viewMode === 'tidal_browse') {
       // perform paginated tidal search
-      const q = activeSearchQuery;
+      const q = tidalSearchQuery;
       setLoadingNavi(true);
       try {
         const offset = newPage * tidalPageSize;
@@ -832,8 +912,8 @@ const App: React.FC = () => {
             setLoadingNavi(false);
           }
         })();
-      } else if (activeSearchQuery) {
-        handleSearch(activeSearchQuery);
+      } else if (naviSearchQuery) {
+        handleSearch(naviSearchQuery);
       } else {
         fetchSongs(0, newSize, activeArtist, activeGenre, activeYear, activeQuickList);
       }
@@ -864,19 +944,15 @@ const App: React.FC = () => {
     else if (viewMode === 'tidal_browse') {
       setTidalPageSize(newSize);
       setPage(0);
-      if (activeSearchQuery) handleTidalSearch(activeSearchQuery, 0, newSize);
+      if (tidalSearchQuery) handleTidalSearch(tidalSearchQuery, 0, newSize);
     }
   };
 
   const handleLibrarySongsClick = () => {
     setViewMode('navi_songs');
     setSelectedPlaylistId(null);
-    setActiveSearchQuery('');
-    setGroupFilterSelection([]);
-    const defaultPageSize = 100;
-    setPageSize(defaultPageSize);
-    setPage(0);
-    fetchSongs(0, defaultPageSize, activeArtist, activeGenre, activeYear, activeQuickList);
+    // Mantém filtros, busca e paginação atuais da biblioteca
+    fetchSongs(page, pageSize, activeArtist, activeGenre, activeYear, activeQuickList);
   };
 
 
@@ -885,16 +961,28 @@ const App: React.FC = () => {
     setLoadingNavi(true);
     setViewMode('spotify_browse');
     setSelectedPlaylistId(null);
-    setActiveSearchQuery(''); // Clear search query for browse
-    setPage(pageNum);
+    setSpotifyBrowseSearchQuery(''); // Clear search query for browse
+    setSpotifyBrowsePage(pageNum);
     setSpotifyBrowsePageSize(size); // Ensure page size is updated if changed
 
     try {
+      const offset = pageNum * size;
+      const items = [];
+      const total = 0;
+      const mappedSongs: NaviSong[] = await spotifyService.getSpotifyMappedTracks(items);
+      setSpotifyBrowseTracks(mappedSongs);
+      setTotalSpotifyBrowseItems(total);
+
+      const existenceChecks = await Promise.all(mappedSongs.map(async song => {
+        const exists = await navidromeService.checkIfSongExists(song.artist, song.title);
+        return [song.id, exists] as [string, boolean];
+      }));
+      setSpotifyNavidromeExistenceMap(new Map(existenceChecks));
+    } catch (e) {
+      console.error("Failed to load Spotify new releases", e);
       setSpotifyBrowseTracks([]);
       setTotalSpotifyBrowseItems(0);
       setSpotifyNavidromeExistenceMap(new Map());
-    } catch (e) {
-      console.error("Failed to clear Spotify browse tracks", e);
     } finally {
       setLoadingNavi(false);
     }
@@ -989,7 +1077,7 @@ const App: React.FC = () => {
     setShowGroupFilterModal(false);
     setViewMode('navi_songs');
     setSelectedPlaylistId(null);
-    setActiveSearchQuery('');
+    setNaviSearchQuery('');
     setActiveArtist('');
     setActiveGenre('');
     setActiveYear('');
@@ -1317,8 +1405,8 @@ const App: React.FC = () => {
             isSpotifyTable={true}
             defaultColumns={SPOTIFY_COLUMN_CONFIG}
             onSearch={handleSpotifyBrowseSearch}
-            activeSearchQuery={activeSearchQuery}
-            page={page}
+            activeSearchQuery={spotifyBrowseSearchQuery}
+            page={spotifyBrowsePage}
             pageSize={spotifyBrowsePageSize}
             totalItems={totalSpotifyBrowseItems}
             onPageChange={handleSpotifyBrowsePageChange}
@@ -1562,7 +1650,7 @@ const App: React.FC = () => {
             activeGenre={isPlaylistOrFav ? '' : activeGenre}
             activeYear={isPlaylistOrFav ? '' : activeYear}
             activeQuickList={isPlaylistOrFav ? null : activeQuickList}
-            activeSearchQuery={isPlaylistOrFav ? '' : activeSearchQuery}
+            activeSearchQuery={isPlaylistOrFav ? '' : naviSearchQuery}
             page={page}
             pageSize={pageSize}
             totalItems={totalSongs}
@@ -1782,7 +1870,13 @@ const App: React.FC = () => {
                 </h3>}
                 <div className="space-y-1">
                   <button
-                    onClick={() => handleSpotifyBrowseClick(0, spotifyBrowsePageSize)}
+                    onClick={() => {
+                      if (!spotifyBrowseTracks.length && !spotifyBrowseSearchQuery) {
+                        handleSpotifyBrowseClick(spotifyBrowsePage, spotifyBrowsePageSize);
+                      } else {
+                        setViewMode('spotify_browse');
+                      }
+                    }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'spotify_browse' ? 'bg-green-500/10 text-green-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                   >                                <Navigation className="w-4 h-4 flex-shrink-0" />
                     {!isSidebarCollapsed && <span>Navegar</span>}
@@ -1809,7 +1903,7 @@ const App: React.FC = () => {
                 {!isSidebarCollapsed && <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2 flex items-center gap-2">TIDAL</h3>}
                 <div className="space-y-1">
                   <button
-                    onClick={() => { setViewMode('tidal_browse'); setActiveSearchQuery(''); setPage(0); setTidalTracks([]); }}
+                    onClick={() => { setViewMode('tidal_browse'); setTidalSearchQuery(''); setPage(0); setTidalTracks([]); }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_browse' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                   >
                     <Navigation className="w-4 h-4 flex-shrink-0" />

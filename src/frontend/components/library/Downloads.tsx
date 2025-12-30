@@ -7,6 +7,7 @@ import { tidalService }  from '../../services/tidalService';
 import showToast from '../utils/toast';
 import GroupTagModal from './GroupTagModal';
 import { getStoredGroups } from '../../repository/metadata';
+import { getUserState, setUserState } from '../../repository/userStates';
 
 
 interface DownloadsProps {
@@ -26,7 +27,10 @@ interface DownloadItem {
 
 export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, currentTrackId, isPlaying }) => {
   const [items, setItems] = useState<DownloadItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'in_progress' | 'completed'>('in_progress');
+  const [activeTab, setActiveTab] = useState<'in_progress' | 'completed'>(() => {
+    const saved = getUserState<any>('navi_downloads');
+    return saved?.activeTab === 'completed' ? 'completed' : 'in_progress';
+  });
   const [completedSongs, setCompletedSongs] = useState<NaviSong[]>([]);
   const [loadingCompleted, setLoadingCompleted] = useState(false);
   const [groupModalSong, setGroupModalSong] = useState<NaviSong | null>(null);
@@ -117,6 +121,11 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
     const id = setInterval(fetchDownloads, 2000);
     return () => clearInterval(id);
   }, []);
+
+  // Persist aba ativa da tela de downloads
+  useEffect(() => {
+    setUserState('navi_downloads', { activeTab });
+  }, [activeTab]);
 
   const fetchCompleted = async () => {
     setLoadingCompleted(true);

@@ -5,6 +5,7 @@ import SongTable from '../library/SongTable';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { SPOTIFY_COLUMN_CONFIG } from './spotifyConstants'; // Import the Spotify specific column config
 import { navidromeService } from '../../services/navidromeService'; // Import navidromeService
+import { getUserState, setUserState } from '../../repository/userStates';
 
 interface LikedSongsProps {
   onPlay: (song: NaviSong) => void;
@@ -19,8 +20,14 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
   const [likedSongs, setLikedSongs] = useState<NaviSong[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(0); // 0-indexed page
-  const [pageSize, setPageSize] = useState(50); // Default page size
+  const [page, setPage] = useState(() => {
+    const saved = getUserState<any>('spotify_liked');
+    return typeof saved?.page === 'number' ? saved.page : 0; // 0-indexed page
+  });
+  const [pageSize, setPageSize] = useState(() => {
+    const saved = getUserState<any>('spotify_liked');
+    return typeof saved?.pageSize === 'number' ? saved.pageSize : 50; // Default page size
+  });
   const [totalItems, setTotalItems] = useState(0);
   const [navidromeExistenceMap, setNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map()); // New state
 
@@ -91,6 +98,11 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
 
     fetchLikedSongs();
   }, [page, pageSize]); // Add page and pageSize to dependency array
+
+  // Persist estado de paginação desta tela
+  useEffect(() => {
+    setUserState('spotify_liked', { page, pageSize });
+  }, [page, pageSize]);
 
   const handlePlaySpotifySong = (song: NaviSong) => {
     onPlay(song);

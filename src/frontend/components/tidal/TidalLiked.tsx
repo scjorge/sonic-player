@@ -4,6 +4,7 @@ import { NaviSong } from '../../../../types';
 import SongTable from '../library/SongTable';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { TIDAL_COLUMN_CONFIG } from './tidalConstants';
+import { getUserState, setUserState } from '../../repository/userStates';
 
 interface TidalLikedProps {
   onOpen: (song: NaviSong) => void;
@@ -16,8 +17,14 @@ const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen, onNavigateToLibraryQuer
   const [items, setItems] = useState<NaviSong[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
+  const [page, setPage] = useState(() => {
+    const saved = getUserState<any>('tidal_liked');
+    return typeof saved?.page === 'number' ? saved.page : 0;
+  });
+  const [pageSize, setPageSize] = useState(() => {
+    const saved = getUserState<any>('tidal_liked');
+    return typeof saved?.pageSize === 'number' ? saved.pageSize : 50;
+  });
   const [total, setTotal] = useState(0);
   const [navidromeExistenceMap, setNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
 
@@ -61,6 +68,11 @@ const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen, onNavigateToLibraryQuer
       }
     };
     load();
+  }, [page, pageSize]);
+
+  // Persist estado de paginação desta tela
+  useEffect(() => {
+    setUserState('tidal_liked', { page, pageSize });
   }, [page, pageSize]);
 
   if (loading) return <div className="flex justify-center items-center h-full"><Loader2 className="w-8 h-8 animate-spin text-yellow-500" /> Carregando favoritos...</div>;

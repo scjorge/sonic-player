@@ -5,6 +5,7 @@ import { navidromeService } from '../../services/navidromeService';
 import SongTable from '../library/SongTable';
 import { TIDAL_COLUMN_CONFIG } from './tidalConstants';
 import { AlertCircle } from 'lucide-react';
+import { getUserState, setUserState } from '../../repository/userStates';
 
 interface TidalBrowseProps {
   onOpen?: (song: NaviSong) => void;
@@ -16,13 +17,22 @@ interface TidalBrowseProps {
 }
 
 const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQuery, initialQuery, autoFocus, currentTrackId, isPlaying }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => {
+    const saved = getUserState<any>('tidal_browse');
+    return saved?.query ?? '';
+  });
   const [tracks, setTracks] = useState<NaviSong[]>([]);
   const [navidromeExistenceMap, setNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
   const [loading, setLoading] = useState(false);
   const [configured, setConfigured] = useState<boolean>(false);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
+  const [page, setPage] = useState(() => {
+    const saved = getUserState<any>('tidal_browse');
+    return typeof saved?.page === 'number' ? saved.page : 0;
+  });
+  const [pageSize, setPageSize] = useState(() => {
+    const saved = getUserState<any>('tidal_browse');
+    return typeof saved?.pageSize === 'number' ? saved.pageSize : 50;
+  });
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
@@ -37,6 +47,9 @@ const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQu
       setQuery(initialQuery);
       setPage(0);
       doSearch(initialQuery, 0, pageSize);
+    } else if (query) {
+      // Restaura último estado salvo ao montar
+      doSearch(query, page, pageSize);
     }
   }, [initialQuery]);
 
@@ -90,6 +103,11 @@ const TidalBrowse: React.FC<TidalBrowseProps> = ({ onOpen, onNavigateToLibraryQu
     setPage(0);
     doSearch(query, 0, s);
   };
+
+  // Persist estado desta tela (busca + paginação)
+  useEffect(() => {
+    setUserState('tidal_browse', { query, page, pageSize });
+  }, [query, page, pageSize]);
 
   if (!configured) {
     return (
