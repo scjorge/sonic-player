@@ -44,6 +44,8 @@ interface SongTableProps {
     onInfo?: (song: NaviSong) => void;
     onSetRating?: (id: string, rating: number) => void;
     onGroupEdit?: (song: NaviSong) => void; // Nova prop
+    onOpenGroupFilter?: () => void;
+    isGroupFilterActive?: boolean;
     defaultColumns?: ColumnConfig[];
     isSpotifyTable?: boolean;
     isTidalTable?: boolean;
@@ -113,8 +115,10 @@ const SongTable: React.FC<SongTableProps> = ({
   onSelectAll,
   onToggleFavorite,
   onInfo,
-  onSetRating,
-  onGroupEdit,
+    onSetRating,
+    onGroupEdit,
+    isGroupFilterActive,
+  onOpenGroupFilter,
   defaultColumns,
   isSpotifyTable,
   isTidalTable,
@@ -774,7 +778,7 @@ const SongTable: React.FC<SongTableProps> = ({
             <>
               {/* FILTER BUTTON (Moved Here) */}
               {onFilter && (
-                <div className="relative">
+                <div className="relative flex items-center gap-2">
                   <button
                     onClick={() => setShowFilter(!showFilter)}
                     className={`
@@ -793,6 +797,21 @@ const SongTable: React.FC<SongTableProps> = ({
                       </span>
                     )}
                   </button>
+
+                  {/* Group Filter Button - Navidrome Only */}
+                  {isNavidromeLibraryTable && onOpenGroupFilter && (
+                    <button
+                      onClick={onOpenGroupFilter}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isGroupFilterActive
+                        ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
+                        : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                      }`}
+                      title="Filtrar por grupos (comentários DJ)"
+                    >
+                      <Tags className="w-4 h-4" />
+                      Filtro por grupos
+                    </button>
+                  )}
 
                   {showFilter && (
                     <>

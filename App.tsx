@@ -20,6 +20,7 @@ import SongInfoModal from './src/frontend/components/library/SongInfoModal.tsx';
 import ConfirmationModal from './src/frontend/components/library/ConfirmationModal.tsx';
 import GroupSettings from './src/frontend/components/settings/GroupSettings.tsx';
 import GroupTagModal from './src/frontend/components/library/GroupTagModal.tsx';
+import GroupFilterModal from './src/frontend/components/library/GroupFilterModal.tsx';
 import SpotifySettings from './src/frontend/components/settings/SpotifySettings.tsx';
 import TidalSettings from './src/frontend/components/settings/TidalSettings.tsx';
 import NavidromeSettings from './src/frontend/components/settings/NavidromeSettings.tsx';
@@ -79,6 +80,8 @@ const App: React.FC = () => {
   const [spotifyNavidromeExistenceMap, setSpotifyNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
   // TIDAL cross-search state (used when triggering TIDAL search from other views)
   const [tidalInitialQuery, setTidalInitialQuery] = useState<string>('');
+  const [showGroupFilterModal, setShowGroupFilterModal] = useState(false);
+  const [groupFilterSelection, setGroupFilterSelection] = useState<string[]>([]);
   const [tidalAutoFocus, setTidalAutoFocus] = useState<boolean>(false);
 
   // Tidal search state
@@ -584,6 +587,8 @@ const App: React.FC = () => {
   };
 
   const handleFilterSongs = (artist: string, genre: string, year: string) => {
+    // Qualquer filtro padrão limpa o filtro de grupos
+    setGroupFilterSelection([]);
     setActiveArtist(artist);
     setActiveGenre(genre);
     setActiveYear(year);
@@ -598,6 +603,8 @@ const App: React.FC = () => {
   };
 
   const handleQuickListChange = (type: QuickListType) => {
+    // Quick lists ignoram filtro por grupos
+    setGroupFilterSelection([]);
     if (activeQuickList === type) {
       setActiveQuickList(null);
       setPage(0);
@@ -618,6 +625,8 @@ const App: React.FC = () => {
   };
 
   const handleSearch = async (query: string) => {
+    // Busca de texto limpa o filtro de grupos
+    setGroupFilterSelection([]);
     setActiveSearchQuery(query);
     if (!query.trim()) {
       handleLibrarySongsClick();
@@ -722,7 +731,32 @@ const App: React.FC = () => {
   const handlePageChange = async (newPage: number) => {
     setPage(newPage);
     if (viewMode === 'navi_songs') {
-      if (activeSearchQuery) {
+      if (groupFilterSelection.length > 0) {
+        // Paginação usando o filtro de grupos (searchByComment)
+        setLoadingNavi(true);
+        try {
+          const params = groupFilterSelection
+            .map(c => `comment=${encodeURIComponent(c)}`)
+            .join('&');
+          const offset = newPage * pageSize;
+          const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${pageSize}&offset=${offset}`);
+
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            showToast(`Erro ao buscar por grupos: ${err.error || resp.statusText}`, 'error');
+          } else {
+            const data = await resp.json();
+            const songs: NaviSong[] = data['subsonic-response']?.searchResult2?.song || [];
+            setNaviSongs(songs);
+            // Para navegação, usamos apenas hasMore; zera total.
+            setTotalSongs(0);
+          }
+        } catch (e: any) {
+          showToast(`Erro ao buscar por grupos: ${e?.message || String(e)}`, 'error');
+        } finally {
+          setLoadingNavi(false);
+        }
+      } else if (activeSearchQuery) {
         setLoadingNavi(true);
         const { songs, total } = await navidromeService.searchSongs(activeSearchQuery, pageSize, newPage * pageSize);
         setNaviSongs(songs);
@@ -772,7 +806,32 @@ const App: React.FC = () => {
     setPageSize(newSize);
     setPage(0);
     if (viewMode === 'navi_songs') {
-      if (activeSearchQuery) {
+      if (groupFilterSelection.length > 0) {
+        // Redimensiona página mantendo o filtro de grupos ativo
+        (async () => {
+          setLoadingNavi(true);
+          try {
+            const params = groupFilterSelection
+              .map(c => `comment=${encodeURIComponent(c)}`)
+              .join('&');
+            const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${newSize}&offset=0`);
+
+            if (!resp.ok) {
+              const err = await resp.json().catch(() => ({}));
+              showToast(`Erro ao buscar por grupos: ${err.error || resp.statusText}`, 'error');
+            } else {
+              const data = await resp.json();
+              const songs: NaviSong[] = data['subsonic-response']?.searchResult2?.song || [];
+              setNaviSongs(songs);
+              setTotalSongs(0);
+            }
+          } catch (e: any) {
+            showToast(`Erro ao buscar por grupos: ${e?.message || String(e)}`, 'error');
+          } finally {
+            setLoadingNavi(false);
+          }
+        })();
+      } else if (activeSearchQuery) {
         handleSearch(activeSearchQuery);
       } else {
         fetchSongs(0, newSize, activeArtist, activeGenre, activeYear, activeQuickList);
@@ -812,6 +871,7 @@ const App: React.FC = () => {
     setViewMode('navi_songs');
     setSelectedPlaylistId(null);
     setActiveSearchQuery('');
+    setGroupFilterSelection([]);
     const defaultPageSize = 100;
     setPageSize(defaultPageSize);
     setPage(0);
@@ -908,6 +968,52 @@ const App: React.FC = () => {
       showToast('Tags atualizadas com sucesso.', 'success');
     } catch (e: any) {
       showToast(`Erro ao salvar tags: ${e?.message || String(e)}`, 'error');
+    }
+  };
+
+  const handleOpenGroupFilter = () => {
+    setShowGroupFilterModal(true);
+  };
+
+  const handleApplyGroupFilter = async (selectedComments: string[]) => {
+    setGroupFilterSelection(selectedComments);
+
+    // Sem seleção de grupos: volta para a visão padrão da biblioteca
+    if (selectedComments.length === 0) {
+      setShowGroupFilterModal(false);
+      handleLibrarySongsClick();
+      return;
+    }
+
+    setShowGroupFilterModal(false);
+    setViewMode('navi_songs');
+    setSelectedPlaylistId(null);
+    setActiveSearchQuery('');
+    setActiveArtist('');
+    setActiveGenre('');
+    setActiveYear('');
+    setActiveQuickList(null);
+    setPage(0);
+
+    try {
+      const params = selectedComments
+        .map(c => `comment=${encodeURIComponent(c)}`)
+        .join('&');
+      const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${pageSize}&offset=0`);
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        showToast(`Erro ao buscar por grupos: ${err.error || resp.statusText}`, 'error');
+        return;
+      }
+
+      const data = await resp.json();
+      const songs: NaviSong[] = data['subsonic-response']?.searchResult2?.song || [];
+      setNaviSongs(songs);
+      // Em modo filtro por grupos, usamos apenas hasMore para paginação
+      setTotalSongs(0);
+    } catch (e: any) {
+      showToast(`Erro ao buscar por grupos: ${e?.message || String(e)}`, 'error');
     }
   };
 
@@ -1468,6 +1574,8 @@ const App: React.FC = () => {
             onToggleFavorite={handleToggleFavorite}
             onInfo={handleOpenInfo}
             onGroupEdit={handleOpenGroupTagEditor}
+            isGroupFilterActive={groupFilterSelection.length > 0}
+            onOpenGroupFilter={handleOpenGroupFilter}
             navidromeConnected={navidromeConnected}
             onOpenNavidromeSettings={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }}
           />
@@ -1866,6 +1974,14 @@ const App: React.FC = () => {
       {showRemoveFromPlaylistModal && <PlaylistSelectorModal mode="remove" playlists={naviPlaylists} onClose={() => setShowRemoveFromPlaylistModal(false)} onSelect={handleRemoveFromPlaylist} />}
       {showInfoModal && infoSong && <SongInfoModal song={infoSong} onClose={() => setShowInfoModal(false)} />}
       {showGroupTagModal && groupTagSong && <GroupTagModal song={groupTagSong} groups={tagGroups} onClose={() => setShowGroupTagModal(false)} onUpdateComments={handleUpdateSongComments} />}
+      {showGroupFilterModal && (
+        <GroupFilterModal
+          groups={tagGroups}
+          initialSelection={groupFilterSelection}
+          onClose={() => setShowGroupFilterModal(false)}
+          onApply={handleApplyGroupFilter}
+        />
+      )}
       <ConfirmationModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} onConfirm={confirmModal.onConfirm} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />
     </div>
   );
