@@ -102,6 +102,10 @@ const App: React.FC = () => {
     return typeof saved?.pageSize === 'number' ? saved.pageSize : 100;
   });
 
+  // Paginação separada para playlists do Navidrome
+  const [naviPlaylistPage, setNaviPlaylistPage] = useState(0);
+  const [naviPlaylistPageSize, setNaviPlaylistPageSize] = useState(100);
+
   // --- STATE: VIEW & MODALS ---
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const last = getLastViewMode<ViewMode>();
@@ -517,7 +521,7 @@ const App: React.FC = () => {
   // Clear selection when changing views or pages
   useEffect(() => {
     setSelectedSongIds([]);
-  }, [viewMode, page, naviFavoritesPage, activeArtist, activeGenre, activeYear, selectedPlaylistId, naviSearchQuery]);
+  }, [viewMode, page, naviFavoritesPage, naviPlaylistPage, activeArtist, activeGenre, activeYear, selectedPlaylistId, naviSearchQuery]);
 
   // --- FETCH LOGIC ---
   const fetchSongs = async (pageNum: number, size: number, artist: string, genre: string, year: string, quickList?: QuickListType) => {
@@ -539,12 +543,12 @@ const App: React.FC = () => {
     setViewMode('navi_playlist');
     setSelectedPlaylistId(playlist.id);
     setNaviSearchQuery('');
-    setPage(0);
+    setNaviPlaylistPage(0);
     try {
       const songs = await navidromeService.getPlaylist(playlist.id);
       setNaviSongs(songs);
       setTotalSongs(songs.length);
-      setPageSize(Math.max(songs.length, 10));
+      setNaviPlaylistPageSize(Math.max(songs.length, 10));
     } catch (e) {
       console.error("Fetch playlist failed", e);
     } finally {
@@ -853,6 +857,11 @@ const App: React.FC = () => {
       setNaviFavoritesPage(newPage);
       return;
     }
+    if (viewMode === 'navi_playlist') {
+      // Playlists também usam paginação em memória com estado próprio
+      setNaviPlaylistPage(newPage);
+      return;
+    }
 
     setPage(newPage);
     if (viewMode === 'navi_songs') {
@@ -931,6 +940,11 @@ const App: React.FC = () => {
     if (viewMode === 'navi_favorites') {
       setNaviFavoritesPageSize(newSize);
       setNaviFavoritesPage(0);
+      return;
+    }
+    if (viewMode === 'navi_playlist') {
+      setNaviPlaylistPageSize(newSize);
+      setNaviPlaylistPage(0);
       return;
     }
 
@@ -1695,8 +1709,18 @@ const App: React.FC = () => {
 
     if (viewMode === 'navi_songs' || viewMode === 'navi_playlist' || viewMode === 'navi_favorites') {
       const isPlaylistOrFav = viewMode === 'navi_playlist' || viewMode === 'navi_favorites';
-      const currentPage = viewMode === 'navi_favorites' ? naviFavoritesPage : page;
-      const currentPageSize = viewMode === 'navi_favorites' ? naviFavoritesPageSize : pageSize;
+      const currentPage =
+        viewMode === 'navi_favorites'
+          ? naviFavoritesPage
+          : viewMode === 'navi_playlist'
+            ? naviPlaylistPage
+            : page;
+      const currentPageSize =
+        viewMode === 'navi_favorites'
+          ? naviFavoritesPageSize
+          : viewMode === 'navi_playlist'
+            ? naviPlaylistPageSize
+            : pageSize;
       // If we explicitly know Navidrome is not connected, show a friendly prompt
       if (navidromeConnected === false) {
         return (
