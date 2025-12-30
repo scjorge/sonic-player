@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { navidromeSettingsService } from '../services/navidromeSettings';
+import { navidromeSettingsService, navidromeTrackService } from '../services/navidrome';
 
 export const getNavidromeSettings = async (_req: Request, res: Response) => {
   const setting = await navidromeSettingsService.get();
@@ -22,3 +22,12 @@ export const clearNavidromeSettings = async (_req: Request, res: Response) => {
   await navidromeSettingsService.clear();
   return res.status(204).send();
 };
+
+export const searchByComment = async (req: Request, res: Response) => {
+  const { comment, limit, offset } = req.query;
+  const commentList: string[] = comment === undefined ? [] : Array.isArray(comment) ? comment.map(c => String(c)) : [String(comment)];
+  const lim = limit ? parseInt(limit as string, 10) : 50;
+  const off = offset ? parseInt(offset as string, 10) : 0;
+  const tracks = navidromeTrackService.get(commentList, lim, off);
+  return res.json(tracks);
+}

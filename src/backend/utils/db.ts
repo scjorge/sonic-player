@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { NavidromeSetting } from '../entities/NavidromeSetting';
+import { NavidromeSetting } from '../entities/Navidrome';
 import { SpotifySetting } from '../entities/SpotifySetting';
 import { TagGroupEntity } from '../entities/TagGroupEntity';
 import { GenreEntity } from '../entities/GenreEntity';

@@ -1,31 +1,40 @@
-import sqlite3 from 'sqlite3';
+import Database from 'better-sqlite3';
 import { NAVIDROME_DATABASE_SQLITE_PATH } from '../../core/config';
 
 
-function getDatabase() {
-    return new sqlite3.Database(NAVIDROME_DATABASE_SQLITE_PATH);
-}
+const db = new Database(NAVIDROME_DATABASE_SQLITE_PATH, {
+    readonly: true
+});
 
-async function execQuery(query: string, params: string[] | null): Promise<any> {
-    const db = getDatabase()
-
-    const row: any = await new Promise((resolve, reject) => {
-        db.get(query, params, (err, result) => {
-            if (err) return reject(err);
-            resolve(result);
-        });
-    }).finally(() => {
-        db.close();
-    });
-
-    return row;
-}
 
 export async function getPathById(id: string): Promise<string | null> {
-    const query = 'SELECT path FROM media_file WHERE id = ?';
-    const row = await execQuery(query, [id]);
-    if (!row) {
+    const sql = 'SELECT path FROM media_file WHERE id = ?';
+    const rows = db.prepare(sql).all([id]);
+    if (rows.length === 0) {
         return null;
     }
-    return row.path as string;
+    return rows[0].path as string;
+}
+
+
+export function getTrackByComment(comments: string[], limit: number = 50, offset: number = 0): any {
+    const commentList = Array.isArray(comments) ? comments : [comments];
+    const where = commentList.map(() => `CAST(comment AS TEXT) LIKE ?`).join(' OR ');
+    const params = [
+        ...commentList.map(c => `%${c}%`),
+        limit,
+        offset
+    ];
+
+    const sql = `
+        SELECT
+            *
+        FROM
+            media_file
+        WHERE 
+            ${where}
+        ORDER BY id LIMIT ? OFFSET ?
+  `;
+    const rows = db.prepare(sql).all(params);
+    return rows;
 }
