@@ -1793,6 +1793,7 @@ const App: React.FC = () => {
             onOpenGroupFilter={handleOpenGroupFilter}
             navidromeConnected={navidromeConnected}
             onOpenNavidromeSettings={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }}
+            isNaviSongsView={viewMode === 'navi_songs'}
           />
         </div>
       );

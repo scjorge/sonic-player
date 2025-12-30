@@ -47,6 +47,7 @@ interface SongTableProps {
     onOpenGroupFilter?: () => void;
     isGroupFilterActive?: boolean;
     groupFilterSelection?: string[];
+    isNaviSongsView?: boolean;
     defaultColumns?: ColumnConfig[];
     isSpotifyTable?: boolean;
     isTidalTable?: boolean;
@@ -121,6 +122,7 @@ const SongTable: React.FC<SongTableProps> = ({
   isGroupFilterActive,
   onOpenGroupFilter,
   groupFilterSelection = [],
+  isNaviSongsView = false,
   defaultColumns,
   isSpotifyTable,
   isTidalTable,
@@ -1029,8 +1031,8 @@ const SongTable: React.FC<SongTableProps> = ({
       {/* Table Container */}
       <div className="flex-1 overflow-auto relative custom-scrollbar">
         <div className="min-w-full inline-block align-middle">
-          {/* Active Filters Summary (between toolbar buttons and column headers) */}
-          {isNavidromeLibraryTable && hasActiveFiltersSummary && (
+          {/* Active Filters Summary (between toolbar buttons and column headers) - only for Navidrome Músicas view */}
+          {isNavidromeLibraryTable && isNaviSongsView && hasActiveFiltersSummary && (
             <div className="sticky top-0 z-10 bg-zinc-950 border-b border-zinc-800 px-3 py-2 flex flex-wrap items-center gap-2 text-[11px] text-zinc-300">
               <span className="uppercase tracking-wide text-zinc-500 mr-1">Filtros ativos:</span>
               {activeArtist && (
