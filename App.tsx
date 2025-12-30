@@ -92,6 +92,16 @@ const App: React.FC = () => {
     return typeof saved?.page === 'number' ? saved.page : 0;
   });
 
+  // Paginação separada para favoritos do Navidrome
+  const [naviFavoritesPage, setNaviFavoritesPage] = useState(() => {
+    const saved = getUserState<any>('navi_favorites');
+    return typeof saved?.page === 'number' ? saved.page : 0;
+  });
+  const [naviFavoritesPageSize, setNaviFavoritesPageSize] = useState(() => {
+    const saved = getUserState<any>('navi_favorites');
+    return typeof saved?.pageSize === 'number' ? saved.pageSize : 100;
+  });
+
   // --- STATE: VIEW & MODALS ---
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const last = getLastViewMode<ViewMode>();
@@ -172,6 +182,14 @@ const App: React.FC = () => {
       groupFilterSelection,
     });
   }, [activeArtist, activeGenre, activeYear, activeQuickList, naviSearchQuery, page, pageSize, groupFilterSelection]);
+
+  // Persist Navidrome favorites (somente paginação)
+  useEffect(() => {
+    setUserState('navi_favorites', {
+      page: naviFavoritesPage,
+      pageSize: naviFavoritesPageSize,
+    });
+  }, [naviFavoritesPage, naviFavoritesPageSize]);
 
   // Persist Spotify Browse (Navegar) busca e paginação
   useEffect(() => {
@@ -479,7 +497,7 @@ const App: React.FC = () => {
   // Clear selection when changing views or pages
   useEffect(() => {
     setSelectedSongIds([]);
-  }, [viewMode, page, activeArtist, activeGenre, activeYear, selectedPlaylistId, naviSearchQuery]);
+  }, [viewMode, page, naviFavoritesPage, activeArtist, activeGenre, activeYear, selectedPlaylistId, naviSearchQuery]);
 
   // --- FETCH LOGIC ---
   const fetchSongs = async (pageNum: number, size: number, artist: string, genre: string, year: string, quickList?: QuickListType) => {
@@ -579,13 +597,13 @@ const App: React.FC = () => {
     setViewMode('navi_favorites');
     setSelectedPlaylistId(null);
     setNaviSearchQuery('');
-    setPage(0);
+    setNaviFavoritesPage(0);
     try {
       const songs = await navidromeService.getStarredSongs();
       setNaviSongs(songs);
       setTotalSongs(songs.length);
       // Paginação padrão para favoritos do Navidrome: 100 por página
-      setPageSize(100);
+      setNaviFavoritesPageSize(100);
     } catch (e) {
       console.error("Fetch favorites failed", e);
     } finally {
@@ -810,6 +828,12 @@ const App: React.FC = () => {
   };
 
   const handlePageChange = async (newPage: number) => {
+    if (viewMode === 'navi_favorites') {
+      // Favoritos usam paginação em memória, apenas atualiza o page específico
+      setNaviFavoritesPage(newPage);
+      return;
+    }
+
     setPage(newPage);
     if (viewMode === 'navi_songs') {
       if (groupFilterSelection.length > 0) {
@@ -884,6 +908,12 @@ const App: React.FC = () => {
   };
 
   const handlePageSizeChange = (newSize: number) => {
+    if (viewMode === 'navi_favorites') {
+      setNaviFavoritesPageSize(newSize);
+      setNaviFavoritesPage(0);
+      return;
+    }
+
     setPageSize(newSize);
     setPage(0);
     if (viewMode === 'navi_songs') {
@@ -1620,6 +1650,8 @@ const App: React.FC = () => {
 
     if (viewMode === 'navi_songs' || viewMode === 'navi_playlist' || viewMode === 'navi_favorites') {
       const isPlaylistOrFav = viewMode === 'navi_playlist' || viewMode === 'navi_favorites';
+      const currentPage = viewMode === 'navi_favorites' ? naviFavoritesPage : page;
+      const currentPageSize = viewMode === 'navi_favorites' ? naviFavoritesPageSize : pageSize;
       // If we explicitly know Navidrome is not connected, show a friendly prompt
       if (navidromeConnected === false) {
         return (
@@ -1651,8 +1683,8 @@ const App: React.FC = () => {
             activeYear={isPlaylistOrFav ? '' : activeYear}
             activeQuickList={isPlaylistOrFav ? null : activeQuickList}
             activeSearchQuery={isPlaylistOrFav ? '' : naviSearchQuery}
-            page={page}
-            pageSize={pageSize}
+            page={currentPage}
+            pageSize={currentPageSize}
             totalItems={totalSongs}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
