@@ -1903,14 +1903,14 @@ const App: React.FC = () => {
                 {!isSidebarCollapsed && <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2 flex items-center gap-2">TIDAL</h3>}
                 <div className="space-y-1">
                   <button
-                    onClick={() => { setViewMode('tidal_browse'); setTidalSearchQuery(''); setPage(0); setTidalTracks([]); }}
+                    onClick={() => { setViewMode('tidal_browse'); setTidalSearchQuery(''); setTidalTracks([]); }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_browse' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                   >
                     <Navigation className="w-4 h-4 flex-shrink-0" />
                     {!isSidebarCollapsed && <span>Navegar</span>}
                   </button>
                   <button
-                    onClick={() => { setViewMode('tidal_liked'); setPage(0); }}
+                    onClick={() => { setViewMode('tidal_liked'); }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'tidal_liked' ? 'bg-yellow-500/10 text-yellow-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                   >
                     <Heart className="w-4 h-4 flex-shrink-0" />
