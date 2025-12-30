@@ -49,7 +49,7 @@ export const navidromeTrackService = {
       .replace(/\\/g, '/');
   },
 
-  hashCover(row: any) {
+  hashCover() {
     return '693eecc3'; 
   },
 
@@ -77,7 +77,7 @@ export const navidromeTrackService = {
               track: row.track_number,
               year: row.year || row.release_year,
               genre: genres[0]?.name ?? "",
-              coverArt: `mf-${row.id}_${this.hashCover(row)}`,
+              coverArt: `mf-${row.id}_${this.hashCover()}`,
               size: row.size,
               contentType: `audio/${row.suffix}`,
               suffix: row.suffix,
