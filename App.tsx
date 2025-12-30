@@ -1996,10 +1996,12 @@ const App: React.FC = () => {
                 <div className="space-y-1">
                   <button
                     onClick={() => {
-                      if (!spotifyBrowseTracks.length && !spotifyBrowseSearchQuery) {
-                        handleSpotifyBrowseClick(spotifyBrowsePage, spotifyBrowsePageSize);
-                      } else {
+                      // Se já temos estado salvo (query ou resultados), basta voltar para a tela
+                      if (spotifyBrowseTracks.length || spotifyBrowseSearchQuery.trim()) {
                         setViewMode('spotify_browse');
+                      } else {
+                        // Primeiro acesso: carrega lançamentos usando a paginação salva
+                        handleSpotifyBrowseClick(spotifyBrowsePage, spotifyBrowsePageSize);
                       }
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'spotify_browse' ? 'bg-green-500/10 text-green-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
