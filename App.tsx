@@ -358,10 +358,30 @@ const App: React.FC = () => {
 
         // Initial Songs Load
         if (viewMode === 'navi_songs') {
-          // Respeita estado salvo (filtros/página) para a tela de músicas
-          const initialPage = page;
-          const initialPageSize = pageSize;
-          fetchSongs(initialPage, initialPageSize, activeArtist, activeGenre, activeYear, activeQuickList || undefined);
+          // Se houver filtro de grupos salvo, re-aplica busca por grupos
+          if (groupFilterSelection.length > 0) {
+            const params = groupFilterSelection
+              .map(c => `comment=${encodeURIComponent(c)}`)
+              .join('&');
+            const offset = page * pageSize;
+            const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${pageSize}&offset=${offset}`);
+
+            if (!resp.ok) {
+              const err = await resp.json().catch(() => ({}));
+              showToast(`Erro ao buscar por grupos: ${err.error || resp.statusText}`, 'error');
+            } else {
+              const data = await resp.json();
+              const songs: NaviSong[] = data['subsonic-response']?.searchResult2?.song || [];
+              setNaviSongs(songs);
+              // Em modo filtro por grupos, usamos apenas hasMore; mantém total em 0
+              setTotalSongs(0);
+            }
+          } else {
+            // Respeita estado salvo (filtros/página) para a tela de músicas
+            const initialPage = page;
+            const initialPageSize = pageSize;
+            fetchSongs(initialPage, initialPageSize, activeArtist, activeGenre, activeYear, activeQuickList || undefined);
+          }
         } else if (viewMode === 'spotify_browse') {
           const savedSpotify = getUserState<any>('spotify_browse');
           const savedPage = typeof savedSpotify?.page === 'number' ? savedSpotify.page : spotifyBrowsePage;
@@ -981,8 +1001,33 @@ const App: React.FC = () => {
   const handleLibrarySongsClick = () => {
     setViewMode('navi_songs');
     setSelectedPlaylistId(null);
-    // Mantém filtros, busca e paginação atuais da biblioteca
-    fetchSongs(page, pageSize, activeArtist, activeGenre, activeYear, activeQuickList);
+    // Se houver filtro de grupos ativo, re-aplica busca por grupos; caso contrário, respeita filtros/busca da biblioteca
+    if (groupFilterSelection.length > 0) {
+      (async () => {
+        try {
+          const params = groupFilterSelection
+            .map(c => `comment=${encodeURIComponent(c)}`)
+            .join('&');
+          const offset = page * pageSize;
+          const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${pageSize}&offset=${offset}`);
+
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            showToast(`Erro ao buscar por grupos: ${err.error || resp.statusText}`, 'error');
+          } else {
+            const data = await resp.json();
+            const songs: NaviSong[] = data['subsonic-response']?.searchResult2?.song || [];
+            setNaviSongs(songs);
+            setTotalSongs(0);
+          }
+        } catch (e: any) {
+          showToast(`Erro ao buscar por grupos: ${e?.message || String(e)}`, 'error');
+        }
+      })();
+    } else {
+      // Mantém filtros, busca e paginação atuais da biblioteca
+      fetchSongs(page, pageSize, activeArtist, activeGenre, activeYear, activeQuickList);
+    }
   };
 
 
