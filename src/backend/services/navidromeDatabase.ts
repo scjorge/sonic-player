@@ -18,7 +18,7 @@ export async function getPathById(id: string): Promise<string | null> {
 
 
 export function search4(comments: string[], genres: string[], artists: string[], years: string[], limit: number = 50, offset: number = 0): any {
-  if(!comments.length && !genres.length && !artists.length && !years.length){
+  if (!comments.length && !genres.length && !artists.length && !years.length) {
     return [];
   }
 
@@ -26,7 +26,7 @@ export function search4(comments: string[], genres: string[], artists: string[],
   const whereParts: string[] = [];
   const params: any[] = [];
 
-  if (comments.length){
+  if (comments.length) {
     whereParts.push(
       comments.map(() => `CAST(comment AS TEXT) LIKE ?`).join(' OR ')
     );
@@ -34,7 +34,7 @@ export function search4(comments: string[], genres: string[], artists: string[],
     params.push(...comments.map(c => `%${c}%`));
   }
 
-  if (artists.length){
+  if (artists.length) {
     whereParts.push(
       artists.map(() => `CAST(artist AS TEXT) LIKE ? OR CAST(title AS TEXT) LIKE ?`).join(' OR ')
     );
@@ -43,7 +43,7 @@ export function search4(comments: string[], genres: string[], artists: string[],
     params.push(...artists.map(a => `%${a}%`));
   }
 
-  if (years.length){
+  if (years.length) {
     whereParts.push(
       years.map(() => `CAST(year AS TEXT) LIKE ?`).join(' OR ')
     );
@@ -77,4 +77,3 @@ export function search4(comments: string[], genres: string[], artists: string[],
   const rows = db.prepare(sql).all(params);
   return rows;
 }
-
