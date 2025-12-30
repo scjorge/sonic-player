@@ -17,7 +17,7 @@ export async function getPathById(id: string): Promise<string | null> {
 }
 
 
-export function getTrackByComment(comments: string[], genres: string[], artists: string[], years: string[], limit: number = 50, offset: number = 0): any {
+export function search4(comments: string[], genres: string[], artists: string[], years: string[], limit: number = 50, offset: number = 0): any {
   if(!comments.length && !genres.length && !artists.length && !years.length){
     return [];
   }
@@ -25,7 +25,6 @@ export function getTrackByComment(comments: string[], genres: string[], artists:
   const whereParts: string[] = [];
   const params: any[] = [];
 
-  // 🔹 filtro por comment
   if (comments.length){
     whereParts.push(
       comments.map(() => `CAST(comment AS TEXT) LIKE ?`).join(' OR ')
@@ -33,15 +32,14 @@ export function getTrackByComment(comments: string[], genres: string[], artists:
     params.push(...comments.map(c => `%${c}%`));
   }
 
-  // 🔹 filtro por artists
   if (artists.length){
     whereParts.push(
-      artists.map(() => `CAST(artist AS TEXT) LIKE ?`).join(' OR ')
+      artists.map(() => `CAST(artist AS TEXT) LIKE ? OR CAST(title AS TEXT) LIKE ?`).join(' OR ')
     );
+    params.push(...artists.map(a => `%${a}%`));
     params.push(...artists.map(a => `%${a}%`));
   }
 
-  // 🔹 filtro por years
   if (years.length){
     whereParts.push(
       years.map(() => `CAST(year AS TEXT) LIKE ?`).join(' OR ')
@@ -49,7 +47,6 @@ export function getTrackByComment(comments: string[], genres: string[], artists:
     params.push(...years.map(y => `%${y}%`));
   }
 
-  // 🔹 filtro por genre (JSON)
   if (genres.length) {
     const genreWhere = genres.map(() => `
       EXISTS (

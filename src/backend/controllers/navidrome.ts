@@ -23,7 +23,7 @@ export const clearNavidromeSettings = async (_req: Request, res: Response) => {
   return res.status(204).send();
 };
 
-export const searchByComment = async (req: Request, res: Response) => {
+export const search4 = async (req: Request, res: Response) => {
   const { comment, genre, artist, year, limit, offset } = req.query;
   const commentList: string[] = comment === undefined ? [] : Array.isArray(comment) ? comment.map(c => String(c)) : [String(comment)];
   const genreList: string[] = genre === undefined ? [] : Array.isArray(genre) ? genre.map(g => String(g)) : [String(genre)];

@@ -368,7 +368,7 @@ const App: React.FC = () => {
               .map(c => `comment=${encodeURIComponent(c)}`)
               .join('&');
             const offset = page * pageSize;
-            const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${pageSize}&offset=${offset}`);
+            const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
 
             if (!resp.ok) {
               const err = await resp.json().catch(() => ({}));
@@ -876,14 +876,14 @@ const App: React.FC = () => {
     setPage(newPage);
     if (viewMode === 'navi_songs') {
       if (groupFilterSelection.length > 0) {
-        // Paginação usando o filtro de grupos (searchByComment)
+        // Paginação usando o filtro de grupos (search4)
         setLoadingNavi(true);
         try {
           const params = groupFilterSelection
             .map(c => `comment=${encodeURIComponent(c)}`)
             .join('&');
           const offset = newPage * pageSize;
-          const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${pageSize}&offset=${offset}`);
+          const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
 
           if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
@@ -969,7 +969,7 @@ const App: React.FC = () => {
             const params = groupFilterSelection
               .map(c => `comment=${encodeURIComponent(c)}`)
               .join('&');
-            const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${newSize}&offset=0`);
+            const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${newSize}&offset=0`);
 
             if (!resp.ok) {
               const err = await resp.json().catch(() => ({}));
@@ -1033,7 +1033,7 @@ const App: React.FC = () => {
             .map(c => `comment=${encodeURIComponent(c)}`)
             .join('&');
           const offset = page * pageSize;
-          const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${pageSize}&offset=${offset}`);
+          const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
 
           if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
@@ -1201,7 +1201,7 @@ const App: React.FC = () => {
       const params = selectedComments
         .map(c => `comment=${encodeURIComponent(c)}`)
         .join('&');
-      const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/searchByComment?${params}&limit=${pageSize}&offset=0`);
+      const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${pageSize}&offset=0`);
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));

@@ -1,6 +1,6 @@
 import { AppDataSource } from '../utils/db';
 import { NavidromeSetting } from '../entities/Navidrome';
-import { getTrackByComment } from './navidromeDatabase';
+import { search4 } from './navidromeDatabase';
 
 
 export const navidromeSettingsService = {
@@ -122,7 +122,7 @@ export const navidromeTrackService = {
   },
 
   get(comments: string[], genreList: string[], artistList: string[], yearList: string[], limit: number = 50, offset: number = 0) {
-    const rows = getTrackByComment(comments, genreList, artistList, yearList, limit, offset);
+    const rows = search4(comments, genreList, artistList, yearList, limit, offset);
     return this.toSubsonicSearchResult(rows);
   }
 }
