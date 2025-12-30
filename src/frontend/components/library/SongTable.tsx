@@ -785,114 +785,23 @@ const SongTable: React.FC<SongTableProps> = ({
             <Search className={`w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 transform -translate-y-1/2 ${isSpotifyTable ? 'group-focus-within:text-green-500' : isTidalTable ? 'group-focus-within:text-yellow-500' : 'group-focus-within:text-indigo-500'} transition-colors`} />
           </div>
         )}
-        {/* QUICK LIST BUTTONS & FILTER */}
+        {/* QUICK LIST BUTTONS & GROUP FILTER */}
         <div className="flex items-center gap-2 mr-auto">
           {onQuickListChange && (
             <>
-              {/* FILTER BUTTON (Moved Here) */}
-              {onFilter && (
-                <div className="flex items-center gap-2">
-                  {/* Filtro padrão (artista/gênero/ano) */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowFilter(!showFilter)}
-                      className={`
-                                      flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border
-                                      ${activeFilterCount > 0
-                  ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
-                  : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-                }
-                                  `}
-                    >
-                      <Filter className="w-4 h-4" />
-                      Filtros
-                      {activeFilterCount > 0 && (
-                        <span className="bg-indigo-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                          {activeFilterCount}
-                        </span>
-                      )}
-                    </button>
-
-                    {showFilter && (
-                      <>
-                        <div className="fixed inset-0 z-10" onClick={() => setShowFilter(false)} />
-                        {/* Dropdown Alinhado à Esquerda do botão */}
-                        <div className="absolute left-0 mt-2 w-72 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-20 overflow-hidden">
-                          <div className="p-3 border-b border-zinc-800 flex items-center justify-between">
-                            <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Filtrar Biblioteca</span>
-                            <button
-                              onClick={() => setShowFilter(false)}
-                              className="text-zinc-500 hover:text-white"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <div className="p-4 space-y-4">
-                            {/* Artist Filter */}
-                            <div className="space-y-1.5">
-                              <label className="text-xs text-zinc-500 font-medium">Artista</label>
-                              <select
-                                value={selectedArtist}
-                                onChange={(e) => setSelectedArtist(e.target.value)}
-                                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer"
-                              >
-                                <option value="">Selecione um Artista...</option>
-                                {availableArtists.map(artist => (
-                                  <option key={artist} value={artist}>{artist}</option>
-                                ))}
-                              </select>
-                            </div>
-
-                            {/* Genre Filter */}
-                            <div className="space-y-1.5">
-                              <label className="text-xs text-zinc-500 font-medium">Gênero</label>
-                              <select
-                                value={selectedGenre}
-                                onChange={(e) => setSelectedGenre(e.target.value)}
-                                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer"
-                              >
-                                <option value="">Selecione um Gênero...</option>
-                                {availableGenres.map(genre => (
-                                  <option key={genre} value={genre}>{genre}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="pt-2 flex gap-2">
-                              <button
-                                onClick={handleClearFilter}
-                                className="flex-1 py-2 text-xs font-medium text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg border border-zinc-700 transition-colors"
-                              >
-                                Limpar
-                              </button>
-                              <button
-                                onClick={handleApplyFilter}
-                                className="flex-1 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-lg shadow-indigo-500/20 transition-colors flex items-center justify-center gap-2"
-                              >
-                                <Search className="w-3 h-3" />
-                                Buscar
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Group Filter Button - Navidrome Only */}
-                  {isNavidromeLibraryTable && onOpenGroupFilter && (
-                    <button
-                      onClick={onOpenGroupFilter}
-                      className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isGroupFilterActive
-                        ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
-                        : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-                      }`}
-                      title="Filtrar por grupos (comentários DJ)"
-                    >
-                      <Tags className="w-4 h-4" />
-                      Filtro por grupos
-                    </button>
-                  )}
-                </div>
+              {/* Group Filter Button - Navidrome Only */}
+              {isNavidromeLibraryTable && onOpenGroupFilter && (
+                <button
+                  onClick={onOpenGroupFilter}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isGroupFilterActive
+                    ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
+                    : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                  }`}
+                  title="Filtrar por grupos (comentários DJ)"
+                >
+                  <Tags className="w-4 h-4" />
+                  Filtro por grupos
+                </button>
               )}
 
               {/* Mais Tocadas (Frequent) */}
@@ -942,8 +851,6 @@ const SongTable: React.FC<SongTableProps> = ({
                 <Sparkles className="w-4 h-4" />
                 <span className="hidden sm:inline">Adicionadas</span>
               </button>
-
-
             </>
           )}
         </div>

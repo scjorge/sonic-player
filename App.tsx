@@ -1177,11 +1177,27 @@ const App: React.FC = () => {
     setShowGroupFilterModal(true);
   };
 
-  const handleApplyGroupFilter = async (selectedComments: string[]) => {
+  const handleApplyGroupFilter = async (
+    selectedComments: string[],
+    artistFilter: string,
+    genreFilter: string,
+    yearFilter: string,
+  ) => {
     setGroupFilterSelection(selectedComments);
+    setActiveArtist(artistFilter || '');
+    setActiveGenre(genreFilter || '');
+    setActiveYear(yearFilter || '');
+    setActiveQuickList(null);
+    setNaviSearchQuery('');
 
-    // Sem seleção de grupos: volta para a visão padrão da biblioteca
-    if (selectedComments.length === 0) {
+    const hasAnyFilter =
+      selectedComments.length > 0 ||
+      !!artistFilter ||
+      !!genreFilter ||
+      !!yearFilter;
+
+    // Sem nenhum filtro: volta para a visão padrão da biblioteca
+    if (!hasAnyFilter) {
       setShowGroupFilterModal(false);
       handleLibrarySongsClick();
       return;
@@ -1190,18 +1206,31 @@ const App: React.FC = () => {
     setShowGroupFilterModal(false);
     setViewMode('navi_songs');
     setSelectedPlaylistId(null);
-    setNaviSearchQuery('');
-    setActiveArtist('');
-    setActiveGenre('');
-    setActiveYear('');
-    setActiveQuickList(null);
     setPage(0);
 
     try {
-      const params = selectedComments
-        .map(c => `comment=${encodeURIComponent(c)}`)
-        .join('&');
-      const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${pageSize}&offset=0`);
+      const queryParts: string[] = [];
+
+      if (selectedComments.length > 0) {
+        queryParts.push(
+          ...selectedComments.map(c => `comment=${encodeURIComponent(c)}`)
+        );
+      }
+
+      if (artistFilter) {
+        queryParts.push(`artist=${encodeURIComponent(artistFilter)}`);
+      }
+
+      if (genreFilter) {
+        queryParts.push(`genre=${encodeURIComponent(genreFilter)}`);
+      }
+
+      if (yearFilter) {
+        queryParts.push(`year=${encodeURIComponent(yearFilter)}`);
+      }
+
+      const queryString = queryParts.join('&');
+      const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${queryString}&limit=${pageSize}&offset=0`);
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
@@ -2202,6 +2231,11 @@ const App: React.FC = () => {
         <GroupFilterModal
           groups={tagGroups}
           initialSelection={groupFilterSelection}
+          initialArtist={activeArtist}
+          initialGenre={activeGenre}
+          initialYear={activeYear}
+          availableArtists={availableArtistNames}
+          availableGenres={availableGenres}
           onClose={() => setShowGroupFilterModal(false)}
           onApply={handleApplyGroupFilter}
         />

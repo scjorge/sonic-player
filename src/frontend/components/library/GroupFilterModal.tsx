@@ -5,12 +5,30 @@ import { X, Save, Filter, CheckSquare, Square } from 'lucide-react';
 interface GroupFilterModalProps {
   groups: TagGroup[];
   initialSelection?: string[];
+  initialArtist?: string;
+  initialGenre?: string;
+  initialYear?: string;
+  availableArtists?: string[];
+  availableGenres?: string[];
   onClose: () => void;
-  onApply: (selectedComments: string[]) => void;
+  onApply: (selectedComments: string[], artist: string, genre: string, year: string) => void;
 }
 
-const GroupFilterModal: React.FC<GroupFilterModalProps> = ({ groups, initialSelection = [], onClose, onApply }) => {
+const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
+  groups,
+  initialSelection = [],
+  initialArtist = '',
+  initialGenre = '',
+  initialYear = '',
+  availableArtists = [],
+  availableGenres = [],
+  onClose,
+  onApply,
+}) => {
   const [selected, setSelected] = useState<Set<string>>(new Set(initialSelection));
+  const [artistFilter, setArtistFilter] = useState<string>(initialArtist);
+  const [genreFilter, setGenreFilter] = useState<string>(initialGenre);
+  const [yearFilter, setYearFilter] = useState<string>(initialYear);
 
   const toggleItem = (group: TagGroup, item: string) => {
     const key = `${group.prefix}=${item}`;
@@ -24,7 +42,7 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({ groups, initialSele
   };
 
   const handleApply = () => {
-    onApply(Array.from(selected));
+    onApply(Array.from(selected), artistFilter, genreFilter, yearFilter);
     onClose();
   };
 
@@ -51,7 +69,51 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({ groups, initialSele
 
         {/* Content */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="flex-1 overflow-y-auto p-6 bg-zinc-900/50 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 bg-zinc-900/50 custom-scrollbar space-y-4">
+            {/* Top Filters: Artista / Gênero / Ano */}
+            <div className="flex flex-wrap items-end gap-4 pb-4 border-b border-zinc-800">
+              <div className="flex flex-col gap-1 min-w-[180px]">
+                <label className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Artista</label>
+                <select
+                  value={artistFilter}
+                  onChange={(e) => setArtistFilter(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer"
+                >
+                  <option value="">Todos os artistas</option>
+                  {availableArtists.map((artist) => (
+                    <option key={artist} value={artist}>{artist}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1 min-w-[180px]">
+                <label className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Gênero</label>
+                <select
+                  value={genreFilter}
+                  onChange={(e) => setGenreFilter(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer"
+                >
+                  <option value="">Todos os gêneros</option>
+                  {availableGenres.map((genre) => (
+                    <option key={genre} value={genre}>{genre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1 w-24">
+                <label className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Ano</label>
+                <input
+                  type="number"
+                  value={yearFilter}
+                  onChange={(e) => setYearFilter(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500"
+                  placeholder="AAAA"
+                />
+              </div>
+            </div>
+
+            {/* Group List */}
+            <div className="flex-1 overflow-y-auto pt-2 custom-scrollbar">
             {groups.length === 0 ? (
               <div className="text-center py-10">
                 <p className="text-zinc-500">Nenhum grupo configurado.</p>
@@ -93,6 +155,7 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({ groups, initialSele
                 ))}
               </div>
             )}
+            </div>
           </div>
         </div>
 
@@ -107,7 +170,10 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({ groups, initialSele
           <button
             onClick={() => {
               setSelected(new Set());
-              onApply([]);
+              setArtistFilter('');
+              setGenreFilter('');
+              setYearFilter('');
+              onApply([], '', '', '');
               onClose();
             }}
             className="px-6 py-2.5 text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg font-medium text-sm transition-colors"
