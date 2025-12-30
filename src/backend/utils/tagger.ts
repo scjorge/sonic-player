@@ -5,6 +5,8 @@ import NodeID3 from 'node-id3';
 import { AudioMetadata, DownloadedCover } from '../types';
 
 
+const DJ_STREAM = 'dj-stream';
+
 class AudioTagger {
   public async write(filePath: string, metadata: AudioMetadata): Promise<void> {
     if (!fs.existsSync(filePath)) {
@@ -47,6 +49,7 @@ class AudioTagger {
     const current = NodeID3.read(filePath) || {};
     const tags: NodeID3.Tags = { ...current };
 
+    tags.mediaType = DJ_STREAM;
     if (metadata.title) tags.title = metadata.title;
     if (metadata.artists) tags.artist = metadata.artists;
     if (metadata.album) tags.album = metadata.album;
@@ -131,6 +134,7 @@ class AudioTagger {
       fs.unlinkSync(coverPath);
     }
 
+    updateTag('MEDIA', DJ_STREAM);
     if (metadata.title) await updateTag('TITLE', metadata.title);
     if (metadata.artists) await updateTag('ARTIST', metadata.artists);
     if (metadata.album) await updateTag('ALBUM', metadata.album);
