@@ -1789,6 +1789,7 @@ const App: React.FC = () => {
             onInfo={handleOpenInfo}
             onGroupEdit={handleOpenGroupTagEditor}
             isGroupFilterActive={groupFilterSelection.length > 0}
+            groupFilterSelection={groupFilterSelection}
             onOpenGroupFilter={handleOpenGroupFilter}
             navidromeConnected={navidromeConnected}
             onOpenNavidromeSettings={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }}

@@ -46,6 +46,7 @@ interface SongTableProps {
     onGroupEdit?: (song: NaviSong) => void; // Nova prop
     onOpenGroupFilter?: () => void;
     isGroupFilterActive?: boolean;
+    groupFilterSelection?: string[];
     defaultColumns?: ColumnConfig[];
     isSpotifyTable?: boolean;
     isTidalTable?: boolean;
@@ -119,6 +120,7 @@ const SongTable: React.FC<SongTableProps> = ({
   onGroupEdit,
   isGroupFilterActive,
   onOpenGroupFilter,
+  groupFilterSelection = [],
   defaultColumns,
   isSpotifyTable,
   isTidalTable,
@@ -637,6 +639,15 @@ const SongTable: React.FC<SongTableProps> = ({
     }
   };
 
+  const hasActiveFiltersSummary = (
+    !!activeArtist ||
+    !!activeGenre ||
+    !!activeYear ||
+    !!activeQuickList ||
+    (groupFilterSelection && groupFilterSelection.length > 0) ||
+    !!isGroupFilterActive
+  );
+
   return (
     <div className="flex flex-col h-full bg-zinc-950 relative">
       {/* Context Menu Portal/Div */}
@@ -1018,6 +1029,54 @@ const SongTable: React.FC<SongTableProps> = ({
       {/* Table Container */}
       <div className="flex-1 overflow-auto relative custom-scrollbar">
         <div className="min-w-full inline-block align-middle">
+          {/* Active Filters Summary (between toolbar buttons and column headers) */}
+          {isNavidromeLibraryTable && hasActiveFiltersSummary && (
+            <div className="sticky top-0 z-10 bg-zinc-950 border-b border-zinc-800 px-3 py-2 flex flex-wrap items-center gap-2 text-[11px] text-zinc-300">
+              <span className="uppercase tracking-wide text-zinc-500 mr-1">Filtros ativos:</span>
+              {activeArtist && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/40">
+                  <span className="text-[10px] uppercase text-zinc-400">Artista</span>
+                  <span className="truncate max-w-[140px]">{activeArtist}</span>
+                </span>
+              )}
+              {activeGenre && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/40">
+                  <span className="text-[10px] uppercase text-zinc-400">Gênero</span>
+                  <span className="truncate max-w-[140px]">{activeGenre}</span>
+                </span>
+              )}
+              {activeYear && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/40">
+                  <span className="text-[10px] uppercase text-zinc-400">Ano</span>
+                  <span>{activeYear}</span>
+                </span>
+              )}
+              {activeQuickList && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/40">
+                  <span className="text-[10px] uppercase text-zinc-400">Lista</span>
+                  <span>
+                    {activeQuickList === 'frequent' && 'Mais tocadas'}
+                    {activeQuickList === 'recent' && 'Tocadas recentemente'}
+                    {activeQuickList === 'newest' && 'Adicionadas recentemente'}
+                    {activeQuickList === 'highest' && 'Melhor avaliadas'}
+                  </span>
+                </span>
+              )}
+              {groupFilterSelection && groupFilterSelection.length > 0 && (
+                <>
+                  {groupFilterSelection.map((group) => (
+                    <span
+                      key={group}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/40"
+                    >
+                      <span className="text-[10px] uppercase text-zinc-400">Grupo</span>
+                      <span className="truncate max-w-[160px]" title={group}>{group}</span>
+                    </span>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
           {/* Headers */}
           <div className="sticky top-0 z-10 flex bg-zinc-900 border-b border-zinc-800 shadow-md">
             {visibleColumns.map((col) => (
