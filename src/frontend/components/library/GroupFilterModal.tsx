@@ -105,6 +105,16 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({ groups, initialSele
             Cancelar
           </button>
           <button
+            onClick={() => {
+              setSelected(new Set());
+              onApply([]);
+              onClose();
+            }}
+            className="px-6 py-2.5 text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg font-medium text-sm transition-colors"
+          >
+            Limpar filtro
+          </button>
+          <button
             onClick={handleApply}
             className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium text-sm transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2"
           >
