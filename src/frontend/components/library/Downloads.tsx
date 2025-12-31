@@ -8,6 +8,7 @@ import showToast from '../utils/toast';
 import GroupTagModal from './GroupTagModal';
 import { getStoredGroups } from '../../repository/metadata';
 import { getUserState, setUserState } from '../../repository/userStates';
+import { NAVI_DOWNLOAD_COLUMN_CONFIG } from './NaviConstants';
 
 
 interface DownloadsProps {
@@ -266,6 +267,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
               songs={completedSongs}
               onPlay={(s) => { if (onPlayDownload) onPlayDownload(s); }}
               currentTrackId={currentTrackId}
+              defaultColumns={NAVI_DOWNLOAD_COLUMN_CONFIG}
               isPlaying={isPlaying}
               isNaviTableDownload={true}
               onGroupEdit={(song) => setGroupModalSong(song)}
