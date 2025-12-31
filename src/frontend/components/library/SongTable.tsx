@@ -755,7 +755,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     throw new Error(err.error || 'Failed to queue download');
                   }
                   const json = await resp.json();
-                  showToast('Download enfileirado no servidor (id: ' + json.id + ')', 'success');
+                  showToast('Download Finalizado (id: ' + json.id + ')', 'success');
                 } catch (e){
                   console.error('TIDAL download request failed', e);
                   showToast('Falha ao iniciar download no servidor: ' + (e?.message || String(e)), 'error');

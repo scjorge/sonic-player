@@ -10,11 +10,22 @@ export async function downloadTrackFromTidal(req: Request, res: Response) {
 
   try {
     const result = await downloadService.downloadTrackFromTidal(trackId, creds, song);
-    return res.json(result);
+    if (result.error) {
+      return res.status(500).json({ error: result.error });
+    }
+    try {
+      try {
+        await fs.promises.access(result.path, fs.constants.W_OK);
+      } catch {
+        return res.status(500).json({ error: `cannot access ` });
+      }
+      return res.json(result);
+    } catch (e: any) {
+      return res.status(500).json({ error: e?.message || 'failed to write metadata' });
+    }
   } catch (e: any) {
-    return res.status(500).json({ error: e?.message || 'failed to download track from TIDAL' });
+    return res.status(500).json({ id: e?.message || 'failed to download track from TIDAL' });
   }
-
 }
 
 export async function getdownloads(_req: Request, res: Response) {

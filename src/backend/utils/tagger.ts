@@ -3,6 +3,7 @@ import path from 'path';
 import { execFile } from 'child_process';
 import NodeID3 from 'node-id3';
 import { AudioMetadata, DownloadedCover } from '../types';
+import { sleep } from '../../commons/tools';
 
 
 const DJ_STREAM = 'dj-stream';
@@ -113,7 +114,9 @@ class AudioTagger {
   // ======================================================
   private execMetaflac(args: string[]): Promise<void> {
     return new Promise((resolve, reject) => {
+      console.log('Executing metaflac with args:', args.join(' '));
       execFile('metaflac', args, (err) => {
+        console.log('ERRORSSSSSS', err);
         if (err) reject(err);
         resolve();
       });
@@ -122,16 +125,25 @@ class AudioTagger {
 
   private async writeFLAC(filePath: string, metadata: AudioMetadata): Promise<void> {
     const updateTag = async (key: string, value?: string | number) => {
-      await this.execMetaflac([`--remove-tag=${key}`, filePath]);
-      await this.execMetaflac([`--set-tag=${key}=${value}`, filePath]);
+      try {
+        await this.execMetaflac([`--remove-tag=${key}`, `"${filePath}"`]);
+        await this.execMetaflac([`--set-tag=${key}=${value}`, filePath]);
+        await sleep(500);
+      } catch (e) {
+        throw new Error(`Falha ao escrever tags FLAC -> ${filePath} | ${e}`);
+      }
     };
 
     const updateCover = async (cover: AudioMetadata['cover']) => {
-      await this.execMetaflac(['--remove', '--block-type=PICTURE,PADDING', '--dont-use-padding', filePath]);
-      const coverPath = `${filePath}.cover`;
-      fs.writeFileSync(coverPath, cover.buffer);
-      await this.execMetaflac([`--import-picture-from=${coverPath}`, filePath]);
-      fs.unlinkSync(coverPath);
+      try {
+        await this.execMetaflac(['--remove', '--block-type=PICTURE,PADDING', '--dont-use-padding', filePath]);
+        const coverPath = `${filePath}.cover`;
+        fs.writeFileSync(coverPath, cover.buffer);
+        await this.execMetaflac([`--import-picture-from=${coverPath}`, filePath]);
+        fs.unlinkSync(coverPath);
+      } catch (e) {
+        throw new Error(`Falha ao escrever capa FLAC -> ${filePath}`);
+      }
     }
 
     updateTag('MEDIA', DJ_STREAM);

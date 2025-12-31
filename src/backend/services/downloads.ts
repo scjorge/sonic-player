@@ -9,6 +9,8 @@ import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
 import { getPathById } from './navidromeDatabase';
 
+import { pipeline } from 'stream/promises';
+import util from 'util';
 
 class DownloadService {
   downloads: Map<string, any>;
@@ -180,17 +182,21 @@ class DownloadService {
   }
 
   async writeMetadata(destFinal: string, song: any) {
-    const metadata: AudioMetadata = {
-      title: song.title,
-      artists: song.artist,
-      album: song.album,
-      albumArtist: song.artist.split(',')[0],
-      year: song.year,
-      trackNumber: song.track,
-      isrc: song.isrc,
-      cover: await this.downloadCoverFromUrl(song.coverArt),
-    };
-    await audioTagger.write(destFinal, metadata);
+    try {
+      const metadata: AudioMetadata = {
+        title: song.title,
+        artists: song.artist,
+        album: song.album,
+        albumArtist: song.artist.split(',')[0],
+        year: song.year,
+        trackNumber: song.track,
+        isrc: song.isrc,
+        cover: await this.downloadCoverFromUrl(song.coverArt),
+      };
+      await audioTagger.write(destFinal, metadata);
+    } catch (e) {
+      throw new Error('Failed to write metadata: ' + e.message);
+    }
   }
 
   private buildNavidromeTargetPath(meta: AudioMetadata, sourcePath: string) {
@@ -257,69 +263,114 @@ class DownloadService {
     }
   }
 
+
+
+
   async downloadTrackFromTidal(trackId: string, creds: any, song: any) {
+    let item: any;
+    let destFinal!: string;
+
     try {
       const filename = sanitizeQuery(`${song.artist} - ${song.title}`);
       const outDir = this.download_dir;
-      const item = {
+
+      // garante que o diretório existe
+      await fs.promises.mkdir(outDir, { recursive: true });
+
+      item = {
         id: song.id,
         title: song.title,
         artist: song.artist,
         coverArt: song.coverArt,
         progress: 0,
         status: 'queued',
-        filename: path.basename(path.join(outDir, filename + '.tmp')),
+        filename: `${filename}.tmp`,
         error: null,
         trackId,
         creds,
         song,
         contentType: 'audio/tidal-local',
       };
+
       this.setdownloadsItems(item);
 
-      // Start download asynchronously
-      (async () => {
-        try {
-          item.status = 'starting';
-          const manifest = await tidalService.getTidalPlaybackInfo(creds, trackId, TIDAL_QUALITY);
-          const url = manifest.urls[0];
-          item.status = 'downloading';
+      item.status = 'starting';
 
-          const resp = await fetch(url);
-          if (!resp.ok) throw new Error('Failed to fetch stream: ' + resp.status);
+      // 1️⃣ Playback info
+      const manifest = await tidalService.getTidalPlaybackInfo(creds, trackId, TIDAL_QUALITY);
+      console.log(song.title , song.artist, manifest.mimeType)
 
-          const total = Number(resp.headers.get('content-length')) || null;
-          let downloaded = 0;
+      if (manifest.mimeType !== 'audio/mpeg' && manifest.mimeType !== 'audio/flac') {
+        throw new Error(`Tipo de mídia não suportado: ${manifest.mimeType}`);
+      }
 
-          const destFinal = path.join(outDir, filename + path.extname(new URL(url).pathname) || '.bin');
-          const fileStream = fs.createWriteStream(destFinal);
+      const url = manifest.urls?.[0];
+      if (!url) {
+        throw new Error('URL de stream não encontrada');
+      }
 
-          const reader = resp.body;
-          for await (const chunk of reader) {
-            fileStream.write(chunk);
-            downloaded += chunk.length;
-            if (total) item.progress = Math.round((downloaded / total) * 100);
-            else item.progress = Math.min(99, item.progress + Math.round(chunk.length / 100000));
-          }
+      item.status = 'downloading';
 
-          fileStream.close();
-          item.progress = 100;
-          item.status = 'completed';
-          item.filename = path.basename(destFinal);
-          await this.writeMetadata(destFinal, song);
-        } catch (err) {
-          item.status = 'failed';
-          item.error = String(err);
-          console.error('Download failed', err);
+      // 2️⃣ Download
+      const resp = await fetch(url);
+      if (!resp.ok || !resp.body) {
+        throw new Error(`Falha no fetch: ${resp.status}`);
+      }
+
+      const total = Number(resp.headers.get('content-length')) || null;
+
+      const ext = path.extname(new URL(url).pathname) || '.bin';
+
+      destFinal = path.join(outDir, filename + ext);
+
+      let downloaded = 0;
+
+      const fileStream = fs.createWriteStream(destFinal);
+
+      // atualiza progresso
+      resp.body.on('data', (chunk: Buffer) => {
+        downloaded += chunk.length;
+        if (total) {
+          item.progress = Math.round((downloaded / total) * 100);
+        } else {
+          item.progress = Math.min(
+            99,
+            item.progress + Math.round(chunk.length / 100000)
+          );
         }
-      })();
-      return { id: song.id };
+      });
 
-    } catch (e) {
-      console.error(e);
-      return { error: String(e) };
+      // 3️⃣ Pipeline garante flush + close
+      await pipeline(resp.body, fileStream);
+
+      // 4️⃣ Validação final
+      const stat = await fs.promises.stat(destFinal);
+      if (!stat.size) {
+        throw new Error('Arquivo final criado mas está vazio');
+      }
+
+      item.progress = 100;
+      item.status = 'completed';
+      item.filename = path.basename(destFinal);
+
+      return {
+        id: song.id,
+        path: destFinal,
+        size: stat.size,
+      };
+    } catch (err) {
+      if (item) {
+        item.status = 'failed';
+        item.error = err instanceof Error ? err.message : String(err);
+      }
+
+      console.error('Download failed:', err);
+      return { error: String(err) };
     }
   }
+
+
+
 }
 
 export const downloadService = new DownloadService();
