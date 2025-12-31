@@ -267,7 +267,6 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
               onPlay={(s) => { if (onPlayDownload) onPlayDownload(s); }}
               currentTrackId={currentTrackId}
               isPlaying={isPlaying}
-              //defaultColumns={TIDAL_COLUMN_DOWNLOAD_CONFIG}
               isNaviTableDownload={true}
               onGroupEdit={(song) => setGroupModalSong(song)}
               onAfterFinalize={fetchCompleted}
