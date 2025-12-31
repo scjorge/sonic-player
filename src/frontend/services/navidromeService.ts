@@ -256,10 +256,9 @@ class NavidromeService {
     // 4. Fallback: getRandomSongs
     
     if (quickListType) {
-      const estimatedAlbumsToFetch = Math.max(5, Math.ceil(size / 10));
       const albumOffset = Math.floor(offset / 10);
         
-      const albums = await this.getAlbums(quickListType, estimatedAlbumsToFetch, albumOffset);
+      const albums = await this.getAlbums(quickListType, size, albumOffset);
         
       // Parallel fetch of songs for these albums
       const detailPromises = albums.map(a => this.getAlbum(a.id));
