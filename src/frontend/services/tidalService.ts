@@ -378,8 +378,15 @@ class TidalService {
     return null;
   }
 
-  // Logout: remove only auth tokens (keep clientId/secret)
-  logout() {}
+  // Logout: remove completamente a chave de autenticação do TIDAL
+  logout() {
+    try {
+      // Remove todas as infos gravadas em TIDAL_AUTH_KEY
+      saveTidalCredentials({});
+    } catch (e) {
+      console.error('Erro ao efetuar logout do TIDAL', e);
+    }
+  }
 
   async getTidalPlaybackInfo(creds: any, trackId: string, audioQuality: TidalPlayback['audioQuality']): Promise<TidalPlayback> {
     const parseBTSManifest = (manifestText: any, data: any) => {
