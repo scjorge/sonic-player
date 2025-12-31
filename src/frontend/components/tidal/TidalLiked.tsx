@@ -90,7 +90,6 @@ const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen, onNavigateToLibraryQuer
 
   return (
     <div className="h-full">
-      {items.length > 0 ? (
         <SongTable
           songs={items}
           onPlay={onOpen}
@@ -106,9 +105,6 @@ const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen, onNavigateToLibraryQuer
           navidromeExistenceMap={navidromeExistenceMap}
           onNavigateToLibraryQuery={onNavigateToLibraryQuery}
         />
-      ) : (
-        <div className="flex items-center justify-center h-full text-zinc-400">Nenhuma faixa favorita encontrada.</div>
-      )}
     </div>
   );
 };

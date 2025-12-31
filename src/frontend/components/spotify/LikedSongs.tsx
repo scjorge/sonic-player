@@ -138,29 +138,23 @@ const LikedSongs: React.FC<LikedSongsProps> = ({ onPlay, currentTrackId, isPlayi
 
   return (
     <div className="p-4 h-full">
-      {likedSongs.length > 0 ? (
-        <SongTable 
-          songs={likedSongs} 
-          onPlay={handlePlaySpotifySong} 
-          defaultColumns={SPOTIFY_COLUMN_CONFIG} // Pass the Spotify specific column config
-          page={page}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          isSpotifyTable={true}
-          currentTrackId={currentTrackId}
-          isPlaying={isPlaying}
-          navidromeExistenceMap={navidromeExistenceMap}
-          onNavigateToLibraryQuery={onNavigateToLibraryQuery}
-          onSearchTidalByTitle={onSearchTidalByTitle}
-          onSearchTidalByISRC={onSearchTidalByISRC}
-        />
-      ) : (
-        <div className="flex justify-center items-center h-full text-zinc-400">
-          <p>Nenhuma música curtida encontrada no Spotify.</p>
-        </div>
-      )}
+      <SongTable 
+        songs={likedSongs} 
+        onPlay={handlePlaySpotifySong} 
+        defaultColumns={SPOTIFY_COLUMN_CONFIG} // Pass the Spotify specific column config
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        isSpotifyTable={true}
+        currentTrackId={currentTrackId}
+        isPlaying={isPlaying}
+        navidromeExistenceMap={navidromeExistenceMap}
+        onNavigateToLibraryQuery={onNavigateToLibraryQuery}
+        onSearchTidalByTitle={onSearchTidalByTitle}
+        onSearchTidalByISRC={onSearchTidalByISRC}
+      />
     </div>
   );
 };
