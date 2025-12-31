@@ -1356,9 +1356,10 @@ const App: React.FC = () => {
   };
 
   const playTidalDownloadedSong = (song: NaviSong) => {
-    setExclusivePlayer('tidal');
+    // Tratar downloads preparados como "tema Navidrome" no player
+    setExclusivePlayer('navidrome');
 
-    if (currentTrack?.id === song.id && currentTrack.sourceType === 'tidal') {
+    if (currentTrack?.id === song.id && currentTrack.sourceType === 'navidrome') {
       togglePlayPause();
       return;
     }
@@ -1372,7 +1373,8 @@ const App: React.FC = () => {
       coverUrl: song.coverArt || null,
       src: streamUrl,
       duration: song.duration || 0,
-      sourceType: 'tidal',
+      // Usa o mesmo sourceType do Navidrome para herdar o tema (cores)
+      sourceType: 'navidrome',
     };
 
     loadAndPlay(playerTrack);
