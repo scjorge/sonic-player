@@ -263,9 +263,6 @@ class DownloadService {
     }
   }
 
-
-
-
   async downloadTrackFromTidal(trackId: string, creds: any, song: any) {
     let item: any;
     let destFinal!: string;
@@ -298,10 +295,6 @@ class DownloadService {
 
       // 1️⃣ Playback info
       const manifest = await tidalService.getTidalPlaybackInfo(creds, trackId, TIDAL_QUALITY);
-
-      if (manifest.mimeType !== 'audio/mpeg' && manifest.mimeType !== 'audio/flac') {
-        throw new Error(`Tipo de mídia não suportado: ${manifest.mimeType}`);
-      }
 
       const url = manifest.urls?.[0];
       if (!url) {
@@ -367,9 +360,6 @@ class DownloadService {
       return { error: String(err) };
     }
   }
-
-
-
 }
 
 export const downloadService = new DownloadService();

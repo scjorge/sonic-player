@@ -114,9 +114,7 @@ class AudioTagger {
   // ======================================================
   private execMetaflac(args: string[]): Promise<void> {
     return new Promise((resolve, reject) => {
-      console.log('Executing metaflac with args:', args.join(' '));
       execFile('metaflac', args, (err) => {
-        console.log('ERRORSSSSSS', err);
         if (err) reject(err);
         resolve();
       });
