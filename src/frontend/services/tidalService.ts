@@ -274,6 +274,64 @@ class TidalService {
     return { items: mapped, total };
   }
 
+  /**
+   * Tenta renovar o accessToken usando o refresh_token salvo, caso esteja expirado.
+   * Retorna true se, ao final, existir um accessToken válido, false caso contrário.
+   */
+  async refreshAccessTokenIfNeeded(): Promise<boolean> {
+    const creds: any = getTidalCredentials();
+
+    // Sem refreshToken ou client credentials, não há o que fazer
+    if (!creds.refreshToken || !creds.clientId || !creds.clientSecret) {
+      return !!(creds.accessToken && creds.expiresAt && creds.expiresAt > Date.now());
+    }
+
+    // Se o token atual ainda é válido, nada a fazer
+    if (creds.accessToken && creds.expiresAt && creds.expiresAt > Date.now()) {
+      return true;
+    }
+
+    try {
+      const body = new URLSearchParams();
+      body.append('grant_type', 'refresh_token');
+      body.append('refresh_token', creds.refreshToken);
+      body.append('client_id', creds.clientId);
+
+      const res = await fetch(`${TIDAL_AUTH_BASE}/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + btoa(`${creds.clientId}:${creds.clientSecret}`),
+        },
+        body: body.toString(),
+      });
+
+      const json: any = await res.json().catch(() => ({}));
+
+      if (!res.ok || !json.access_token) {
+        console.error('Falha ao renovar token do TIDAL via refresh_token', json);
+        // Se falhou, zera os tokens para forçar re-autenticação manual
+        saveTidalCredentials({});
+        return false;
+      }
+
+      const expiresAt = Date.now() + (json.expires_in * 1000);
+
+      saveTidalCredentials({
+        accessToken: json.access_token,
+        refreshToken: json.refresh_token || creds.refreshToken,
+        expiresAt,
+        countryCode: creds.countryCode,
+        userId: creds.userId,
+      });
+
+      return true;
+    } catch (e) {
+      console.error('Erro ao tentar renovar token do TIDAL', e);
+      return false;
+    }
+  }
+
   async getPlaylistItems(playlistId: string, limit = 100, offset = 0) {
     const creds = this.getCredentials();
     const token = this.getAccessToken();

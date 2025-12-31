@@ -238,6 +238,8 @@ const App: React.FC = () => {
   const [spotifyDevices, setSpotifyDevices] = useState<any[]>([]);
   const [spotifyActiveDeviceId, setSpotifyActiveDeviceId] = useState<string | null>(null);
   const [devicesDropdownOpen, setDevicesDropdownOpen] = useState(false);
+  // Trigger para re-renderizar após auto-refresh de token TIDAL
+  const [, setTidalAuthVersion] = useState(0);
 
   // --- SPOTIFY PLAYBACK SYNC ---
   useEffect(() => {
@@ -331,7 +333,6 @@ const App: React.FC = () => {
         if (path === '/callback' && code) {
           console.log("Código de autorização recebido em App.tsx:", code, 'state=', state);
           const success = await spotifyService.exchangeCodeForTokens(code);
-          console.log(success, "888888888888888")
           if (success) {
             setIsAuthenticated(true);
           } else {
@@ -407,6 +408,17 @@ const App: React.FC = () => {
           } else {
             await handleSpotifyBrowseClick(savedPage, savedSize);
           }
+        }
+
+        // Auto-refresh TIDAL access token se houver refresh_token válido
+        try {
+          const refreshed = await tidalService.refreshAccessTokenIfNeeded();
+          if (refreshed) {
+            // Força re-render para que os checks de isAuthenticated() reflitam o novo token
+            setTidalAuthVersion(v => v + 1);
+          }
+        } catch {
+          // Silencia erros de refresh automático; usuário poderá reautenticar manualmente
         }
         // if tidal_browse was default, nothing to do until user searches
       } catch (e) {
