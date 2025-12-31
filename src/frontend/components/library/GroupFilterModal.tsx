@@ -56,9 +56,9 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
               <Filter className="w-5 h-5 text-indigo-500" />
             </div>
             <div>
-              <h3 className="text-zinc-500 text-xs font-mono uppercase tracking-widest mb-1">Filtro por Grupos</h3>
+              <h3 className="text-zinc-500 text-xs font-mono uppercase tracking-widest mb-1">Filtros</h3>
               <h2 className="text-white font-bold text-lg truncate max-w-md">
-                Selecione os grupos para filtrar a biblioteca
+                Selecione os Filtros
               </h2>
             </div>
           </div>

@@ -800,7 +800,7 @@ const SongTable: React.FC<SongTableProps> = ({
                   title="Filtrar por grupos (comentários DJ)"
                 >
                   <Tags className="w-4 h-4" />
-                  Filtro por grupos
+                  Filtros
                 </button>
               )}
 
