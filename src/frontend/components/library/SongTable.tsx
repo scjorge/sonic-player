@@ -370,10 +370,25 @@ const SongTable: React.FC<SongTableProps> = ({
           ? (isSpotifyTable ? 'text-green-400' : isTidalTable ? 'text-yellow-400' : 'text-indigo-400')
           : 'text-zinc-100';
 
+        if (song.artist && song.album) {
+          return (
+            <div className="flex flex-col leading-tight">
+              <span className={`font-medium ${titleColor}`}>{song.title}</span>
+              <span className="text-xs text-zinc-400 mt-0.5">{song.artist} | {song.album}</span>
+            </div>
+          );
+        }
+        if (song.artist){
+          return (
+            <div className="flex flex-col leading-tight">
+              <span className={`font-medium ${titleColor}`}>{song.title}</span>
+              <span className="text-xs text-zinc-400 mt-0.5">{song.artist}</span>
+            </div>
+          );
+        }
         return (
           <div className="flex flex-col leading-tight">
             <span className={`font-medium ${titleColor}`}>{song.title}</span>
-            <span className="text-xs text-zinc-400 mt-0.5">{song.artist}</span>
           </div>
         );
       }

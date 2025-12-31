@@ -7,7 +7,7 @@ export const SPOTIFY_COLUMN_CONFIG: ColumnConfig[] = [
   { id: 'combinedTitle', label: 'Título combinado', width: 260, visible: true, minWidth: 150 },
   { id: 'title', label: 'Título', width: 200, visible: false, minWidth: 100 },
   { id: 'artist', label: 'Artista', width: 160, visible: false, minWidth: 100 },
-  { id: 'album', label: 'Álbum', width: 200, visible: true, minWidth: 100 },
+  { id: 'album', label: 'Álbum', width: 200, visible: false, minWidth: 100 },
   { id: 'year', label: 'Ano', width: 80, visible: true, minWidth: 60 },
   { id: 'duration', label: 'Duração', width: 80, visible: true, minWidth: 60 },
   { id: 'isrc', label: 'ISRC', width: 150, visible: false, minWidth: 80 },

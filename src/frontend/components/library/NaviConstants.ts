@@ -7,7 +7,7 @@ export const NAVI_COLUMN_CONFIG: ColumnConfig[] = [
   { id: 'combinedTitle', label: 'Título combinado', width: 300, visible: true, minWidth: 150 },
   { id: 'title', label: 'Título', width: 200, visible: false, minWidth: 100 },
   { id: 'artist', label: 'Artista', width: 150, visible: false, minWidth: 100 },
-  { id: 'album', label: 'Álbum', width: 150, visible: true, minWidth: 100 },
+  { id: 'album', label: 'Álbum', width: 150, visible: false, minWidth: 100 },
   { id: 'genre', label: 'Gênero', width: 100, visible: true, minWidth: 200 },
   { id: 'comment', label: 'Comentários', width: 400, visible: true, minWidth: 200 },
   { id: 'userRating', label: 'Avaliação', width: 100, visible: false, minWidth: 80 },
