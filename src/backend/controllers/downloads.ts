@@ -5,27 +5,26 @@ import { downloadService } from '../services/downloads';
 
 
 export async function downloadTrackFromTidal(req: Request, res: Response) {
+  let result: any
   const { trackId, creds, song } = req.body;
   if (!trackId || !creds || !song) return res.status(400).json({ error: 'trackId creds and song are required' });
 
   try {
-    const result = await downloadService.downloadTrackFromTidal(trackId, creds, song);
+    result = await downloadService.downloadTrackFromTidal(trackId, creds, song);
     if (result.error) {
       return res.status(500).json({ error: result.error });
-    }
-    try {
-      try {
-        await fs.promises.access(result.path, fs.constants.W_OK);
-      } catch {
-        return res.status(500).json({ error: `cannot access ` });
-      }
-      return res.json(result);
-    } catch (e: any) {
-      return res.status(500).json({ error: e?.message || 'failed to write metadata' });
     }
   } catch (e: any) {
     return res.status(500).json({ id: e?.message || 'failed to download track from TIDAL' });
   }
+
+  try {
+    await downloadService.writeMetadata(result.path, song);
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'failed to write metadata' });
+  }
+
+  return res.json(result);
 }
 
 export async function getdownloads(_req: Request, res: Response) {

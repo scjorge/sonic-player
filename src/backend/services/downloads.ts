@@ -298,7 +298,6 @@ class DownloadService {
 
       // 1️⃣ Playback info
       const manifest = await tidalService.getTidalPlaybackInfo(creds, trackId, TIDAL_QUALITY);
-      console.log(song.title , song.artist, manifest.mimeType)
 
       if (manifest.mimeType !== 'audio/mpeg' && manifest.mimeType !== 'audio/flac') {
         throw new Error(`Tipo de mídia não suportado: ${manifest.mimeType}`);

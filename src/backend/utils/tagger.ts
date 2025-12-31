@@ -126,9 +126,9 @@ class AudioTagger {
   private async writeFLAC(filePath: string, metadata: AudioMetadata): Promise<void> {
     const updateTag = async (key: string, value?: string | number) => {
       try {
-        await this.execMetaflac([`--remove-tag=${key}`, `"${filePath}"`]);
+        await this.execMetaflac([`--remove-tag=${key}`, filePath]);
         await this.execMetaflac([`--set-tag=${key}=${value}`, filePath]);
-        await sleep(500);
+        await sleep(100);
       } catch (e) {
         throw new Error(`Falha ao escrever tags FLAC -> ${filePath} | ${e}`);
       }
@@ -146,7 +146,7 @@ class AudioTagger {
       }
     }
 
-    updateTag('MEDIA', DJ_STREAM);
+    await updateTag('MEDIA', DJ_STREAM);
     if (metadata.title) await updateTag('TITLE', metadata.title);
     if (metadata.artists) await updateTag('ARTIST', metadata.artists);
     if (metadata.album) await updateTag('ALBUM', metadata.album);
