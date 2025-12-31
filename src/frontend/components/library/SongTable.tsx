@@ -63,7 +63,7 @@ interface SongTableProps {
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
-export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate' | 'download' | 'isrc' | 'finalize';
+export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'combinedTitle' | 'artist' | 'album' | 'genre' | 'userRating' | 'year' | 'duration' | 'comment' | 'mood' | 'group' | 'format' | 'filename' | 'discNumber' | 'bitRate' | 'samplingRate' | 'download' | 'isrc' | 'finalize';
 
 type RowDensity = 'compact' | 'normal' | 'relaxed';
 
@@ -361,6 +361,19 @@ const SongTable: React.FC<SongTableProps> = ({
                 <Play className="text-white fill-white drop-shadow-md ml-0.5" size={playIconSize} />
               )}
             </div>
+          </div>
+        );
+      }
+      case 'combinedTitle': {
+        const isCurrent = currentTrackId === song.id;
+        const titleColor = isCurrent
+          ? (isSpotifyTable ? 'text-green-400' : isTidalTable ? 'text-yellow-400' : 'text-indigo-400')
+          : 'text-zinc-100';
+
+        return (
+          <div className="flex flex-col leading-tight">
+            <span className={`font-medium ${titleColor}`}>{song.title}</span>
+            <span className="text-xs text-zinc-400 mt-0.5">{song.artist}</span>
           </div>
         );
       }

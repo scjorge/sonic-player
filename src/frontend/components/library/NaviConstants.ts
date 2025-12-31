@@ -5,6 +5,7 @@ export const NAVI_COLUMN_CONFIG: ColumnConfig[] = [
   { id: 'index', label: '#', width: 40, visible: true, minWidth: 30 },
   { id: 'cover', label: 'Capa', width: 80, visible: true, minWidth: 50 },
   { id: 'title', label: 'Título', width: 200, visible: true, minWidth: 100 },
+  { id: 'combinedTitle', label: 'Título combinado', width: 230, visible: true, minWidth: 150 },
   { id: 'artist', label: 'Artista', width: 150, visible: true, minWidth: 100 },
   { id: 'album', label: 'Álbum', width: 150, visible: true, minWidth: 100 },
   { id: 'genre', label: 'Gênero', width: 100, visible: true, minWidth: 200 },
