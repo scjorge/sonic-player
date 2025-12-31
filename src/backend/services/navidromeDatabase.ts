@@ -22,7 +22,6 @@ export function search4(comments: string[], genres: string[], artists: string[],
     return [];
   }
 
-  console.log('Search4 called with:', { comments, genres, artists, years, limit, offset });
   const whereParts: string[] = [];
   const params: any[] = [];
 

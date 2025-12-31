@@ -102,71 +102,70 @@ const GroupTagModal: React.FC<GroupTagModalProps> = ({ song, groups, onClose, on
           </button>
         </div>
 
-        {/* Content Grid */}
-        <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
-            
-          {/* Left: Groups & Checkboxes */}
-          <div className="flex-1 overflow-y-auto p-6 bg-zinc-900/50 custom-scrollbar">
-            {groups.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-zinc-500">Nenhum grupo configurado.</p>
-                <p className="text-xs text-zinc-600 mt-2">Vá em Configurações na tela principal para criar grupos.</p>
+        {/* Content: Preview on top, Groups below */}
+        <div className="flex-1 overflow-hidden bg-zinc-900/50">
+          <div className="h-full overflow-y-auto p-6 custom-scrollbar space-y-6">
+            {/* Preview & Manual Edit */}
+            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2 text-zinc-100 font-semibold text-sm">
+                <Eye className="w-4 h-4 text-indigo-500" />
+                Prévia do Comentário
               </div>
-            ) : (
-              <div className="space-y-8">
-                {groups.map(group => (
-                  <div key={group.id} className="space-y-3">
-                    <div className="flex items-baseline gap-2 border-b border-zinc-800 pb-2">
-                      <h4 className="text-indigo-400 font-bold text-sm uppercase tracking-wider">{group.name}</h4>
-                      <span className="text-[15px] text-zinc-600 font-mono">prefixo: {group.prefix}</span>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {group.items.map((item, idx) => {
-                        const isChecked = isItemSelected(group, item);
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => toggleItem(group, item)}
-                            className={`group flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left transition-all ${
-                              isChecked 
-                                ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-200' 
-                                : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:bg-zinc-800/80'
-                            }`}
-                          >
-                            {isChecked ? (
-                              <CheckSquare className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-                            ) : (
-                              <Square className="w-4 h-4 text-zinc-600 group-hover:text-zinc-500 flex-shrink-0" />
-                            )}
-                            <span className="truncate" title={item}>{item}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* Right: Preview & Manual Edit */}
-          <div className="w-full md:w-80 border-l border-zinc-800 bg-zinc-950 p-6 flex flex-col gap-4">
-            <div className="flex items-center gap-2 text-zinc-100 font-semibold text-sm">
-              <Eye className="w-4 h-4 text-indigo-500" />
-              Prévia do Comentário
-            </div>
-                
-            <div className="flex-1 relative">
-              <textarea 
+              <textarea
                 value={localComments}
                 onChange={(e) => setLocalComments(e.target.value)}
-                className="w-full h-full min-h-[200px] bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm font-mono text-zinc-300 focus:outline-none focus:border-indigo-500 resize-none shadow-inner custom-scrollbar"
-                placeholder="Selecione os itens ao lado ou digite aqui..."
+                className="w-full min-h-[96px] max-h-[180px] bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm font-mono text-zinc-300 focus:outline-none focus:border-indigo-500 resize-none shadow-inner custom-scrollbar"
+                placeholder="Selecione os itens abaixo ou digite aqui..."
               />
+
+              <div className="text-[10px] text-zinc-600">
+                * Você pode editar manualmente ou usar os checkboxes. As alterações são sincronizadas localmente.
+              </div>
             </div>
-                
-            <div className="text-[10px] text-zinc-600">
-              * Você pode editar manualmente ou usar os checkboxes. As alterações são sincronizadas localmente.
+
+            {/* Groups & Checkboxes */}
+            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar">
+              {groups.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-zinc-500">Nenhum grupo configurado.</p>
+                  <p className="text-xs text-zinc-600 mt-2">Vá em Configurações na tela principal para criar grupos.</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {groups.map(group => (
+                    <div key={group.id} className="space-y-3">
+                      <div className="flex items-baseline gap-2 border-b border-zinc-800 pb-2">
+                        <h4 className="text-indigo-400 font-bold text-sm uppercase tracking-wider">{group.name}</h4>
+                        <span className="text-[15px] text-zinc-600 font-mono">prefixo: {group.prefix}</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                        {group.items.map((item, idx) => {
+                          const isChecked = isItemSelected(group, item);
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => toggleItem(group, item)}
+                              className={`group flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left transition-all ${
+                                isChecked
+                                  ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-200'
+                                  : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:bg-zinc-800/80'
+                              }`}
+                            >
+                              {isChecked ? (
+                                <CheckSquare className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                              ) : (
+                                <Square className="w-4 h-4 text-zinc-600 group-hover:text-zinc-500 flex-shrink-0" />
+                              )}
+                              <span className="truncate" title={item}>{item}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

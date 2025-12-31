@@ -127,7 +127,7 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
                       <h4 className="text-indigo-400 font-bold text-sm uppercase tracking-wider">{group.name}</h4>
                       <span className="text-[13px] text-zinc-600 font-mono">prefixo: {group.prefix}</span>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                       {group.items.map((item, idx) => {
                         const key = `${group.prefix}=${item}`;
                         const isChecked = selected.has(key);
