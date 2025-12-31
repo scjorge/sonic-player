@@ -197,6 +197,7 @@ const SongTable: React.FC<SongTableProps> = ({
   };
 
   const activeFilterCount = (activeArtist ? 1 : 0) + (activeGenre ? 1 : 0) + (activeYear ? 1 : 0);
+  const isAnyFilterActive = (activeFilterCount > 0) || !!isGroupFilterActive;
 
   // --- RESIZE LOGIC ---
   const resizingRef = useRef<{ startX: number; startWidth: number; columnId: ColumnId } | null>(null);
@@ -793,7 +794,7 @@ const SongTable: React.FC<SongTableProps> = ({
               {isNavidromeLibraryTable && onOpenGroupFilter && (
                 <button
                   onClick={onOpenGroupFilter}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isGroupFilterActive
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isAnyFilterActive
                     ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
                     : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
                   }`}
