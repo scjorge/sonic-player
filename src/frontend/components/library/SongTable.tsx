@@ -768,6 +768,7 @@ const SongTable: React.FC<SongTableProps> = ({
               onClick={async () => {
                 setContextMenu({ ...contextMenu, visible: false });
                 try {
+                  showToast(`Download Iniciado: ${contextMenu.song.title}`, 'warning');
                   const body = {
                     creds: tidalService.getCredentials(),
                     trackId: contextMenu.song!.id,
@@ -782,8 +783,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     const err = await resp.json().catch(() => ({}));
                     throw new Error(err.error || 'Failed to queue download');
                   }
-                  const json = await resp.json();
-                  showToast('Download Finalizado (id: ' + json.id + ')', 'success');
+                  showToast(`Download Finalizado: ${contextMenu.song.title}`, 'success');
                 } catch (e){
                   console.error('TIDAL download request failed', e);
                   showToast('Falha ao iniciar download no servidor: ' + (e?.message || String(e)), 'error');
