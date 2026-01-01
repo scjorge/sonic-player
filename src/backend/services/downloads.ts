@@ -106,7 +106,7 @@ class DownloadService {
             path: fullPath,
             contentType: 'audio/tidal-local',
             duration: duration,
-            ext: path.extname(name).toLowerCase().slice(1),
+            suffix: path.extname(name).toLowerCase().slice(1),
           };
         } catch (e) {
           console.error('Failed to read metadata for downloaded file', fullPath, e);
