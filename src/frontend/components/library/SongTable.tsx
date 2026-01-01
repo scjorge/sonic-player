@@ -145,6 +145,22 @@ const SongTable: React.FC<SongTableProps> = ({
   const [searchInputValue, setSearchInputValue] = useState(activeSearchQuery);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [isTagEditMode, setIsTagEditMode] = useState(false);
+  const [shazamState, setShazamState] = useState<{
+    open: boolean;
+    loading: boolean;
+    error?: string | null;
+    song: NaviSong | null;
+    matches: {
+      id: string;
+      title?: string;
+      artist?: string;
+      album?: string;
+      year?: string;
+      isrc?: string;
+      coverArt?: string;
+    }[];
+    selectedId?: string;
+  }>({ open: false, loading: false, error: null, song: null, matches: [] });
 
   // Sync internal state with external prop if it changes (e.g. clear)
   useEffect(() => {
@@ -681,6 +697,128 @@ const SongTable: React.FC<SongTableProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-zinc-950 relative">
+      {/* Shazam Modal */}
+      {shazamState.open && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+              <div>
+                <h2 className="text-sm font-semibold text-white">Resultados do Shazam</h2>
+                {shazamState.song && (
+                  <p className="text-[11px] text-zinc-500 mt-0.5 truncate">
+                    Arquivo: {getFileName(shazamState.song.path)}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setShazamState({ open: false, loading: false, error: null, song: null, matches: [], selectedId: undefined })}
+                className="text-zinc-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-zinc-800"
+              >
+                Fechar
+              </button>
+            </div>
+
+            {shazamState.loading && (
+              <div className="flex-1 flex items-center justify-center p-6 text-zinc-300 text-sm">
+                Buscando no Shazam...
+              </div>
+            )}
+
+            {!shazamState.loading && shazamState.error && (
+              <div className="flex-1 flex items-center justify-center p-6 text-red-400 text-sm">
+                {shazamState.error}
+              </div>
+            )}
+
+            {!shazamState.loading && !shazamState.error && (
+              <div className="flex-1 flex divide-x divide-zinc-800 overflow-hidden">
+                <div className="w-1/3 max-w-xs overflow-y-auto custom-scrollbar p-3 space-y-1">
+                  {shazamState.matches.length === 0 && (
+                    <p className="text-xs text-zinc-500">Nenhuma correspondência encontrada.</p>
+                  )}
+                  {shazamState.matches.map((m) => {
+                    const isSelected = shazamState.selectedId === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => setShazamState((prev) => ({ ...prev, selectedId: m.id }))}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${isSelected ? 'bg-indigo-600/80 text-white' : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300'}`}
+                      >
+                        <div className="font-semibold truncate">{m.title || 'Sem título'}</div>
+                        <div className="text-[11px] text-zinc-400 truncate">{m.artist || '-'}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex-1 p-4 overflow-y-auto custom-scrollbar flex flex-col gap-4">
+                  {(() => {
+                    const current = shazamState.matches.find(m => m.id === shazamState.selectedId) || shazamState.matches[0];
+                    if (!current) return <p className="text-xs text-zinc-500">Selecione um resultado na lista ao lado.</p>;
+
+                    const fields: { key: keyof typeof current; label: string }[] = [
+                      { key: 'title', label: 'Título' },
+                      { key: 'artist', label: 'Artista' },
+                      { key: 'album', label: 'Álbum' },
+                      { key: 'year', label: 'Ano' },
+                      { key: 'isrc', label: 'ISRC' },
+                    ];
+
+                    const handleCopy = async (value?: string) => {
+                      if (!value) return;
+                      try {
+                        await navigator.clipboard.writeText(value);
+                        showToast('Copiado para a área de transferência.', 'success');
+                      } catch {
+                        showToast('Falha ao copiar para a área de transferência.', 'error');
+                      }
+                    };
+
+                    return (
+                      <>
+                        {current.coverArt && (
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={current.coverArt}
+                              alt="Capa"
+                              className="w-16 h-16 rounded-md object-cover border border-zinc-700"
+                            />
+                            <div className="min-w-0">
+                              <div className="text-sm font-semibold text-white truncate">{current.title || '-'}</div>
+                              <div className="text-xs text-zinc-400 truncate">{current.artist || '-'}</div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="space-y-2 text-xs">
+                          {fields.map(({ key, label }) => (
+                            <div key={key as string} className="flex items-center gap-2">
+                              <span className="w-16 text-zinc-500 flex-shrink-0">{label}</span>
+                              <span className="flex-1 truncate text-zinc-200" title={current[key] as string | undefined}>
+                                {current[key] || '-'}
+                              </span>
+                              <button
+                                onClick={() => handleCopy(current[key] as string | undefined)}
+                                disabled={!current[key]}
+                                className={`px-2 py-1 text-[11px] rounded border ${current[key]
+                                  ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800'
+                                  : 'border-zinc-800 text-zinc-600 cursor-not-allowed'
+                                }`}
+                              >
+                                Copiar
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* Context Menu Portal/Div */}
       {contextMenu.visible && contextMenu.song && (
         <div
@@ -747,6 +885,54 @@ const SongTable: React.FC<SongTableProps> = ({
               className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
             >
               <Tags className="w-4 h-4" /> Editar Grupos
+            </button>
+          )}
+
+          {/* Shazam search option - only for Navidrome preparation/download table with local file */}
+          {isNaviTableDownload && contextMenu.song?.path && (
+            <button
+              onClick={async () => {
+                const song = contextMenu.song!;
+                setContextMenu({ ...contextMenu, visible: false });
+                setShazamState({
+                  open: true,
+                  loading: true,
+                  error: null,
+                  song,
+                  matches: [],
+                  selectedId: undefined,
+                });
+                try {
+                  const resp = await fetch(`${BACKEND_BASE_URL}/api/shazam/recognise`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: song.path }),
+                  });
+                  if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.error || resp.statusText);
+                  }
+                  const json = await resp.json();
+                  const matches = Array.isArray(json.matches) ? json.matches : [];
+                  setShazamState((prev) => ({
+                    ...prev,
+                    loading: false,
+                    matches,
+                    selectedId: matches[0]?.id,
+                  }));
+                } catch (e: any) {
+                  const message = e?.message || 'Falha ao buscar no Shazam';
+                  showToast(message, 'error');
+                  setShazamState((prev) => ({
+                    ...prev,
+                    loading: false,
+                    error: message,
+                  }));
+                }
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+            >
+              <Search className="w-4 h-4" /> Encontrar no Shazam
             </button>
           )}
 
