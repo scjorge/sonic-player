@@ -173,6 +173,14 @@ const App: React.FC = () => {
     setLastViewMode(viewMode);
   }, [viewMode]);
 
+  // Limpa o "initialQuery" do TIDAL assim que o usuário sai da tela de busca do TIDAL,
+  // para que mudanças manuais na busca persistam quando voltar para a página.
+  useEffect(() => {
+    if (viewMode !== 'tidal_browse') {
+      setTidalInitialQuery('');
+    }
+  }, [viewMode]);
+
   // Persist Navidrome library (Músicas) filters, busca e paginação
   useEffect(() => {
     setUserState('navi_songs', {
