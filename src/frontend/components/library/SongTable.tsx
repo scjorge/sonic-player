@@ -144,6 +144,7 @@ const SongTable: React.FC<SongTableProps> = ({
   const [genreSuggestions, setGenreSuggestions] = useState<string[]>([]);
   const [searchInputValue, setSearchInputValue] = useState(activeSearchQuery);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const [isTagEditMode, setIsTagEditMode] = useState(false);
   const [shazamState, setShazamState] = useState<{
     open: boolean;
@@ -179,6 +180,47 @@ const SongTable: React.FC<SongTableProps> = ({
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && onSearch) {
       onSearch(searchInputValue);
+    }
+  };
+
+  const handleUploadPreparationClick = () => {
+    if (!isNaviTableDownload) return;
+    if (uploadInputRef.current) {
+      uploadInputRef.current.click();
+    }
+  };
+
+  const handleUploadPreparationFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isNaviTableDownload) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const formData = new FormData();
+    Array.from(files).forEach((file) => {
+      formData.append('files', file);
+    });
+
+    // permite reenvio dos mesmos arquivos
+    e.target.value = '';
+
+    try {
+      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/upload-preparation`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        showToast(`Erro ao fazer upload: ${err.error || resp.statusText}`, 'error');
+        return;
+      }
+
+      showToast('Upload concluído. Atualizando lista de preparo...', 'success');
+      if (onAfterFinalize) {
+        onAfterFinalize();
+      }
+    } catch (error: any) {
+      showToast(`Erro ao fazer upload: ${error?.message || String(error)}`, 'error');
     }
   };
 
@@ -893,6 +935,7 @@ const SongTable: React.FC<SongTableProps> = ({
           </div>
         </div>
       )}
+
       {/* Context Menu Portal/Div */}
       {contextMenu.visible && contextMenu.song && (
         <div
@@ -1163,6 +1206,24 @@ const SongTable: React.FC<SongTableProps> = ({
           </button>
         )}
         <div className="flex items-center gap-2">
+          {isNaviTableDownload && (
+            <>
+              <input
+                ref={uploadInputRef}
+                type="file"
+                multiple
+                accept="audio/mpeg,audio/flac,.mp3,.flac,audio/*"
+                className="hidden"
+                onChange={handleUploadPreparationFiles}
+              />
+              <button
+                onClick={handleUploadPreparationClick}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-indigo-500 text-indigo-300 hover:bg-indigo-500/20"
+              >
+                Upload
+              </button>
+            </>
+          )}
           <div className="relative">
             <button
               onClick={() => setShowSettings(!showSettings)}

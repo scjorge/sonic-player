@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { NaviSong, TagGroup } from '../../../../types';
 import SongTable from './SongTable';
 import { BACKEND_BASE_URL } from '../../../core/config';
@@ -36,6 +36,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
   const [loadingCompleted, setLoadingCompleted] = useState(false);
   const [groupModalSong, setGroupModalSong] = useState<NaviSong | null>(null);
   const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -280,13 +281,13 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
       )}
 
       {activeTab === 'completed' && (
-        <div className="flex-1 bg-zinc-950">
+        <div className="flex-1 bg-zinc-950 flex flex-col">
           {loadingCompleted ? (
-            <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+            <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm">
               Carregando downloads finalizados...
             </div>
           ) : completedSongs.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+            <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm">
               Nenhum download finalizado encontrado.
             </div>
           ) : (

@@ -22,7 +22,7 @@ export async function recogniseFromFile(filePath: string, navidrome_id: string |
   if(navidrome_id) {
     filePath = await getPathById(navidrome_id);
   }
-  console.log('Recognising file with Shazam:', filePath);
+
   let resolved = filePath;
   if (!path.isAbsolute(resolved)) {
     resolved = path.resolve(process.cwd(), resolved);

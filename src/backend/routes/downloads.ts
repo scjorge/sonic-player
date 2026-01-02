@@ -1,7 +1,20 @@
 import { Router } from 'express';
-import { downloadTrackFromTidal, getdownloads, getCompletedDownloads, streamDownload, writeMetadataParts, finalizeDownload, deleteDownload, clearDownloads, getCoverDownloads, writeCoverFromUrl } from '../controllers/downloads';
+import multer from 'multer';
+import { downloadTrackFromTidal, getdownloads, getCompletedDownloads, streamDownload, writeMetadataParts, finalizeDownload, deleteDownload, clearDownloads, getCoverDownloads, writeCoverFromUrl, uploadPreparation } from '../controllers/downloads';
+import { NAVIDROME_PREPARATION_PATH } from '../../core/config';
 
 const downloadsRouter = Router();
+
+const storage = multer.diskStorage({
+	destination: (_req, _file, cb) => {
+		cb(null, NAVIDROME_PREPARATION_PATH);
+	},
+	filename: (_req, file, cb) => {
+		cb(null, file.originalname);
+	},
+});
+
+const upload = multer({ storage });
 
 downloadsRouter.get('/', getdownloads);
 downloadsRouter.delete('/', clearDownloads);
@@ -13,5 +26,6 @@ downloadsRouter.post('/tidal', downloadTrackFromTidal);
 downloadsRouter.post('/finalize', finalizeDownload);
 downloadsRouter.post('/metadata', writeMetadataParts);
 downloadsRouter.post('/metadata-cover', writeCoverFromUrl);
+downloadsRouter.post('/upload-preparation', upload.array('files'), uploadPreparation);
 
 export default downloadsRouter;

@@ -4,13 +4,13 @@ import fetch from 'node-fetch';
 import { execFile } from 'child_process';
 import { sanitizeQuery } from '../../commons/tools';
 import { tidalService } from '../../frontend/services/tidalService';
-import { NAVIDROME_BASE_PATH, NAVIDROME_SAVE_FORMAT, TIDAL_QUALITY, TIDAL_DOWNLOAD_PATH } from '../../core/config';
+import { NAVIDROME_BASE_PATH, NAVIDROME_SAVE_FORMAT, TIDAL_QUALITY, NAVIDROME_PREPARATION_PATH } from '../../core/config';
 import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
 import { getPathById } from './navidromeDatabase';
 
 import { pipeline } from 'stream/promises';
-import util from 'util';
+
 
 class DownloadService {
   downloads: Map<string, any>;
@@ -18,7 +18,7 @@ class DownloadService {
 
   constructor() {
     this.downloads = new Map();
-    this.download_dir = TIDAL_DOWNLOAD_PATH;
+    this.download_dir = NAVIDROME_PREPARATION_PATH;
     if (!fs.existsSync(this.download_dir)) fs.mkdirSync(this.download_dir, { recursive: true });
   }
 

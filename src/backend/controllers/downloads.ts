@@ -166,3 +166,24 @@ export async function streamDownload(req: Request, res: Response) {
     return res.status(500).json({ error: e?.message || 'failed to stream download' });
   }
 }
+
+export async function uploadPreparation(req: Request, res: Response) {
+  try {
+    const files = (req as any).files as any[] | undefined;
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'no files uploaded' });
+    }
+
+    const items = files.map((f: any) => ({
+      filename: f.filename,
+      originalname: f.originalname,
+      path: f.path,
+      size: f.size,
+      mimetype: f.mimetype,
+    }));
+
+    return res.json({ status: 'ok', count: items.length, items });
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'failed to upload preparation files' });
+  }
+}

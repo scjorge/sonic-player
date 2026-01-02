@@ -19,6 +19,7 @@
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "lucide-react": "0.294.0",
+    "multer": "^2.0.2",
     "music-metadata": "^11.10.3",
     "node-id3": "^0.2.9",
     "node-shazam": "^1.2.7",
