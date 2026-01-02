@@ -104,7 +104,7 @@ class DownloadService {
             isrc: meta.isrc,
             comment: meta.comments,
             path: fullPath,
-            contentType: 'audio/tidal-local',
+            contentType: 'audio/preparation',
             duration: duration,
             suffix: path.extname(name).toLowerCase().slice(1),
           };
@@ -285,7 +285,7 @@ class DownloadService {
         trackId,
         creds,
         song,
-        contentType: 'audio/tidal-local',
+        contentType: 'audio/preparation',
       };
 
       this.setdownloadsItems(item);
