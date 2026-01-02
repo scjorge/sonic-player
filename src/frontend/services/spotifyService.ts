@@ -48,6 +48,7 @@ class SpotifyService {
         uri: track.uri,
         path: track.external_urls ? track.external_urls.spotify : undefined,
         type: 'music',
+        href: track.href
       };
       return naviSong;
     }));

@@ -19,7 +19,8 @@ export interface NaviSong {
   coverArt?: string;
   duration?: number; // seconds
   path?: string;
-  uri?: string;  
+  uri?: string;
+  href?: string;
   // Novos campos para a tabela e modal detalhado
   genre?: string;
   comment?: string;
