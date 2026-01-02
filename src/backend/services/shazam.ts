@@ -1,6 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import { Shazam } from 'node-shazam';
+import { getPathById } from './navidromeDatabase';
+
 
 export interface ShazamMatchSummary {
   id: string;
@@ -12,11 +14,15 @@ export interface ShazamMatchSummary {
   coverArt?: string;
 }
 
-export async function recogniseFromFile(filePath: string): Promise<ShazamMatchSummary[]> {
+export async function recogniseFromFile(filePath: string, navidrome_id: string | null): Promise<ShazamMatchSummary[]> {
   if (!filePath) {
     throw new Error('File path is required');
   }
 
+  if(navidrome_id) {
+    filePath = await getPathById(navidrome_id);
+  }
+  console.log('Recognising file with Shazam:', filePath);
   let resolved = filePath;
   if (!path.isAbsolute(resolved)) {
     resolved = path.resolve(process.cwd(), resolved);

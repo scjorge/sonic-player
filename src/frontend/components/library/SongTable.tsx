@@ -961,11 +961,12 @@ const SongTable: React.FC<SongTableProps> = ({
             </button>
           )}
 
-          {/* Shazam search option - only for Navidrome preparation/download table with local file */}
-          {isNaviTableDownload && contextMenu.song?.path && (
+          {/* Shazam search option - available on Downloads table and Navidrome library when tag edit is enabled, with local file */}
+          {(isNaviTableDownload || (isNavidromeLibraryTable && isTagEditMode)) && contextMenu.song?.path && (
             <button
               onClick={async () => {
                 const song = contextMenu.song!;
+                let navidrome_id: string | null = null;
                 setContextMenu({ ...contextMenu, visible: false });
                 setShazamState({
                   open: true,
@@ -975,11 +976,14 @@ const SongTable: React.FC<SongTableProps> = ({
                   matches: [],
                   selectedId: undefined,
                 });
+                if (isNavidromeLibraryTable) {
+                  navidrome_id = song.id;
+                }
                 try {
                   const resp = await fetch(`${BACKEND_BASE_URL}/api/shazam/recognise`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: song.path }),
+                    body: JSON.stringify({ path: song.path, navidrome_id: navidrome_id }),
                   });
                   if (!resp.ok) {
                     const err = await resp.json().catch(() => ({}));

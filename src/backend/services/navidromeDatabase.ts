@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
-import { NAVIDROME_DATABASE_SQLITE_PATH } from '../../core/config';
+import { NAVIDROME_DATABASE_SQLITE_PATH, NAVIDROME_BASE_PATH } from '../../core/config';
+import path from 'path';
 
 
 const db = new Database(NAVIDROME_DATABASE_SQLITE_PATH, {
@@ -13,7 +14,13 @@ export async function getPathById(id: string): Promise<string | null> {
   if (rows.length === 0) {
     return null;
   }
-  return rows[0].path as string;
+  const trackPath = rows[0].path as string;
+  if (!trackPath) {
+    throw new Error('Media file path not found in Navidrome database');
+  }
+
+  const fullPath = path.join(NAVIDROME_BASE_PATH, trackPath);
+  return fullPath;
 }
 
 
