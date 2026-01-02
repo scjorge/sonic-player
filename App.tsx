@@ -3,6 +3,7 @@ import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, S
 import { navidromeService } from './src/frontend/services/navidromeService.ts';
 import { spotifyService } from './src/frontend/services/spotifyService.ts';
 import { tidalService } from './src/frontend/services/tidalService.ts';
+import { youtubeService } from './src/frontend/services/youtubeService.ts';
 import TidalBrowse from './src/frontend/components/tidal/TidalBrowse.tsx';
 import TidalLiked from './src/frontend/components/tidal/TidalLiked.tsx';
 import TidalPlaylists from './src/frontend/components/tidal/TidalPlaylists.tsx';
@@ -23,14 +24,16 @@ import GroupTagModal from './src/frontend/components/library/GroupTagModal.tsx';
 import GroupFilterModal from './src/frontend/components/library/GroupFilterModal.tsx';
 import SpotifySettings from './src/frontend/components/settings/SpotifySettings.tsx';
 import TidalSettings from './src/frontend/components/settings/TidalSettings.tsx';
+import YoutubeSettings from './src/frontend/components/settings/YoutubeSettings.tsx';
 import NavidromeSettings from './src/frontend/components/settings/NavidromeSettings.tsx';
 import LikedSongs from './src/frontend/components/spotify/LikedSongs.tsx';
 import SpotifyPlaylists from './src/frontend/components/spotify/SpotifyPlaylists.tsx';
 import { SPOTIFY_COLUMN_CONFIG } from './src/frontend/components/spotify/spotifyConstants.ts';
+import { YOUTUBE_COLUMN_CONFIG } from './src/frontend/components/youtube/youtubeConstants.ts';
 import { getUserState, getLastViewMode, setLastViewMode, setUserState } from './src/frontend/repository/userStates.ts';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'navi_downloads' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks';
-type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'general';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'navi_downloads' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks' | 'youtube_browse';
+type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'youtube' | 'general';
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
 const App: React.FC = () => {
@@ -128,6 +131,7 @@ const App: React.FC = () => {
   const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
   const [spotifyBrowseTracks, setSpotifyBrowseTracks] = useState<NaviSong[]>([]);
   const [spotifyNavidromeExistenceMap, setSpotifyNavidromeExistenceMap] = useState<Map<string, boolean>>(new Map());
+  const [youtubeBrowseTracks, setYoutubeBrowseTracks] = useState<NaviSong[]>([]);
   // TIDAL cross-search state (used when triggering TIDAL search from other views)
   const [tidalInitialQuery, setTidalInitialQuery] = useState<string>('');
   const [showGroupFilterModal, setShowGroupFilterModal] = useState(false);
@@ -142,6 +146,7 @@ const App: React.FC = () => {
   const [tidalTotal, setTidalTotal] = useState(0);
   const [tidalPageSize, setTidalPageSize] = useState(50);
   const [tidalSearchQuery, setTidalSearchQuery] = useState<string>('');
+  const [youtubeBrowseSearchQuery, setYoutubeBrowseSearchQuery] = useState<string>('');
 
   const [spotifyCreds, setSpotifyCreds] = useState<SpotifyCredentials | null>(null);
 
@@ -211,6 +216,13 @@ const App: React.FC = () => {
       pageSize: spotifyBrowsePageSize,
     });
   }, [spotifyBrowseSearchQuery, spotifyBrowsePage, spotifyBrowsePageSize]);
+
+  // Persist YouTube Browse (Navegar) busca simples
+  useEffect(() => {
+    setUserState('youtube_browse', {
+      searchQuery: youtubeBrowseSearchQuery,
+    });
+  }, [youtubeBrowseSearchQuery]);
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -829,6 +841,26 @@ const App: React.FC = () => {
       console.error("Failed to search Spotify tracks", e);
       setSpotifyBrowseTracks([]);
       setTotalSpotifyBrowseItems(0);
+    } finally {
+      setLoadingNavi(false);
+    }
+  };
+
+  const handleYoutubeBrowseSearch = async (query: string) => {
+    setYoutubeBrowseSearchQuery(query);
+    const trimmed = (query || '').trim();
+    if (!trimmed) {
+      setYoutubeBrowseTracks([]);
+      return;
+    }
+
+    setLoadingNavi(true);
+    try {
+      const { items } = await youtubeService.searchTracks(trimmed, 50);
+      setYoutubeBrowseTracks(items);
+    } catch (e) {
+      console.error('Failed to search YouTube Music tracks', e);
+      setYoutubeBrowseTracks([]);
     } finally {
       setLoadingNavi(false);
     }
@@ -1540,6 +1572,13 @@ const App: React.FC = () => {
           </div>
         );
       }
+      if (activeSettingsTab === 'youtube') {
+        return (
+          <div className="h-full overflow-y-auto custom-scrollbar bg-zinc-950">
+            <YoutubeSettings />
+          </div>
+        );
+      }
       return <div className="p-10 text-zinc-500">Selecione uma opção de configuração.</div>;
     }
 
@@ -1650,6 +1689,27 @@ const App: React.FC = () => {
       return (
         <div className="h-full">
           <TidalBrowse onOpen={playTidalSong} onNavigateToLibraryQuery={handleSearch} initialQuery={tidalInitialQuery} autoFocus={tidalAutoFocus} currentTrackId={currentTrack?.id} isPlaying={isPlaying} />
+        </div>
+      );
+    }
+
+    if (viewMode === 'youtube_browse') {
+      return (
+        <div className="h-full">
+          <SongTable
+            songs={youtubeBrowseTracks}
+            onPlay={(song) => {
+              if (song.path) {
+                window.open(song.path, '_blank');
+              }
+            }}
+            currentTrackId={currentTrack?.id}
+            isPlaying={isPlaying}
+            defaultColumns={YOUTUBE_COLUMN_CONFIG}
+            isYoutubeTable={true}
+            onSearch={handleYoutubeBrowseSearch}
+            activeSearchQuery={youtubeBrowseSearchQuery}
+          />
         </div>
       );
     }
@@ -1972,6 +2032,14 @@ const App: React.FC = () => {
               </button>
 
               <button
+                onClick={() => setActiveSettingsTab('youtube')}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'youtube' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+              >
+                <span className="w-4 h-4 rounded bg-red-600 flex items-center justify-center text-[9px] font-black">YT</span>
+                {!isSidebarCollapsed && "YouTube API"}
+              </button>
+
+              <button
                 onClick={() => setActiveSettingsTab('groups')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'groups' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
               >
@@ -2106,6 +2174,22 @@ const App: React.FC = () => {
                   {/* Downloads moved to Navidrome section */}
                 </div>
               </div>
+
+              {/* YOUTUBE SECTION */}
+              <div className="animate-fade-in mt-6">
+                {!isSidebarCollapsed && <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2 flex items-center gap-2">YouTube</h3>}
+                <div className="space-y-1">
+                  <button
+                    onClick={() => {
+                      setViewMode('youtube_browse');
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'youtube_browse' ? 'bg-red-500/10 text-red-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                  >
+                    <Navigation className="w-4 h-4 flex-shrink-0" />
+                    {!isSidebarCollapsed && <span>Navegar</span>}
+                  </button>
+                </div>
+              </div>
             </>
           )}
         </div>
@@ -2136,6 +2220,7 @@ const App: React.FC = () => {
             {viewMode === 'tidal_liked' && <><Heart className="w-5 h-5 text-yellow-400 fill-yellow-400" /> Músicas Curtidas</>}
             {viewMode === 'tidal_playlists' && <><List className="w-5 h-5 text-yellow-500" /> Playlists</>}
             {viewMode === 'tidal_playlist_tracks' && <><List className="w-5 h-5 text-yellow-500" /> {selectedPlaylistName || 'Playlist'}</>}
+            {viewMode === 'youtube_browse' && <><Navigation className="w-4 h-4 flex-shrink-0 text-red-500" /> Navegador</>}
             {viewMode === 'settings' && <><Settings className="w-5 h-5 text-indigo-500" />Configurações</>}
           </h2>
         </div>
