@@ -160,7 +160,9 @@ const SongTable: React.FC<SongTableProps> = ({
       coverArt?: string;
     }[];
     selectedId?: string;
-  }>({ open: false, loading: false, error: null, song: null, matches: [] });
+    previewUrl?: string | null;
+    previewLoading?: boolean;
+  }>({ open: false, loading: false, error: null, song: null, matches: [], selectedId: undefined, previewUrl: null, previewLoading: false });
 
   // Sync internal state with external prop if it changes (e.g. clear)
   useEffect(() => {
@@ -711,7 +713,7 @@ const SongTable: React.FC<SongTableProps> = ({
                 )}
               </div>
               <button
-                onClick={() => setShazamState({ open: false, loading: false, error: null, song: null, matches: [], selectedId: undefined })}
+                onClick={() => setShazamState({ open: false, loading: false, error: null, song: null, matches: [], selectedId: undefined, previewUrl: null, previewLoading: false })}
                 className="text-zinc-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-zinc-800"
               >
                 Fechar
@@ -732,7 +734,9 @@ const SongTable: React.FC<SongTableProps> = ({
 
             {!shazamState.loading && !shazamState.error && (
               <div className="flex-1 flex divide-x divide-zinc-800 overflow-hidden">
-                <div className="w-1/3 max-w-xs overflow-y-auto custom-scrollbar p-3 space-y-1">
+
+                {/* *?  Retorno lateral do Shazam List  *? */}
+                {/* <div className="w-1/3 max-w-xs overflow-y-auto custom-scrollbar p-3 space-y-1">
                   {shazamState.matches.length === 0 && (
                     <p className="text-xs text-zinc-500">Nenhuma correspondência encontrada.</p>
                   )}
@@ -749,7 +753,7 @@ const SongTable: React.FC<SongTableProps> = ({
                       </button>
                     );
                   })}
-                </div>
+                </div> */}
 
                 <div className="flex-1 p-4 overflow-y-auto custom-scrollbar flex flex-col gap-4">
                   {(() => {
@@ -764,13 +768,41 @@ const SongTable: React.FC<SongTableProps> = ({
                       { key: 'isrc', label: 'ISRC' },
                     ];
 
-                    const handleCopy = async (value?: string) => {
+                    const handleApplyTag = async (key: keyof typeof current) => {
+                      const value = current[key] as string | undefined;
                       if (!value) return;
+                      if (!shazamState.song || !shazamState.song.path) {
+                        showToast('Caminho do arquivo não encontrado para aplicar a tag.', 'error');
+                        return;
+                      }
+
+                      const columnId = key as ColumnId;
+                      const metadata = buildMetadataFromEdit(columnId, value);
+
                       try {
-                        await navigator.clipboard.writeText(value);
-                        showToast('Copiado para a área de transferência.', 'success');
-                      } catch {
-                        showToast('Falha ao copiar para a área de transferência.', 'error');
+                        const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            source: 'download',
+                            id: shazamState.song.id,
+                            path: shazamState.song.path,
+                            metadata,
+                          }),
+                        });
+
+                        if (!resp.ok) {
+                          const err = await resp.json().catch(() => ({}));
+                          showToast(`Erro ao aplicar tag: ${err.error || resp.statusText}`, 'error');
+                          return;
+                        }
+
+                        // Atualiza objeto local da música
+                        applyLocalSongUpdate(shazamState.song, columnId, value);
+                        setShazamState(prev => prev.song ? { ...prev, song: { ...prev.song } } : prev);
+                        showToast('Tag aplicada com sucesso.', 'success');
+                      } catch (e: any) {
+                        showToast(`Erro ao aplicar tag: ${e?.message || String(e)}`, 'error');
                       }
                     };
 
@@ -798,14 +830,14 @@ const SongTable: React.FC<SongTableProps> = ({
                                 {current[key] || '-'}
                               </span>
                               <button
-                                onClick={() => handleCopy(current[key] as string | undefined)}
+                                onClick={() => handleApplyTag(key)}
                                 disabled={!current[key]}
                                 className={`px-2 py-1 text-[11px] rounded border ${current[key]
-                                  ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800'
+                                  ? 'border-green-600 text-green-300 hover:bg-green-600/20'
                                   : 'border-zinc-800 text-zinc-600 cursor-not-allowed'
                                 }`}
                               >
-                                Copiar
+                                Aplicar tag
                               </button>
                             </div>
                           ))}
