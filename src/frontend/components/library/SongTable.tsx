@@ -476,7 +476,15 @@ const SongTable: React.FC<SongTableProps> = ({
       case 'comment': return <span className="text-zinc-500 italic truncate block w-full">{song.comment || '-'}</span>;
       case 'mood': return song.moods || '-';
       case 'group': return song.group || '-';
-      case 'format': return <span className="text-xs uppercase bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400">{song.suffix}</span>;
+      case 'format': {
+        const fmt = (song.suffix || '').toLowerCase();
+        const colorClass = fmt === 'flac' ? 'text-green-400' : fmt === 'mp3' ? 'text-yellow-300' : 'text-zinc-400';
+        return (
+          <span className={`text-xs uppercase bg-zinc-800 px-1.5 py-0.5 rounded ${colorClass}`}>
+            {song.suffix}
+          </span>
+        );
+      }
       case 'filename': return <span className="text-zinc-500 text-xs font-mono truncate" title={song.path}>{getFileName(song.path)}</span>;
       case 'download': {
         const existsInNavidrome = navidromeExistenceMap?.get(song.id);
