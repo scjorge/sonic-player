@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NaviSong } from '../../../../types';
-import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, Filter, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download } from 'lucide-react';
+import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
@@ -239,22 +239,6 @@ const SongTable: React.FC<SongTableProps> = ({
   const [selectedArtist, setSelectedArtist] = useState<string>(activeArtist);
   const [selectedGenre, setSelectedGenre] = useState<string>(activeGenre);
   const [selectedYear, setSelectedYear] = useState<string>(activeYear);
-
-  const handleApplyFilter = () => {
-    if (onFilter) {
-      onFilter(selectedArtist, selectedGenre, selectedYear);
-      setShowFilter(false);
-    }
-  };
-
-  const handleClearFilter = () => {
-    setSelectedArtist('');
-    setSelectedGenre('');
-    setSelectedYear('');
-    if (onFilter) {
-      onFilter('', '', '');
-    }
-  };
 
   const activeFilterCount = (activeArtist ? 1 : 0) + (activeGenre ? 1 : 0) + (activeYear ? 1 : 0);
   const isAnyFilterActive = (activeFilterCount > 0) || !!isGroupFilterActive;
