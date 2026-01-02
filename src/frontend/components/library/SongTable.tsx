@@ -768,18 +768,33 @@ const SongTable: React.FC<SongTableProps> = ({
                       { key: 'isrc', label: 'ISRC' },
                     ];
 
-                    const handleApplyTag = async (key: keyof typeof current) => {
-                      const value = current[key] as string | undefined;
-                      if (!value) return;
+                    const handleApplyAll = async () => {
                       if (!shazamState.song || !shazamState.song.path) {
-                        showToast('Caminho do arquivo não encontrado para aplicar a tag.', 'error');
+                        showToast('Caminho do arquivo não encontrado para aplicar as tags.', 'error');
                         return;
                       }
 
-                      const columnId = key as ColumnId;
-                      const metadata = buildMetadataFromEdit(columnId, value);
+                      const metadata: any = {};
+                      if (current.title) metadata.title = current.title;
+                      if (current.artist) {
+                        metadata.artists = current.artist;
+                        metadata.albumArtist = current.artist.split(',')[0] || current.artist;
+                      }
+                      if (current.album) metadata.album = current.album;
+
+                      let yearNum: number | undefined;
+                      if (current.year) {
+                        const parsed = parseInt(current.year, 10);
+                        if (!Number.isNaN(parsed)) {
+                          metadata.year = parsed;
+                          yearNum = parsed;
+                        }
+                      }
+
+                      if (current.isrc) metadata.isrc = current.isrc;
 
                       try {
+                        // Aplica tags principais
                         const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
@@ -793,16 +808,43 @@ const SongTable: React.FC<SongTableProps> = ({
 
                         if (!resp.ok) {
                           const err = await resp.json().catch(() => ({}));
-                          showToast(`Erro ao aplicar tag: ${err.error || resp.statusText}`, 'error');
+                          showToast(`Erro ao aplicar tags: ${err.error || resp.statusText}`, 'error');
                           return;
                         }
 
-                        // Atualiza objeto local da música
-                        applyLocalSongUpdate(shazamState.song, columnId, value);
+                        // Aplica capa, se disponível
+                        if (current.coverArt) {
+                          const respCover = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata-cover`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              source: 'download',
+                              id: shazamState.song.id,
+                              path: shazamState.song.path,
+                              coverUrl: current.coverArt,
+                            }),
+                          });
+
+                          if (!respCover.ok) {
+                            const err = await respCover.json().catch(() => ({}));
+                            showToast(`Tags aplicadas, mas erro ao aplicar capa: ${err.error || respCover.statusText}`, 'error');
+                          }
+                        }
+
+                        // Atualiza objeto local da música (título, artista, álbum, ano, isrc e capa)
+                        if (current.title) applyLocalSongUpdate(shazamState.song, 'title', current.title);
+                        if (current.artist) applyLocalSongUpdate(shazamState.song, 'artist', current.artist);
+                        if (current.album) applyLocalSongUpdate(shazamState.song, 'album', current.album);
+                        if (yearNum !== undefined) applyLocalSongUpdate(shazamState.song, 'year', String(yearNum));
+                        if (current.isrc) applyLocalSongUpdate(shazamState.song, 'isrc', current.isrc);
+                        if (current.coverArt) {
+                          shazamState.song.coverArt = current.coverArt;
+                        }
+
                         setShazamState(prev => prev.song ? { ...prev, song: { ...prev.song } } : prev);
-                        showToast('Tag aplicada com sucesso.', 'success');
+                        showToast('Tags aplicadas com sucesso.', 'success');
                       } catch (e: any) {
-                        showToast(`Erro ao aplicar tag: ${e?.message || String(e)}`, 'error');
+                        showToast(`Erro ao aplicar tags: ${e?.message || String(e)}`, 'error');
                       }
                     };
 
@@ -829,18 +871,17 @@ const SongTable: React.FC<SongTableProps> = ({
                               <span className="flex-1 truncate text-zinc-200" title={current[key] as string | undefined}>
                                 {current[key] || '-'}
                               </span>
-                              <button
-                                onClick={() => handleApplyTag(key)}
-                                disabled={!current[key]}
-                                className={`px-2 py-1 text-[11px] rounded border ${current[key]
-                                  ? 'border-green-600 text-green-300 hover:bg-green-600/20'
-                                  : 'border-zinc-800 text-zinc-600 cursor-not-allowed'
-                                }`}
-                              >
-                                Aplicar tag
-                              </button>
                             </div>
                           ))}
+                        </div>
+
+                        <div className="mt-4 flex justify-end">
+                          <button
+                            onClick={handleApplyAll}
+                            className="px-4 py-1.5 text-[11px] rounded border border-green-600 text-green-300 hover:bg-green-600/20"
+                          >
+                            Aplicar tags
+                          </button>
                         </div>
                       </>
                     );

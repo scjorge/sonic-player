@@ -90,6 +90,21 @@ export async function writeMetadataParts(req: Request, res: Response) {
   }
 }
 
+export async function writeCoverFromUrl(req: Request, res: Response) {
+  const { id, source, path, coverUrl } = req.body;
+  if (!id || !source || !path || !coverUrl) {
+    return res.status(400).json({ error: 'id, source, path, and coverUrl are required' });
+  }
+
+  try {
+    const cover = await downloadService.downloadCoverFromUrl(coverUrl);
+    const result = await downloadService.writeMetadataParts(id, path, source, { cover });
+    return res.json(result);
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'failed to write cover from url' });
+  }
+}
+
 export async function finalizeDownload(req: Request, res: Response) {
   const { path: filePath } = req.body;
   if (!filePath) return res.status(400).json({ error: 'path is required' });
