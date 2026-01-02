@@ -138,42 +138,51 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
       }
       const json = await res.json();
       const items = (json.items || []) as any[];
-      const songs: NaviSong[] = items.map((it) => {
-        let coverArt: string | undefined;
-        try {
-          if (it.cover && it.cover.buffer && it.cover.buffer.data) {
-            const byteArray = new Uint8Array(it.cover.buffer.data as number[]);
-            let binary = '';
-            for (let i = 0; i < byteArray.length; i++) {
-              binary += String.fromCharCode(byteArray[i]);
-            }
-            const base64 = btoa(binary);
-            coverArt = `data:${it.cover.mime};base64,${base64}`;
-          }
-        } catch {
-          coverArt = undefined;
-        }
-
-        return {
-          id: it.id,
-          title: it.title,
-          album: it.album,
-          artist: it.artist,
-          year: it.year,
-          genre: it.genre,
-          comment: it.comment,
-          isrc: it.isrc,
-          suffix: it.suffix,
-          track: it.track,
-          discNumber: it.discNumber,
-          duration: it.duration,
-          path: it.path,
-          contentType: it.contentType,
-          ext: it.ext,
-          coverArt,
-        } as NaviSong;
-      });
+      const songs: NaviSong[] = items.map((it) => ({
+        id: it.id,
+        title: it.title,
+        album: it.album,
+        artist: it.artist,
+        year: it.year,
+        genre: it.genre,
+        comment: it.comment,
+        isrc: it.isrc,
+        suffix: it.suffix,
+        track: it.track,
+        discNumber: it.discNumber,
+        duration: it.duration,
+        path: it.path,
+        contentType: it.contentType,
+        ext: it.ext,
+        coverArt: undefined,
+      }));
       setCompletedSongs(songs);
+
+      // Em paralelo, buscar capas individuais via /completed-cover
+      songs.forEach(async (song) => {
+        if (!song.path) return;
+        try {
+          const coverRes = await fetch(`${BACKEND_BASE_URL}/api/downloads/completed-cover?path=${encodeURIComponent(song.path)}`);
+          if (!coverRes.ok) return;
+          const coverJson = await coverRes.json();
+          const cover = coverJson.cover;
+          if (!cover || !cover.buffer || !cover.buffer.data) return;
+
+          const byteArray = new Uint8Array(cover.buffer.data as number[]);
+          let binary = '';
+          for (let i = 0; i < byteArray.length; i++) {
+            binary += String.fromCharCode(byteArray[i]);
+          }
+          const base64 = btoa(binary);
+          const coverArt = `data:${cover.mime};base64,${base64}`;
+
+          setCompletedSongs((prev) => prev.map((s) =>
+            s.id === song.id ? { ...s, coverArt } : s
+          ));
+        } catch {
+          // ignora erro de capa individual
+        }
+      });
     } catch {
       setCompletedSongs([]);
     } finally {

@@ -118,6 +118,15 @@ class DownloadService {
     return { items: items.filter((it) => it !== null) };
   }
 
+  async getCoverDownloads(fullPath: string) {
+    if (!fs.existsSync(fullPath)) {
+      return { cover: null };
+    }
+
+    const meta = await audioTagger.read(fullPath);
+    return { cover: meta.cover };
+  }
+
   resolveDownloadPath(id: string): string | null {
     let filePath = id;
     if (!path.isAbsolute(filePath)) {
