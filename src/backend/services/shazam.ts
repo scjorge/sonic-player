@@ -33,7 +33,6 @@ export async function recogniseFromFile(filePath: string): Promise<ShazamMatchSu
 
   const pushFromTrack = (track: any, fallbackId: string) => {
     if (!track) return;
-    console.log(track)
 
     const summary: ShazamMatchSummary = {
       id: String(track.key || track.id || fallbackId),
@@ -63,7 +62,6 @@ export async function recogniseFromFile(filePath: string): Promise<ShazamMatchSu
   };
 
   if (result?.track) {
-    console.log('Shazam found a single track match');
     pushFromTrack(result.track, 'primary');
   }
 
