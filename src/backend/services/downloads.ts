@@ -103,6 +103,7 @@ class DownloadService {
             genre: meta.genre,
             isrc: meta.isrc,
             comment: meta.comments,
+            //cover: meta.cover, // TODO
             path: fullPath,
             contentType: 'audio/tidal-local',
             duration: duration,

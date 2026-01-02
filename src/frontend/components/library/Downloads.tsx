@@ -138,23 +138,41 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
       }
       const json = await res.json();
       const items = (json.items || []) as any[];
-      const songs: NaviSong[] = items.map((it) => ({
-        id: it.id,
-        title: it.title,
-        album: it.album,
-        artist: it.artist,
-        year: it.year,
-        genre: it.genre,
-        comment: it.comment,
-        isrc: it.isrc,
-        suffix: it.suffix,
-        track: it.track,
-        discNumber: it.discNumber,
-        duration: it.duration,
-        path: it.path,
-        contentType: it.contentType,
-        ext: it.ext,
-      }));
+      const songs: NaviSong[] = items.map((it) => {
+        let coverArt: string | undefined;
+        try {
+          if (it.cover && it.cover.buffer && it.cover.buffer.data) {
+            const byteArray = new Uint8Array(it.cover.buffer.data as number[]);
+            let binary = '';
+            for (let i = 0; i < byteArray.length; i++) {
+              binary += String.fromCharCode(byteArray[i]);
+            }
+            const base64 = btoa(binary);
+            coverArt = `data:${it.cover.mime};base64,${base64}`;
+          }
+        } catch {
+          coverArt = undefined;
+        }
+
+        return {
+          id: it.id,
+          title: it.title,
+          album: it.album,
+          artist: it.artist,
+          year: it.year,
+          genre: it.genre,
+          comment: it.comment,
+          isrc: it.isrc,
+          suffix: it.suffix,
+          track: it.track,
+          discNumber: it.discNumber,
+          duration: it.duration,
+          path: it.path,
+          contentType: it.contentType,
+          ext: it.ext,
+          coverArt,
+        } as NaviSong;
+      });
       setCompletedSongs(songs);
     } catch {
       setCompletedSongs([]);
