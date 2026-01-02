@@ -49,6 +49,53 @@ class YoutubeService {
       const json: any = await res.json();
       const items: any[] = json.items || [];
 
+      // Buscar detalhes adicionais (duração) usando a API de "videos"
+      const videoIds: string[] = items
+        .map((item: any) => item.id?.videoId || item.id)
+        .filter((id: any) => typeof id === 'string' && id.length > 0);
+
+      const durationMap: Record<string, number> = {};
+
+      if (videoIds.length > 0) {
+        try {
+          const videosParams = new URLSearchParams({
+            part: 'contentDetails',
+            id: videoIds.join(','),
+          });
+
+          const videosRes = await fetch(`${YOUTUBE_API_BASE}/videos?${videosParams.toString()}&key=${encodeURIComponent(apiKey)}`);
+          if (videosRes.ok) {
+            const videosJson: any = await videosRes.json();
+            const videoItems: any[] = videosJson.items || [];
+
+            const parseIsoDurationToSeconds = (iso: string | undefined): number | undefined => {
+              if (!iso || typeof iso !== 'string') return undefined;
+              const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+              if (!match) return undefined;
+              const hours = parseInt(match[1] || '0', 10) || 0;
+              const minutes = parseInt(match[2] || '0', 10) || 0;
+              const seconds = parseInt(match[3] || '0', 10) || 0;
+              const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+              return totalSeconds > 0 ? totalSeconds : undefined;
+            };
+
+            for (const v of videoItems) {
+              const id = v.id;
+              const iso = v.contentDetails?.duration as string | undefined;
+              const secs = parseIsoDurationToSeconds(iso);
+              if (id && typeof id === 'string' && typeof secs === 'number') {
+                durationMap[id] = secs;
+              }
+            }
+          } else {
+            const err = await videosRes.json().catch(() => ({}));
+            console.warn('YouTube videos details fetch failed', err);
+          }
+        } catch (e) {
+          console.warn('Erro ao buscar detalhes de vídeos do YouTube', e);
+        }
+      }
+
       const mapped: NaviSong[] = items.map((item: any) => {
         const videoId = item.id?.videoId || item.id;
         const snippet = item.snippet || {};
@@ -63,6 +110,7 @@ class YoutubeService {
           coverArt: thumbUrl,
           contentType: 'audio/youtube',
           path: videoId ? `${YOUTUBE_MUSIC_BASE_URL}${videoId}` : undefined,
+          duration: videoId && durationMap[String(videoId)] ? durationMap[String(videoId)] : undefined,
           type: 'music',
           isVideo: true,
         };
