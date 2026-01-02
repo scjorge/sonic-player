@@ -1088,6 +1088,37 @@ const SongTable: React.FC<SongTableProps> = ({
             </>
           )}
 
+          {/* YouTube -> MP3 download via SpotDL (usa song.path como URL do YouTube Music) */}
+          {contextMenu.song.contentType === 'audio/youtube' && (
+            <button
+              onClick={async () => {
+                const song = contextMenu.song!;
+                setContextMenu({ ...contextMenu, visible: false });
+                try {
+                  showToast(`Iniciando download MP3 (YouTube): ${song.title}`, 'warning');
+                  const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/spotdl`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ song }),
+                  });
+
+                  if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    showToast(`Erro ao iniciar download MP3: ${err.error || resp.statusText}`, 'error');
+                    return;
+                  }
+
+                  showToast('Download MP3 (YouTube) adicionado à fila de downloads.', 'success');
+                } catch (e: any) {
+                  showToast(`Erro ao iniciar download MP3: ${e?.message || String(e)}`, 'error');
+                }
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" /> Download MP3
+            </button>
+          )}
+
           {(!isSpotifyTable && !isTidalTable && !isYoutubeTable && !isNaviTableDownload && onToggleFavorite) && (
             <button
               onClick={() => { onToggleFavorite && onToggleFavorite(contextMenu.song!); setContextMenu({ ...contextMenu, visible: false }); }}
