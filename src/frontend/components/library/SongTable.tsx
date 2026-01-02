@@ -146,6 +146,7 @@ const SongTable: React.FC<SongTableProps> = ({
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const [isTagEditMode, setIsTagEditMode] = useState(false);
+  const [convertState, setConvertState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
   const [shazamState, setShazamState] = useState<{
     open: boolean;
     loading: boolean;
@@ -928,6 +929,94 @@ const SongTable: React.FC<SongTableProps> = ({
         </div>
       )}
 
+      {/* Convert Modal for Downloads (Preparo) */}
+      {convertState.open && convertState.song && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-full max-w-sm flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+              <div>
+                <h2 className="text-sm font-semibold text-white">Converter arquivo</h2>
+                <p className="text-[11px] text-zinc-500 mt-0.5 truncate">
+                  {convertState.song.title} — {convertState.song.artist}
+                </p>
+              </div>
+              <button
+                disabled={convertState.loading}
+                onClick={() => setConvertState({ open: false, song: null, loading: false })}
+                className="text-zinc-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-zinc-800 disabled:opacity-50"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3 text-xs text-zinc-200">
+              <p>Escolha o formato para conversão. A música será convertida na pasta de preparo.</p>
+              <div className="flex flex-col gap-2">
+                <button
+                  disabled={convertState.loading}
+                  onClick={async () => {
+                    if (!convertState.song?.path) return;
+                    setConvertState(prev => ({ ...prev, loading: true }));
+                    try {
+                      showToast('Convertendo para MP3 320 kbps...', 'warning');
+                      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/convert`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: convertState.song.path, format: 'mp3', song: convertState.song }),
+                      });
+                      if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({}));
+                        showToast(`Erro ao converter para MP3: ${err.error || resp.statusText}`, 'error');
+                      } else {
+                        showToast('Conversão para MP3 concluída. Atualizando lista de preparo...', 'success');
+                        if (onAfterFinalize) onAfterFinalize();
+                      }
+                    } catch (e: any) {
+                      showToast(`Erro ao converter para MP3: ${e?.message || String(e)}`, 'error');
+                    } finally {
+                      setConvertState({ open: false, song: null, loading: false });
+                    }
+                  }}
+                  className="px-3 py-2 rounded-lg border border-green-500 text-green-300 hover:bg-green-500/20 text-xs disabled:opacity-50"
+                >
+                  MP3 (320k)
+                </button>
+
+                <button
+                  disabled={convertState.loading}
+                  onClick={async () => {
+                    if (!convertState.song?.path) return;
+                    setConvertState(prev => ({ ...prev, loading: true }));
+                    try {
+                      showToast('Convertendo para FLAC...', 'warning');
+                      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/convert`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: convertState.song.path, format: 'flac', song: convertState.song }),
+                      });
+                      if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({}));
+                        showToast(`Erro ao converter para FLAC: ${err.error || resp.statusText}`, 'error');
+                      } else {
+                        showToast('Conversão para FLAC concluída. Atualizando lista de preparo...', 'success');
+                        if (onAfterFinalize) onAfterFinalize();
+                      }
+                    } catch (e: any) {
+                      showToast(`Erro ao converter para FLAC: ${e?.message || String(e)}`, 'error');
+                    } finally {
+                      setConvertState({ open: false, song: null, loading: false });
+                    }
+                  }}
+                  className="px-3 py-2 rounded-lg border border-yellow-500 text-yellow-300 hover:bg-yellow-500/20 text-xs disabled:opacity-50"
+                >
+                  FLAC
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Context Menu Portal/Div */}
       {contextMenu.visible && contextMenu.song && (
         <div
@@ -1073,6 +1162,19 @@ const SongTable: React.FC<SongTableProps> = ({
               className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
             >
               <Search className="w-4 h-4" /> Encontrar no Shazam
+            </button>
+          )}
+
+          {/* Converter option for preparation table */}
+          {isNaviTableDownload && contextMenu.song?.path && (
+            <button
+              onClick={() => {
+                setConvertState({ open: true, song: contextMenu.song!, loading: false });
+                setContextMenu({ ...contextMenu, visible: false });
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" /> Converter
             </button>
           )}
 

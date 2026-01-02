@@ -204,3 +204,24 @@ export async function uploadPreparation(req: Request, res: Response) {
     return res.status(500).json({ error: e?.message || 'failed to upload preparation files' });
   }
 }
+
+export async function convertDownload(req: Request, res: Response) {
+  const { path: filePath, format, song } = req.body as { path?: string; format?: 'mp3' | 'flac'; song?: any };
+  if (!filePath || !format) {
+    return res.status(400).json({ error: 'path and format are required' });
+  }
+
+  if (format !== 'mp3' && format !== 'flac') {
+    return res.status(400).json({ error: 'invalid format, expected mp3 or flac' });
+  }
+
+  try {
+    const result = await downloadService.convertDownload(filePath, song, format);
+    if ((result as any).error) {
+      return res.status(500).json({ error: (result as any).error });
+    }
+    return res.json(result);
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'failed to convert download' });
+  }
+}

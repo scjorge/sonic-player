@@ -464,6 +464,112 @@ class DownloadService {
       }
     }
   }
+
+  async convertDownload(pathOrId: string, song: any, targetFormat: 'mp3' | 'flac') {
+    let item: any | undefined;
+    let progressTimer: NodeJS.Timeout | undefined;
+
+    try {
+      const inputPath = this.resolveDownloadPath(pathOrId);
+      if (!inputPath) {
+        throw new Error('Caminho de arquivo inválido para conversão');
+      }
+
+      const ext = path.extname(inputPath).toLowerCase();
+      const baseName = path.basename(inputPath, ext);
+      const dir = path.dirname(inputPath);
+      const targetExt = targetFormat === 'mp3' ? '.mp3' : '.flac';
+      const outputPath = path.join(dir, `${baseName}${targetExt}`);
+
+      // Cria item na fila de downloads para acompanhar conversão
+      const displayTitle = song?.title || baseName;
+      const displayArtist = song?.artist || '';
+
+      item = {
+        id: `${song?.id || inputPath}:convert:${targetFormat}`,
+        title: displayTitle,
+        artist: displayArtist,
+        progress: 0,
+        status: 'queued',
+        filename: path.basename(outputPath),
+        error: null,
+        contentType: 'audio/preparation',
+      };
+      this.setdownloadsItems(item);
+
+      item.status = 'converting';
+
+      const args: string[] = ['-y', '-i', inputPath];
+      if (targetFormat === 'mp3') {
+        args.push('-codec:a', 'libmp3lame', '-b:a', '320k');
+      } else {
+        args.push('-vn', '-acodec', 'flac');
+      }
+      args.push(outputPath);
+
+      const child = spawn('ffmpeg', args);
+
+      // Simula progresso durante a conversão
+      progressTimer = setInterval(() => {
+        if (!item || item.status !== 'converting') return;
+        if (typeof item.progress !== 'number') item.progress = 0;
+        if (item.progress < 95) {
+          item.progress += 1;
+        }
+      }, 1000);
+
+      child.stderr.on('data', (data: Buffer) => {
+        const text = data.toString();
+        if (text.toLowerCase().includes('error')) {
+          console.warn('ffmpeg stderr:', text.trim());
+        }
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        child.on('error', (err) => reject(err));
+        child.on('close', (code) => {
+          if (code === 0) resolve();
+          else reject(new Error(`ffmpeg exited with code ${code}`));
+        });
+      });
+
+      const stat = await fs.promises.stat(outputPath);
+      if (!stat.isFile() || !stat.size) {
+        throw new Error('Arquivo convertido não encontrado ou vazio');
+      }
+
+      // Remove o arquivo original e mantém apenas o convertido
+      try {
+        if (inputPath !== outputPath && fs.existsSync(inputPath)) {
+          await fs.promises.unlink(inputPath);
+        }
+      } catch (e) {
+        console.warn('Falha ao remover arquivo original após conversão:', e);
+      }
+
+      item.progress = 100;
+      item.status = 'completed';
+      item.filename = path.basename(outputPath);
+
+      return {
+        status: 'converted',
+        from: inputPath,
+        to: outputPath,
+        format: targetFormat,
+      };
+    } catch (err: any) {
+      if (item) {
+        item.status = 'failed';
+        item.error = err?.message || String(err);
+      }
+      console.error('Conversion failed:', err);
+      return { error: err?.message || String(err) };
+    } finally {
+      if (progressTimer) {
+        clearInterval(progressTimer);
+      }
+    }
+  }
 }
 
 export const downloadService = new DownloadService();
