@@ -1252,7 +1252,7 @@ const SongTable: React.FC<SongTableProps> = ({
               }}
               className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
             >
-              <Download className="w-4 h-4" /> Download
+              <Download className="w-4 h-4" /> Download FLAC
             </button>
           )}
         </div>
