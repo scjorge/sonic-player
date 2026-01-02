@@ -5,6 +5,7 @@ import spotifySettingsRouter from './spotifySettings';
 import tagGroupsRouter from './tagGroups';
 import genresRouter from './genres';
 import shazamRouter from './shazam';
+import youtubeSettingsRouter from './youtubeSettings';
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.use('/spotify-settings', spotifySettingsRouter);
 router.use('/tag-groups', tagGroupsRouter);
 router.use('/genres', genresRouter);
 router.use('/shazam', shazamRouter);
+router.use('/youtube-settings', youtubeSettingsRouter);
 
 export default router;
 
