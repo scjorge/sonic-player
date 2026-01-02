@@ -82,7 +82,7 @@ class DownloadService {
     }
 
     const entries = await fs.promises.readdir(this.download_dir);
-    const supportedExts = new Set(['.mp3', '.flac', '.wav']);
+    const supportedExts = new Set(['.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.wma']);
     const items = await Promise.all(entries
       .filter((name) => supportedExts.has(path.extname(name).toLowerCase()))
       .map(async (name) => {
@@ -90,9 +90,10 @@ class DownloadService {
         try {
           const baseTitle = path.basename(name, path.extname(name));
           const duration = await this.getDuration(fullPath);
+          const suffix = path.extname(name).toLowerCase().slice(1);
 
-          if (path.extname(name).toLowerCase() === '.wav') {
-            return { id: fullPath, title: baseTitle, path: fullPath, contentType: 'audio/preparation', duration: duration, suffix: 'wav' };  
+          if (['.wav', '.ogg', '.m4a', '.aac', '.wma'].includes(path.extname(name).toLowerCase())) {
+            return { id: fullPath, title: baseTitle, path: fullPath, contentType: 'audio/preparation', duration: duration, suffix: suffix };
           }
 
           const meta = await audioTagger.read(fullPath);
@@ -111,7 +112,7 @@ class DownloadService {
             path: fullPath,
             contentType: 'audio/preparation',
             duration: duration,
-            suffix: path.extname(name).toLowerCase().slice(1),
+            suffix: suffix,
           };
         } catch (e) {
           console.error('Failed to read metadata for downloaded file', fullPath, e);
