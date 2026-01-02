@@ -90,21 +90,21 @@ const TidalLiked: React.FC<TidalLikedProps> = ({ onOpen, onNavigateToLibraryQuer
 
   return (
     <div className="h-full">
-        <SongTable
-          songs={items}
-          onPlay={onOpen}
-          currentTrackId={currentTrackId}
-          isPlaying={isPlaying}
-          page={page}
-          pageSize={pageSize}
-          totalItems={total}
-          onPageChange={(p) => setPage(p)}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
-          defaultColumns={TIDAL_COLUMN_CONFIG}
-          isTidalTable={true}
-          navidromeExistenceMap={navidromeExistenceMap}
-          onNavigateToLibraryQuery={onNavigateToLibraryQuery}
-        />
+      <SongTable
+        songs={items}
+        onPlay={onOpen}
+        currentTrackId={currentTrackId}
+        isPlaying={isPlaying}
+        page={page}
+        pageSize={pageSize}
+        totalItems={total}
+        onPageChange={(p) => setPage(p)}
+        onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+        defaultColumns={TIDAL_COLUMN_CONFIG}
+        isTidalTable={true}
+        navidromeExistenceMap={navidromeExistenceMap}
+        onNavigateToLibraryQuery={onNavigateToLibraryQuery}
+      />
     </div>
   );
 };

@@ -114,47 +114,47 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
 
             {/* Group List */}
             <div className="flex-1 overflow-y-auto pt-2 custom-scrollbar">
-            {groups.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-zinc-500">Nenhum grupo configurado.</p>
-                <p className="text-xs text-zinc-600 mt-2">Vá em Configurações &gt; Grupos na tela principal para criar grupos.</p>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {groups.map(group => (
-                  <div key={group.id} className="space-y-3">
-                    <div className="flex items-baseline gap-2 border-b border-zinc-800 pb-2">
-                      <h4 className="text-indigo-400 font-bold text-sm uppercase tracking-wider">{group.name}</h4>
-                      <span className="text-[13px] text-zinc-600 font-mono">prefixo: {group.prefix}</span>
+              {groups.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-zinc-500">Nenhum grupo configurado.</p>
+                  <p className="text-xs text-zinc-600 mt-2">Vá em Configurações &gt; Grupos na tela principal para criar grupos.</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {groups.map(group => (
+                    <div key={group.id} className="space-y-3">
+                      <div className="flex items-baseline gap-2 border-b border-zinc-800 pb-2">
+                        <h4 className="text-indigo-400 font-bold text-sm uppercase tracking-wider">{group.name}</h4>
+                        <span className="text-[13px] text-zinc-600 font-mono">prefixo: {group.prefix}</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                        {group.items.map((item, idx) => {
+                          const key = `${group.prefix}=${item}`;
+                          const isChecked = selected.has(key);
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => toggleItem(group, item)}
+                              className={`group flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left transition-all ${
+                                isChecked
+                                  ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-200'
+                                  : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:bg-zinc-800/80'
+                              }`}
+                            >
+                              {isChecked ? (
+                                <CheckSquare className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                              ) : (
+                                <Square className="w-4 h-4 text-zinc-600 group-hover:text-zinc-500 flex-shrink-0" />
+                              )}
+                              <span className="truncate" title={item}>{item}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                      {group.items.map((item, idx) => {
-                        const key = `${group.prefix}=${item}`;
-                        const isChecked = selected.has(key);
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => toggleItem(group, item)}
-                            className={`group flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left transition-all ${
-                              isChecked
-                                ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-200'
-                                : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:bg-zinc-800/80'
-                            }`}
-                          >
-                            {isChecked ? (
-                              <CheckSquare className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-                            ) : (
-                              <Square className="w-4 h-4 text-zinc-600 group-hover:text-zinc-500 flex-shrink-0" />
-                            )}
-                            <span className="truncate" title={item}>{item}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

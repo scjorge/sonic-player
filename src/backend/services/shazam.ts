@@ -71,15 +71,15 @@ export async function recogniseFromFile(filePath: string, navidrome_id: string |
     pushFromTrack(result.track, 'primary');
   }
 
-//   if (Array.isArray(result?.matches) && result.matches.length > 0) {
-//     result.matches.forEach((m: any, idx: number) => {
-//       const track = m.track || m;
-//       pushFromTrack(result.track, `match-${idx}`);
-//     });
-//   } else if (result?.track) {
-//     console.log('Shazam found a single track match');
-//     pushFromTrack(result.track, 'primary');
-//   }
+  //   if (Array.isArray(result?.matches) && result.matches.length > 0) {
+  //     result.matches.forEach((m: any, idx: number) => {
+  //       const track = m.track || m;
+  //       pushFromTrack(result.track, `match-${idx}`);
+  //     });
+  //   } else if (result?.track) {
+  //     console.log('Shazam found a single track match');
+  //     pushFromTrack(result.track, 'primary');
+  //   }
 
   if (matches.length === 0) {
     return [];
