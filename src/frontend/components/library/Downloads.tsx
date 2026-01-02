@@ -281,7 +281,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
       )}
 
       {activeTab === 'completed' && (
-        <div className="flex-1 bg-zinc-950 flex flex-col">
+        <div className="flex-1 bg-zinc-950 flex flex-col overflow-y-auto">
           {loadingCompleted ? (
             <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm">
               Carregando downloads finalizados...
