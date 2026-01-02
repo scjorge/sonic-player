@@ -958,7 +958,7 @@ const SongTable: React.FC<SongTableProps> = ({
             <Play className="w-4 h-4" /> Play
           </button>
 
-          {/* Spotify -> Search on TIDAL options */}
+          {/* Spotify -> Search on TIDAL options + MP3 download via SpotDL */}
           {contextMenu.song.contentType === 'audio/spotify' && (
             <>
               <button
@@ -974,6 +974,33 @@ const SongTable: React.FC<SongTableProps> = ({
                 title={contextMenu.song!.isrc ? 'Buscar por ISRC' : 'ISRC não disponível'}
               >
                 <Search className="w-4 h-4" /> Buscar no TIDAL por ISRC
+              </button>
+              <button
+                onClick={async () => {
+                  const song = contextMenu.song!;
+                  setContextMenu({ ...contextMenu, visible: false });
+                  try {
+                    showToast(`Iniciando download MP3: ${song.title}`, 'warning');
+                    const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/spotdl`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ song }),
+                    });
+
+                    if (!resp.ok) {
+                      const err = await resp.json().catch(() => ({}));
+                      showToast(`Erro ao iniciar download MP3: ${err.error || resp.statusText}`, 'error');
+                      return;
+                    }
+
+                    showToast('Download MP3 adicionado à fila de downloads.', 'success');
+                  } catch (e: any) {
+                    showToast(`Erro ao iniciar download MP3: ${e?.message || String(e)}`, 'error');
+                  }
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" /> Download MP3
               </button>
             </>
           )}

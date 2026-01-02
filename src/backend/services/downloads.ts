@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
-import { execFile } from 'child_process';
+import { execFile, spawn } from 'child_process';
 import { sanitizeQuery } from '../../commons/tools';
 import { tidalService } from '../../frontend/services/tidalService';
 import { NAVIDROME_BASE_PATH, NAVIDROME_SAVE_FORMAT, TIDAL_QUALITY, NAVIDROME_PREPARATION_PATH } from '../../core/config';
@@ -202,7 +202,7 @@ class DownloadService {
     const ext = (path.extname(sourcePath).toLowerCase().replace('.', '') || 'mp3');
 
     const genre = meta.genre || 'Unknown';
-    const artist = meta.albumArtist || 'Unknown Artist';
+    const artist = meta.albumArtist || meta.artists || 'Unknown Artist';
     const album = meta.album || 'Unknown Album';
     const trackNumber = meta.trackNumber || 0;
     const year = meta.year || 'Unknown Year';
@@ -357,6 +357,106 @@ class DownloadService {
 
       console.error('Download failed:', err);
       return { error: String(err) };
+    }
+  }
+
+  async downloadTrackFromSpotDL(song: any) {
+    let item: any | undefined;
+    let progressTimer: NodeJS.Timeout | undefined;
+
+    try {
+      const outDir = this.download_dir;
+      await fs.promises.mkdir(outDir, { recursive: true });
+
+      const baseTitle = song?.title || 'spotify-track';
+      const baseArtist = song?.artist || '';
+      const nameBaseRaw = baseArtist ? `${baseArtist} - ${baseTitle}` : baseTitle;
+      const filenameBase = sanitizeQuery(nameBaseRaw) || 'spotify-track';
+
+      const spotifyUrl: string | undefined = song?.path || song?.href;
+      if (!spotifyUrl) {
+        throw new Error('URL do Spotify não encontrada para este item');
+      }
+
+      item = {
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        coverArt: song.coverArt,
+        progress: 0,
+        status: 'queued',
+        filename: `${filenameBase}.mp3`,
+        error: null,
+        song,
+        contentType: 'audio/spotify-local',
+      };
+
+      this.setdownloadsItems(item);
+
+      item.status = 'starting';
+
+      const outputTemplate = `${filenameBase}.{output-ext}`;
+      const args = ['--format', 'mp3', '--output', outputTemplate, spotifyUrl];
+
+      const child = spawn('spotdl', args, { cwd: outDir });
+
+      item.status = 'downloading';
+
+      // Simula progresso enquanto o spotdl roda
+      progressTimer = setInterval(() => {
+        if (!item || item.status !== 'downloading') return;
+        if (typeof item.progress !== 'number') item.progress = 0;
+        if (item.progress < 95) {
+          item.progress += 1;
+        }
+      }, 1000);
+
+      child.stdout.on('data', (data: Buffer) => {
+        const text = data.toString();
+        // Logs opcionais para debug
+        if (text.toLowerCase().includes('error')) {
+          console.warn('spotdl stdout:', text.trim());
+        }
+      });
+
+      child.stderr.on('data', (data: Buffer) => {
+        console.warn('spotdl stderr:', data.toString().trim());
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        child.on('error', (err) => reject(err));
+        child.on('close', (code) => {
+          if (code === 0) resolve();
+          else reject(new Error(`spotdl exited with code ${code}`));
+        });
+      });
+
+      const finalPath = path.join(outDir, `${filenameBase}.mp3`);
+      const stat = await fs.promises.stat(finalPath);
+      if (!stat.isFile() || !stat.size) {
+        throw new Error('Arquivo final do spotdl não encontrado ou vazio');
+      }
+
+      item.progress = 100;
+      item.status = 'completed';
+      item.filename = path.basename(finalPath);
+
+      return {
+        id: song.id,
+        path: finalPath,
+        size: stat.size,
+      };
+    } catch (err: any) {
+      if (item) {
+        item.status = 'failed';
+        item.error = err?.message || String(err);
+      }
+      console.error('SpotDL download failed:', err);
+      return { error: err?.message || String(err) };
+    } finally {
+      if (progressTimer) {
+        clearInterval(progressTimer);
+      }
     }
   }
 }

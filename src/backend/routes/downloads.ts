@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { downloadTrackFromTidal, getdownloads, getCompletedDownloads, streamDownload, writeMetadataParts, finalizeDownload, deleteDownload, clearDownloads, getCoverDownloads, writeCoverFromUrl, uploadPreparation } from '../controllers/downloads';
+import { downloadTrackFromTidal, downloadTrackFromSpotDL, getdownloads, getCompletedDownloads, streamDownload, writeMetadataParts, finalizeDownload, deleteDownload, clearDownloads, getCoverDownloads, writeCoverFromUrl, uploadPreparation } from '../controllers/downloads';
 import { NAVIDROME_PREPARATION_PATH } from '../../core/config';
 
 const downloadsRouter = Router();
@@ -23,6 +23,7 @@ downloadsRouter.get('/completed', getCompletedDownloads);
 downloadsRouter.get('/completed-cover', getCoverDownloads);
 downloadsRouter.get('/stream', streamDownload);
 downloadsRouter.post('/tidal', downloadTrackFromTidal);
+downloadsRouter.post('/spotdl', downloadTrackFromSpotDL);
 downloadsRouter.post('/finalize', finalizeDownload);
 downloadsRouter.post('/metadata', writeMetadataParts);
 downloadsRouter.post('/metadata-cover', writeCoverFromUrl);

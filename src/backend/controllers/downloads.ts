@@ -27,6 +27,23 @@ export async function downloadTrackFromTidal(req: Request, res: Response) {
   return res.json(result);
 }
 
+export async function downloadTrackFromSpotDL(req: Request, res: Response) {
+  const { song } = req.body;
+  if (!song) {
+    return res.status(400).json({ error: 'song is required' });
+  }
+
+  try {
+    const result = await downloadService.downloadTrackFromSpotDL(song);
+    if ((result as any).error) {
+      return res.status(500).json({ error: (result as any).error });
+    }
+    return res.json(result);
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'failed to download track with SpotDL' });
+  }
+}
+
 export async function getdownloads(_req: Request, res: Response) {
   try {
     const result = await downloadService.getdownloads();
