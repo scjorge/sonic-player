@@ -477,10 +477,8 @@ const SongTable: React.FC<SongTableProps> = ({
       case 'mood': return song.moods || '-';
       case 'group': return song.group || '-';
       case 'format': {
-        const fmt = (song.suffix || '').toLowerCase();
-        const colorClass = fmt === 'flac' ? 'text-green-400' : fmt === 'mp3' ? 'text-yellow-300' : 'text-zinc-400';
         return (
-          <span className={`text-xs uppercase bg-zinc-800 px-1.5 py-0.5 rounded ${colorClass}`}>
+          <span className={`text-xs uppercase bg-zinc-800 px-1.5 py-0.5 rounded`}>
             {song.suffix}
           </span>
         );
