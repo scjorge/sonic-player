@@ -286,10 +286,6 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
             <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm">
               Carregando downloads finalizados...
             </div>
-          ) : completedSongs.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm">
-              Nenhum download finalizado encontrado.
-            </div>
           ) : (
             <SongTable
               songs={completedSongs}

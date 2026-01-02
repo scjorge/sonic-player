@@ -82,15 +82,20 @@ class DownloadService {
     }
 
     const entries = await fs.promises.readdir(this.download_dir);
-    const supportedExts = new Set(['.mp3', '.flac']);
+    const supportedExts = new Set(['.mp3', '.flac', '.wav']);
     const items = await Promise.all(entries
       .filter((name) => supportedExts.has(path.extname(name).toLowerCase()))
       .map(async (name) => {
         const fullPath = path.join(this.download_dir, name);
         try {
-          const meta = await audioTagger.read(fullPath);
           const baseTitle = path.basename(name, path.extname(name));
           const duration = await this.getDuration(fullPath);
+
+          if (path.extname(name).toLowerCase() === '.wav') {
+            return { id: fullPath, title: baseTitle, path: fullPath, contentType: 'audio/preparation', duration: duration, suffix: 'wav' };  
+          }
+
+          const meta = await audioTagger.read(fullPath);
 
           return {
             id: fullPath,
