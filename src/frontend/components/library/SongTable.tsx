@@ -792,6 +792,7 @@ const SongTable: React.FC<SongTableProps> = ({
                       }
 
                       if (current.isrc) metadata.isrc = current.isrc;
+                      const source: 'download' | 'navidrome' = isNaviTableDownload ? 'download' : isNavidromeLibraryTable ? 'navidrome' : 'download';
 
                       try {
                         // Aplica tags principais
@@ -799,7 +800,7 @@ const SongTable: React.FC<SongTableProps> = ({
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
-                            source: 'download',
+                            source: source,
                             id: shazamState.song.id,
                             path: shazamState.song.path,
                             metadata,
@@ -818,7 +819,7 @@ const SongTable: React.FC<SongTableProps> = ({
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                              source: 'download',
+                              source: source,
                               id: shazamState.song.id,
                               path: shazamState.song.path,
                               coverUrl: current.coverArt,
