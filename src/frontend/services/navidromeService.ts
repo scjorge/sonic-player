@@ -188,6 +188,50 @@ class NavidromeService {
     }
   }
 
+  async reorderPlaylist(playlistId: string, orderedSongIds: string[]): Promise<boolean> {
+    try {
+      // 1) Busca estado atual da playlist para garantir que estamos trabalhando
+      // com a lista correta de entradas e para validar os IDs recebidos
+      const currentSongs = await this.getPlaylist(playlistId);
+      const currentIds = currentSongs.map(s => s.id);
+
+      if (currentSongs.length === 0) return true;
+
+      // 2) Normaliza a nova ordem mantendo apenas IDs que já existem na playlist
+      // (evita adicionar entradas inválidas ou duplicadas acidentais)
+      const validIdSet = new Set(currentIds);
+      const normalizedIds = orderedSongIds.filter(id => validIdSet.has(id));
+
+      // Garante que temos pelo menos os mesmos itens; se algo der muito errado,
+      // não altera a playlist no servidor.
+      if (normalizedIds.length === 0) {
+        console.warn('reorderPlaylist: nenhuma música válida para reordenar');
+        return false;
+      }
+
+      // 3) Remove todas as músicas pela posição atual
+      const removeParams = currentSongs
+        .map((_, idx) => `&songIndexToRemove=${idx}`)
+        .join('');
+
+      await this.fetchData('updatePlaylist.view', `&playlistId=${playlistId}${removeParams}`);
+
+      // 4) Adiciona novamente na nova ordem
+      const addParams = normalizedIds
+        .map(id => `&songIdToAdd=${id}`)
+        .join('');
+
+      if (addParams) {
+        await this.fetchData('updatePlaylist.view', `&playlistId=${playlistId}${addParams}`);
+      }
+
+      return true;
+    } catch (e) {
+      console.error('Failed to reorder playlist', e);
+      return false;
+    }
+  }
+
   async toggleStar(id: string, isStarred: boolean): Promise<boolean> {
     try {
       const endpoint = isStarred ? 'unstar.view' : 'star.view';

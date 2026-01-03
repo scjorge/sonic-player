@@ -727,6 +727,45 @@ const App: React.FC = () => {
     }
   };
 
+  const handleReorderNaviPlaylist = async (fromIndex: number, toIndex: number) => {
+    if (viewMode !== 'navi_playlist' || !selectedPlaylistId) return;
+    if (fromIndex === toIndex) return;
+
+    // Reordena localmente para feedback imediato na UI
+    const updated = [...naviSongs];
+    if (fromIndex < 0 || fromIndex >= updated.length || toIndex < 0 || toIndex >= updated.length) {
+      return;
+    }
+
+    const [moved] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, moved);
+    setNaviSongs(updated);
+
+    try {
+      const success = await navidromeService.reorderPlaylist(
+        selectedPlaylistId,
+        updated.map(s => s.id),
+      );
+
+      if (!success) {
+        showToast('Erro ao salvar ordem da playlist no Navidrome.', 'error');
+        // Recarrega estado real do servidor para evitar divergência
+        const songs = await navidromeService.getPlaylist(selectedPlaylistId);
+        setNaviSongs(songs);
+      } else {
+        showToast('Ordem da playlist atualizada.', 'success');
+      }
+    } catch (e: any) {
+      showToast(`Erro ao salvar ordem da playlist: ${e?.message || String(e)}`, 'error');
+      try {
+        const songs = await navidromeService.getPlaylist(selectedPlaylistId);
+        setNaviSongs(songs);
+      } catch {
+        // best-effort, mantém ordem local caso falhe novamente
+      }
+    }
+  };
+
   const handleQuickRemoveFromCurrent = async () => {
     if (!selectedPlaylistId) return;
     setConfirmModal({
@@ -1905,6 +1944,8 @@ const App: React.FC = () => {
             navidromeConnected={navidromeConnected}
             onOpenNavidromeSettings={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }}
             isNaviSongsView={viewMode === 'navi_songs'}
+            isNaviPlaylistView={viewMode === 'navi_playlist'}
+            onReorderNaviPlaylist={viewMode === 'navi_playlist' ? handleReorderNaviPlaylist : undefined}
           />
         </div>
       );

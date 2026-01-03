@@ -61,6 +61,9 @@ interface SongTableProps {
     navidromeConnected?: boolean | null;
     onOpenNavidromeSettings?: () => void;
     onAfterFinalize?: () => void;
+    // Navidrome playlist-specific
+    isNaviPlaylistView?: boolean;
+    onReorderNaviPlaylist?: (fromIndex: number, toIndex: number) => void;
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
@@ -134,6 +137,8 @@ const SongTable: React.FC<SongTableProps> = ({
   navidromeConnected = null,
   onOpenNavidromeSettings,
   onAfterFinalize,
+  isNaviPlaylistView,
+  onReorderNaviPlaylist,
 }) => {
   // --- STATE ---
   const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || NAVI_COLUMN_CONFIG);
@@ -235,6 +240,10 @@ const SongTable: React.FC<SongTableProps> = ({
         y: number;
         song: NaviSong | null;
     }>({ visible: false, x: 0, y: 0, song: null });
+
+  // Drag & drop de linhas (somente playlist Navidrome)
+  const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
+  const [dragOverRowIndex, setDragOverRowIndex] = useState<number | null>(null);
 
 
   // --- FILTER STATE ---
@@ -1549,6 +1558,7 @@ const SongTable: React.FC<SongTableProps> = ({
             {songs.map((song, index) => {
               const isSelected = selectedIds.includes(song.id);
               const showLoginPrompt = navidromeConnected === false && !isSpotifyTable;
+              const enableRowDrag = isNavidromeLibraryTable && !!isNaviPlaylistView && !!onReorderNaviPlaylist;
               return (
                 <div
                   key={song.id}
@@ -1558,7 +1568,38 @@ const SongTable: React.FC<SongTableProps> = ({
                                 ${index % 2 === 0 ? 'bg-zinc-950' : 'bg-zinc-950/50'}
                                 ${isSelected ? 'bg-indigo-500/10 hover:bg-indigo-500/15' : ''}
                                 ${currentTrackId === song.id ? (isSpotifyTable ? 'bg-green-600/20' : isTidalTable ? 'bg-yellow-600/20' : isYoutubeTable ? 'bg-red-600/20' : 'bg-indigo-500/5') : ''}
+                                ${draggedRowIndex === index ? 'opacity-60' : ''}
+                                ${dragOverRowIndex === index && draggedRowIndex !== null && draggedRowIndex !== index ? 'ring-1 ring-indigo-500' : ''}
                             `}
+                  draggable={enableRowDrag}
+                  onDragStart={(e) => {
+                    if (!enableRowDrag) return;
+                    setDraggedRowIndex(index);
+                    setDragOverRowIndex(null);
+                    try {
+                      e.dataTransfer.effectAllowed = 'move';
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                  onDragOver={(e) => {
+                    if (!enableRowDrag || draggedRowIndex === null || draggedRowIndex === index) return;
+                    e.preventDefault();
+                    setDragOverRowIndex(index);
+                  }}
+                  onDrop={(e) => {
+                    if (!enableRowDrag || draggedRowIndex === null || draggedRowIndex === index || !onReorderNaviPlaylist) return;
+                    e.preventDefault();
+                    const from = draggedRowIndex;
+                    const to = index;
+                    setDraggedRowIndex(null);
+                    setDragOverRowIndex(null);
+                    onReorderNaviPlaylist(from, to);
+                  }}
+                  onDragEnd={() => {
+                    setDraggedRowIndex(null);
+                    setDragOverRowIndex(null);
+                  }}
                 >
                   {showLoginPrompt && (
                     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 text-sm text-yellow-200">
