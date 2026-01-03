@@ -155,6 +155,9 @@ const SongTable: React.FC<SongTableProps> = ({
   const [isTagEditMode, setIsTagEditMode] = useState(false);
   const [convertState, setConvertState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
   const [deleteState, setDeleteState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
+  const [uploadState, setUploadState] = useState<{ active: boolean; progress: number; totalFiles: number; }>(
+    { active: false, progress: 0, totalFiles: 0 }
+  );
   const [shazamState, setShazamState] = useState<{
     open: boolean;
     loading: boolean;
@@ -213,16 +216,38 @@ const SongTable: React.FC<SongTableProps> = ({
     e.target.value = '';
 
     try {
-      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/upload-preparation`, {
-        method: 'POST',
-        body: formData,
-      });
+      const totalFiles = files.length;
+      setUploadState({ active: true, progress: 0, totalFiles });
 
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        showToast(`Erro ao fazer upload: ${err.error || resp.statusText}`, 'error');
-        return;
-      }
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${BACKEND_BASE_URL}/api/downloads/upload-preparation`);
+
+        xhr.upload.onprogress = (event: ProgressEvent) => {
+          if (!event.lengthComputable) return;
+          const percent = (event.loaded / event.total) * 100;
+          setUploadState(prev => ({ ...prev, progress: percent }));
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            try {
+              const err = JSON.parse(xhr.responseText || '{}');
+              reject(new Error(err.error || xhr.statusText || 'Erro ao fazer upload'));
+            } catch {
+              reject(new Error(xhr.statusText || 'Erro ao fazer upload'));
+            }
+          }
+        };
+
+        xhr.onerror = () => {
+          reject(new Error('Falha de rede durante o upload'));
+        };
+
+        xhr.send(formData);
+      });
 
       showToast('Upload concluído. Atualizando lista de preparo...', 'success');
       if (onAfterFinalize) {
@@ -230,6 +255,8 @@ const SongTable: React.FC<SongTableProps> = ({
       }
     } catch (error: any) {
       showToast(`Erro ao fazer upload: ${error?.message || String(error)}`, 'error');
+    } finally {
+      setUploadState({ active: false, progress: 0, totalFiles: 0 });
     }
   };
 
@@ -746,6 +773,25 @@ const SongTable: React.FC<SongTableProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-zinc-950 relative">
+      {/* Upload progress for preparation uploads */}
+      {isNaviTableDownload && uploadState.active && (
+        <div className="absolute right-4 top-4 z-30 bg-zinc-900/95 border border-zinc-700 rounded-lg px-3 py-2 shadow-lg flex flex-col gap-1 min-w-[220px]">
+          <span className="text-[11px] text-zinc-300 font-medium">
+            Enviando arquivos de preparo...
+          </span>
+          <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
+            <div
+              className="h-full bg-indigo-500 transition-[width] duration-150"
+              style={{ width: `${Math.max(2, Math.min(100, uploadState.progress || 0))}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-zinc-500 mt-0.5">
+            <span>{uploadState.totalFiles} arquivo(s)</span>
+            <span>{uploadState.progress.toFixed(0)}%</span>
+          </div>
+        </div>
+      )}
+
       {/* Shazam Modal */}
       {shazamState.open && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
