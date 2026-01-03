@@ -135,6 +135,20 @@ export async function finalizeDownload(req: Request, res: Response) {
   }
 }
 
+export async function deletePreparation(req: Request, res: Response) {
+  const { path: filePath } = req.body as { path?: string };
+  if (!filePath) {
+    return res.status(400).json({ error: 'path is required' });
+  }
+
+  try {
+    const result = await downloadService.deletePreparation(filePath);
+    return res.json(result);
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'failed to delete preparation file' });
+  }
+}
+
 export async function streamDownload(req: Request, res: Response) {
   const { id } = req.query;
   if (!id || typeof id !== 'string') {

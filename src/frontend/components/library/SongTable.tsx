@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NaviSong } from '../../../../types';
-import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download } from 'lucide-react';
+import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download, Trash2 } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
@@ -154,6 +154,7 @@ const SongTable: React.FC<SongTableProps> = ({
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const [isTagEditMode, setIsTagEditMode] = useState(false);
   const [convertState, setConvertState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
+  const [deleteState, setDeleteState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
   const [shazamState, setShazamState] = useState<{
     open: boolean;
     loading: boolean;
@@ -1028,6 +1029,77 @@ const SongTable: React.FC<SongTableProps> = ({
         </div>
       )}
 
+      {/* Delete Modal for Downloads (Preparo) */}
+      {deleteState.open && deleteState.song && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-full max-w-sm flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+              <div>
+                <h2 className="text-sm font-semibold text-white">Excluir arquivo de preparo</h2>
+                <p className="text-[11px] text-zinc-500 mt-0.5 truncate">
+                  {deleteState.song.title} — {deleteState.song.artist}
+                </p>
+              </div>
+              <button
+                disabled={deleteState.loading}
+                onClick={() => setDeleteState({ open: false, song: null, loading: false })}
+                className="text-zinc-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-zinc-800 disabled:opacity-50"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3 text-xs text-zinc-200">
+              <p>
+                Tem certeza que deseja excluir este arquivo da pasta de preparo?
+              </p>
+              <p className="text-[11px] text-zinc-500 break-all">
+                Arquivo: {getFileName(deleteState.song.path)}
+              </p>
+
+              <div className="flex justify-end gap-2 mt-2">
+                <button
+                  disabled={deleteState.loading}
+                  onClick={() => setDeleteState({ open: false, song: null, loading: false })}
+                  className="px-3 py-1.5 text-[11px] rounded border border-zinc-600 text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  disabled={deleteState.loading}
+                  onClick={async () => {
+                    const song = deleteState.song;
+                    if (!song?.path) return;
+                    setDeleteState(prev => ({ ...prev, loading: true }));
+                    try {
+                      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/delete-preparation`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: song.path }),
+                      });
+                      if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({}));
+                        showToast(`Erro ao excluir arquivo de preparo: ${err.error || resp.statusText}`, 'error');
+                      } else {
+                        showToast('Arquivo excluído da pasta de preparo.', 'success');
+                        if (onAfterFinalize) onAfterFinalize();
+                      }
+                    } catch (e: any) {
+                      showToast(`Erro ao excluir arquivo de preparo: ${e?.message || String(e)}`, 'error');
+                    } finally {
+                      setDeleteState({ open: false, song: null, loading: false });
+                    }
+                  }}
+                  className="px-3 py-1.5 text-[11px] rounded border border-red-600 text-red-300 hover:bg-red-600/20 disabled:opacity-50"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Context Menu Portal/Div */}
       {contextMenu.visible && contextMenu.song && (
         <div
@@ -1209,15 +1281,26 @@ const SongTable: React.FC<SongTableProps> = ({
 
           {/* Converter option for preparation table */}
           {isNaviTableDownload && contextMenu.song?.path && (
-            <button
-              onClick={() => {
-                setConvertState({ open: true, song: contextMenu.song!, loading: false });
-                setContextMenu({ ...contextMenu, visible: false });
-              }}
-              className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" /> Converter
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  setConvertState({ open: true, song: contextMenu.song!, loading: false });
+                  setContextMenu({ ...contextMenu, visible: false });
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" /> Converter
+              </button>
+              <button
+                onClick={() => {
+                  setDeleteState({ open: true, song: contextMenu.song!, loading: false });
+                  setContextMenu({ ...contextMenu, visible: false });
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-red-300 hover:bg-red-900/40 hover:text-red-200 flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" /> Excluir arquivo
+              </button>
+            </>
           )}
 
           {(!isSpotifyTable && !isTidalTable && !isYoutubeTable && !isNaviTableDownload && onInfo) && (

@@ -268,6 +268,21 @@ class DownloadService {
     }
   }
 
+  async deletePreparation(filePath: string) {
+    const resolved = this.resolveDownloadPath(filePath);
+    if (!resolved) {
+      throw new Error('Caminho de preparo inválido');
+    }
+
+    if (!fs.existsSync(resolved)) {
+      return { status: 'not_found', path: resolved };
+    }
+
+    await fs.promises.unlink(resolved);
+
+    return { status: 'deleted', path: resolved };
+  }
+
   async downloadTrackFromTidal(trackId: string, creds: any, song: any) {
     let item: any;
     let destFinal!: string;
