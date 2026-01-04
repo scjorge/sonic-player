@@ -152,6 +152,8 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
         track: it.track,
         discNumber: it.discNumber,
         duration: it.duration,
+        bitRate: it.bitRate,
+        samplingRate: it.samplingRate,
         path: it.path,
         contentType: it.contentType,
         ext: it.ext,

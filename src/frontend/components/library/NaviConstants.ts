@@ -40,7 +40,7 @@ export const NAVI_DOWNLOAD_COLUMN_CONFIG: ColumnConfig[] = [
   { id: 'duration', label: 'Duração', width: 70, visible: true, minWidth: 60 },
   { id: 'track', label: 'Track', width: 50, visible: false, minWidth: 100 },
   { id: 'discNumber', label: 'Disco', width: 60, visible: false, minWidth: 50 },
-  { id: 'bitRate', label: 'Bitrate', width: 80, visible: false, minWidth: 60 },
+  { id: 'bitRate', label: 'Bitrate', width: 80, visible: true, minWidth: 60 },
   { id: 'samplingRate', label: 'Sample', width: 80, visible: false, minWidth: 60 },
   { id: 'isrc', label: 'ISRC', width: 150, visible: false, minWidth: 80 },
   { id: 'format', label: 'Fmt', width: 60, visible: true, minWidth: 50 },

@@ -76,6 +76,38 @@ class DownloadService {
     });
   }
 
+  private async getBitAndSample(filePath: string): Promise<{ bitRate?: number; samplingRate?: number }> {
+    return new Promise((resolve) => {
+      execFile(
+        'ffprobe',
+        [
+          '-v', 'error',
+          '-select_streams', 'a:0',
+          '-show_entries', 'stream=bit_rate,sample_rate',
+          '-of', 'json',
+          filePath,
+        ],
+        (err, stdout) => {
+          if (err) {
+            return resolve({});
+          }
+
+          try {
+            const json = JSON.parse(stdout.toString());
+            const stream = Array.isArray(json.streams) && json.streams.length > 0 ? json.streams[0] : undefined;
+            if (!stream) return resolve({});
+
+            const bitRate = stream.bit_rate ? Math.round(parseInt(stream.bit_rate, 10) / 1000) : undefined;
+            const samplingRate = stream.sample_rate ? parseInt(stream.sample_rate, 10) : undefined;
+            resolve({ bitRate, samplingRate });
+          } catch {
+            resolve({});
+          }
+        },
+      );
+    });
+  }
+
   async getCompletedDownloads() {
     if (!fs.existsSync(this.download_dir)) {
       return { items: [] };
@@ -90,10 +122,11 @@ class DownloadService {
         try {
           const baseTitle = path.basename(name, path.extname(name));
           const duration = await this.getDuration(fullPath);
+          const { bitRate, samplingRate } = await this.getBitAndSample(fullPath);
           const suffix = path.extname(name).toLowerCase().slice(1);
 
           if (['.wav', '.ogg', '.m4a', '.aac', '.wma'].includes(path.extname(name).toLowerCase())) {
-            return { id: fullPath, title: baseTitle, path: fullPath, contentType: 'audio/preparation', duration: duration, suffix: suffix };
+            return { id: fullPath, title: baseTitle, path: fullPath, contentType: 'audio/preparation', duration, suffix, bitRate, samplingRate };
           }
 
           const meta = await audioTagger.read(fullPath);
@@ -111,8 +144,10 @@ class DownloadService {
             comment: meta.comments,
             path: fullPath,
             contentType: 'audio/preparation',
-            duration: duration,
-            suffix: suffix,
+            duration,
+            suffix,
+            bitRate,
+            samplingRate,
           };
         } catch (e) {
           console.error('Failed to read metadata for downloaded file', fullPath, e);
