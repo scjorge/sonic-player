@@ -22,7 +22,7 @@ class AudioTagger {
       case '.flac':
         return this.writeFLAC(filePath, metadata);
       default:
-        throw new Error(`Formato não suportado: ${ext}, arquivo -> ${filePath}`);
+        throw new Error(`Formato não suportado: ${ext}`);
     }
   }
 
@@ -39,7 +39,7 @@ class AudioTagger {
       case '.flac':
         return this.readFLAC(filePath);
       default:
-        throw new Error(`Formato não suportado: ${ext}, arquivo -> ${filePath}`);
+        throw new Error(`Formato não suportado: ${ext}`);
     }
   }
 
