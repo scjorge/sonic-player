@@ -552,9 +552,25 @@ class DownloadService {
 
       const args: string[] = ['-y', '-i', inputPath];
       if (targetFormat === 'mp3') {
-        args.push('-codec:a', 'libmp3lame', '-b:a', '320k');
+        args.push(
+          '-map', '0:a',
+          '-map', '0:v?',
+          '-map_metadata', '0',
+          '-c:a', 'libmp3lame',
+          '-b:a', '320k',
+          '-ar', '44100',
+          '-c:v', 'copy',
+          '-disposition:v', 'attached_pic'
+        );
       } else {
-        args.push('-vn', '-acodec', 'flac');
+        args.push(
+          '-map', '0:a',
+          '-map', '0:v?',
+          '-map_metadata', '0',
+          '-c:a', 'flac',
+          '-c:v', 'copy',
+          '-disposition:v', 'attached_pic'
+        );
       }
       args.push(outputPath);
 
