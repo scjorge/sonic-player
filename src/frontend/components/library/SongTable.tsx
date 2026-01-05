@@ -1020,7 +1020,7 @@ const SongTable: React.FC<SongTableProps> = ({
                       const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/convert`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ path: convertState.song.path, format: 'mp3', song: convertState.song }),
+                        body: JSON.stringify({ path: convertState.song.path, format: 'mp3' }),
                       });
                       if (!resp.ok) {
                         const err = await resp.json().catch(() => ({}));
@@ -1050,7 +1050,7 @@ const SongTable: React.FC<SongTableProps> = ({
                       const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/convert`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ path: convertState.song.path, format: 'flac', song: convertState.song }),
+                        body: JSON.stringify({ path: convertState.song.path, format: 'flac' }),
                       });
                       if (!resp.ok) {
                         const err = await resp.json().catch(() => ({}));
