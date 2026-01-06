@@ -1393,6 +1393,38 @@ const SongTable: React.FC<SongTableProps> = ({
               <Download className="w-4 h-4" /> Download FLAC
             </button>
           )}
+          {contextMenu.song.contentType === 'audio/tidal' && (
+            <button
+              onClick={async () => {
+                setContextMenu({ ...contextMenu, visible: false });
+                try {
+                  showToast(`Download Iniciado: ${contextMenu.song.title}`, 'warning');
+                  const body = {
+                    creds: tidalService.getCredentials(),
+                    trackId: contextMenu.song!.id,
+                    song: contextMenu.song,
+                    format: 'mp3'
+                  };
+                  const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/tidal`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                  });
+                  if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.error || 'Failed to queue download');
+                  }
+                  showToast(`Download Finalizado: ${contextMenu.song.title}`, 'success');
+                } catch (e){
+                  console.error('TIDAL download request failed', e);
+                  showToast('Falha ao iniciar download no servidor: ' + (e?.message || String(e)), 'error');
+                }
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" /> Download MP3 (320kbps)
+            </button>
+          )}
         </div>
       )}
 

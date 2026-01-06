@@ -10,6 +10,7 @@ import { audioTagger } from '../utils/tagger';
 import { getPathById } from './navidromeDatabase';
 
 import { pipeline } from 'stream/promises';
+import { threadId } from 'worker_threads';
 
 
 class DownloadService {
@@ -32,6 +33,7 @@ class DownloadService {
       filename: d.filename,
       coverArt: d.coverArt,
       contentType: d.contentType,
+      type: d.type,
     }));
     return items;
   }
@@ -341,6 +343,7 @@ class DownloadService {
         trackId,
         creds,
         song,
+        type: 'download-tidal',
         contentType: 'audio/preparation',
       };
 
@@ -444,6 +447,7 @@ class DownloadService {
         filename: `${filenameBase}.mp3`,
         error: null,
         song,
+        type: 'download-spotify',
         contentType: 'audio/spotify-local',
       };
 
@@ -537,13 +541,15 @@ class DownloadService {
       const displayArtist = song?.artist || '';
 
       item = {
-        id: `${song?.id || inputPath}:convert:${targetFormat}`,
+        //id: `${song?.id || inputPath}:convert:${targetFormat}`,
+        id: song.id ,
         title: displayTitle,
         artist: displayArtist,
         progress: 0,
         status: 'queued',
         filename: path.basename(outputPath),
         error: null,
+        type: 'download-convert',
         contentType: 'audio/preparation',
       };
       this.setdownloadsItems(item);
