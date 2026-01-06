@@ -3,9 +3,15 @@ import { NAVIDROME_DATABASE_SQLITE_PATH, NAVIDROME_BASE_PATH } from '../../core/
 import path from 'path';
 
 
-const db = new Database(NAVIDROME_DATABASE_SQLITE_PATH, {
-  readonly: true
-});
+function getNaviDatabaseConnection(): Database.Database | null {
+  try {
+    return new Database(NAVIDROME_DATABASE_SQLITE_PATH);
+  } catch (error) {
+    return null;
+  }
+}
+
+const db = getNaviDatabaseConnection();
 
 
 export async function getPathById(id: string): Promise<string | null> {
