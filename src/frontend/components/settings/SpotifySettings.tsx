@@ -4,6 +4,7 @@ import { SpotifyCredentials } from '../../../../types';
 import { saveSpotifyCredentials, getSpotifyCredentials, deleteSpotifyCredentials } from '../../repository/spotify';
 import { spotifyService } from '../../services/spotifyService';
 import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle, LogIn, LogOut, Copy } from 'lucide-react';
+import ConfirmationModal from '../library/ConfirmationModal';
 
 const CopyButton: React.FC = () => {
   const [copied, setCopied] = useState(false);
@@ -40,6 +41,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
   const [creds, setCreds] = useState<SpotifyCredentials>({ clientId: '', clientSecret: '', redirectUri: '' });
   const [showSaved, setShowSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof SpotifyCredentials, string>>>({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const fetchCredentials = async () => {
@@ -97,6 +99,10 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
   };
 
   const handleDelete = async () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
     await deleteSpotifyCredentials();
     setCreds({
       clientId: '',
@@ -106,6 +112,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
       refreshToken: '',
       expiresAt: 0,
     });
+    setShowDeleteConfirm(false);
   };
 
   const handleAuthenticate = async () => {
@@ -256,6 +263,14 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
           )}
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        title="Apagar credenciais do Spotify"
+        message="Tem certeza que deseja apagar as credenciais do Spotify? Esta ação não pode ser desfeita."
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
 
       <div className="bg-zinc-900/30 rounded-xl p-6 border border-dashed border-zinc-800">
         <h4 className="text-sm font-bold text-zinc-300 mb-2">Como obter estas credenciais?</h4>

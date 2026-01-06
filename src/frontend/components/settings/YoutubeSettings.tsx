@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Key, Save, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { getYoutubeConfig, saveYoutubeConfig, deleteYoutubeConfig, YoutubeConfig } from '../../repository/youtube';
+import ConfirmationModal from '../library/ConfirmationModal';
 
 const YoutubeSettings: React.FC = () => {
   const [config, setConfig] = useState<YoutubeConfig>({ apiKey: '' });
   const [error, setError] = useState<string | null>(null);
   const [showSaved, setShowSaved] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -32,9 +34,14 @@ const YoutubeSettings: React.FC = () => {
   };
 
   const handleDelete = async () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
     await deleteYoutubeConfig();
     setConfig({ apiKey: '' });
     setError(null);
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -107,6 +114,14 @@ const YoutubeSettings: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        title="Apagar chave da API do YouTube"
+        message="Tem certeza que deseja apagar a chave da API do YouTube? Esta ação não pode ser desfeita."
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 };
