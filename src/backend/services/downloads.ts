@@ -541,8 +541,7 @@ class DownloadService {
       const displayArtist = song?.artist || '';
 
       item = {
-        //id: `${song?.id || inputPath}:convert:${targetFormat}`,
-        id: song.id ,
+        id: `${song?.id || inputPath}`,
         title: displayTitle,
         artist: displayArtist,
         progress: 0,
