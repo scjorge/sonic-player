@@ -3,6 +3,9 @@ import { NAVIDROME_DATABASE_SQLITE_PATH, NAVIDROME_BASE_PATH } from '../../core/
 import path from 'path';
 
 
+const db = getNaviDatabaseConnection();
+
+
 function getNaviDatabaseConnection(): Database.Database | null {
   try {
     return new Database(NAVIDROME_DATABASE_SQLITE_PATH);
@@ -11,12 +14,16 @@ function getNaviDatabaseConnection(): Database.Database | null {
   }
 }
 
-const db = getNaviDatabaseConnection();
+
+function execQueryAll(sql: string, params: any[] = []): any[] {
+  if (!db) return [];
+  return db.prepare(sql).all(params);
+}
 
 
 export async function getPathById(id: string): Promise<string | null> {
   const sql = 'SELECT path FROM media_file WHERE id = ?';
-  const rows = db.prepare(sql).all([id]);
+  const rows = execQueryAll(sql, [id]);
   if (rows.length === 0) {
     return null;
   }
@@ -86,6 +93,6 @@ export function search4(comments: string[], genres: string[], artists: string[],
   `;
   params.push(limit, offset);
 
-  const rows = db.prepare(sql).all(params);
+  const rows = execQueryAll(sql, params);
   return rows;
 }
