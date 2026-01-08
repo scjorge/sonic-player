@@ -92,8 +92,8 @@ const GeneralSettings: React.FC = () => {
           <button
             onClick={() => setActiveTab('templates')}
             className={`px-4 py-1.5 rounded-lg font-medium transition-colors ${activeTab === 'templates'
-                ? 'bg-indigo-600 text-white shadow shadow-indigo-500/30'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+              ? 'bg-indigo-600 text-white shadow shadow-indigo-500/30'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
               }`}
           >
             Template Navidrome
