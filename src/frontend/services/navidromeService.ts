@@ -1,4 +1,4 @@
-import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, SubsonicResponse } from '../../../types';
+import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist } from '../../../types';
 import { MD5, sanitizeQuery } from '../../commons/tools';
 import { getNavidromeCredentials } from '../repository/navidrome';
 

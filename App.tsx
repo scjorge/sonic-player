@@ -13,7 +13,7 @@ import { BACKEND_BASE_URL, TIDAL_QUALITY } from './src/core/config.ts';
 import { getSpotifyCredentials } from './src/frontend/repository/spotify';
 import { getStoredGroups } from './src/frontend/repository/metadata.ts';
 import showToast from './src/frontend/components/utils/toast.ts';
-import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, ArrowLeft, Navigation, AlertCircle, Download } from 'lucide-react';
+import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, ArrowLeft, Navigation, AlertCircle, Download, FolderTree } from 'lucide-react';
 import SongTable from './src/frontend/components/library/SongTable.tsx';
 import CreatePlaylistModal from './src/frontend/components/library/CreatePlaylistModal.tsx';
 import PlaylistSelectorModal from './src/frontend/components/library/PlaylistSelectorModal.tsx';
@@ -26,6 +26,7 @@ import SpotifySettings from './src/frontend/components/settings/SpotifySettings.
 import TidalSettings from './src/frontend/components/settings/TidalSettings.tsx';
 import YoutubeSettings from './src/frontend/components/settings/YoutubeSettings.tsx';
 import NavidromeSettings from './src/frontend/components/settings/NavidromeSettings.tsx';
+import GeneralSettings from './src/frontend/components/settings/GeneralSettings.tsx';
 import LikedSongs from './src/frontend/components/spotify/LikedSongs.tsx';
 import SpotifyPlaylists from './src/frontend/components/spotify/SpotifyPlaylists.tsx';
 import { SPOTIFY_COLUMN_CONFIG } from './src/frontend/components/spotify/spotifyConstants.ts';
@@ -1618,6 +1619,13 @@ const App: React.FC = () => {
           </div>
         );
       }
+      if (activeSettingsTab === 'general') {
+        return (
+          <div className="h-full overflow-y-auto custom-scrollbar bg-zinc-950">
+            <GeneralSettings />
+          </div>
+        );
+      }
       return <div className="p-10 text-zinc-500">Selecione uma opção de configuração.</div>;
     }
 
@@ -2086,6 +2094,14 @@ const App: React.FC = () => {
               >
                 <Tag className="w-4 h-4 flex-shrink-0" />
                 {!isSidebarCollapsed && "Tags/Metadados"}
+              </button>
+
+              <button
+                onClick={() => setActiveSettingsTab('general')}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'general' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
+              >
+                <FolderTree className="w-4 h-4 flex-shrink-0" />
+                {!isSidebarCollapsed && "Geral"}
               </button>
             </div>
           ) : (

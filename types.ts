@@ -105,14 +105,6 @@ export interface MusicFile {
   coverUrl: string | null;
 }
 
-export interface AISuggestion {
-  title?: string;
-  artist?: string;
-  album?: string;
-  year?: string;
-  genre?: string;
-}
-
 export interface TagGroup {
   id: string;
   name: string;

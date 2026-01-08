@@ -4,11 +4,13 @@ import { SpotifySetting } from '../entities/SpotifySetting';
 import { TagGroupEntity } from '../entities/TagGroupEntity';
 import { GenreEntity } from '../entities/GenreEntity';
 import { YoutubeSetting } from '../entities/YoutubeSetting';
+import { GeneralSettingsEntity } from '../entities/GeneralSettings';
+import { DATABASE_PATH } from '../../core/config';
 
 export const AppDataSource = new DataSource({
   type: 'sqlite',
-  database: process.env.DB_PATH || '/app/database.sqlite',
-  entities: [NavidromeSetting, SpotifySetting, TagGroupEntity, GenreEntity, YoutubeSetting],
+  database: DATABASE_PATH,
+  entities: [NavidromeSetting, SpotifySetting, TagGroupEntity, GenreEntity, YoutubeSetting, GeneralSettingsEntity],
   synchronize: true,
   logging: false,
 });

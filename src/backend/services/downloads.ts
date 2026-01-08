@@ -4,13 +4,12 @@ import fetch from 'node-fetch';
 import { execFile, spawn } from 'child_process';
 import { sanitizeQuery } from '../../commons/tools';
 import { tidalService } from '../../frontend/services/tidalService';
-import { NAVIDROME_BASE_PATH, NAVIDROME_SAVE_FORMAT, TIDAL_QUALITY, NAVIDROME_PREPARATION_PATH } from '../../core/config';
+import { NAVIDROME_BASE_PATH, TIDAL_QUALITY, NAVIDROME_PREPARATION_PATH } from '../../core/config';
 import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
 import { getPathById } from './navidromeDatabase';
-
 import { pipeline } from 'stream/promises';
-import { threadId } from 'worker_threads';
+import { generalSettingsService } from './generalSettings';
 
 
 class DownloadService {
@@ -241,7 +240,7 @@ class DownloadService {
     }
   }
 
-  private buildNavidromeTargetPath(meta: AudioMetadata, sourcePath: string) {
+  private async buildNavidromeTargetPath(meta: AudioMetadata, sourcePath: string) {
     const ext = (path.extname(sourcePath).toLowerCase().replace('.', '') || 'mp3');
 
     const genre = meta.genre || 'Unknown';
@@ -254,7 +253,8 @@ class DownloadService {
 
     const safe = (value: string) => sanitizeQuery(value || '').replace(/^\.+$/, '') || 'Unknown';
 
-    let relative = NAVIDROME_SAVE_FORMAT;
+    const generalSetting = await generalSettingsService.getGeneralSettings();
+    let relative = generalSetting.navidromeSaveFormat;
     relative = relative.replace(/{genre}/g, safe(genre));
     relative = relative.replace(/{artist}/g, safe(artist));
     relative = relative.replace(/{album}/g, safe(album));
@@ -278,7 +278,7 @@ class DownloadService {
         throw new Error('Gênero é obrigatório para finalizar o download');
       }
 
-      let target = this.buildNavidromeTargetPath(meta, resolved);
+      let target = await this.buildNavidromeTargetPath(meta, resolved);
       const targetDir = path.dirname(target);
       await fs.promises.mkdir(targetDir, { recursive: true });
 
