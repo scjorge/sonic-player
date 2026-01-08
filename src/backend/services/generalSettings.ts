@@ -1,6 +1,6 @@
 import { AppDataSource } from '../utils/db';
 import { GeneralSettingsEntity } from '../entities/GeneralSettings';
-import { NAVIDROME_SAVE_FORMAT } from '../../core/config';
+import { NAVIDROME_SAVE_FORMAT_DEFAULT } from '../../core/config';
 
 
 export const generalSettingsService = {
@@ -12,7 +12,7 @@ export const generalSettingsService = {
       // Set default if not exists
       if (!settings) {
         settings = repo.create({
-            navidromeSaveFormat: NAVIDROME_SAVE_FORMAT
+          navidromeSaveFormat: NAVIDROME_SAVE_FORMAT_DEFAULT
         });
         await repo.save(settings);
       }
@@ -20,7 +20,7 @@ export const generalSettingsService = {
       return settings;
     } catch (e) {
       console.error('Failed to load general settings from DB', e);
-      return { navidromeSaveFormat: NAVIDROME_SAVE_FORMAT, error: 'Failed to load general settings' };
+      return { navidromeSaveFormat: NAVIDROME_SAVE_FORMAT_DEFAULT, error: 'Failed to load general settings' };
     }
   },
 
@@ -35,7 +35,7 @@ export const generalSettingsService = {
       }
 
       const saved = await repo.save(settings);
-      return { navidromeSaveFormat: saved.navidromeSaveFormat || NAVIDROME_SAVE_FORMAT };
+      return { navidromeSaveFormat: saved.navidromeSaveFormat || NAVIDROME_SAVE_FORMAT_DEFAULT };
     } catch (e) {
       console.error('Failed to save general settings to DB', e);
       return { navidromeSaveFormat, error: 'Failed to save general settings' };

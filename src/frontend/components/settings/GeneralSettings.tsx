@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { GeneralSettings } from '../../repository/generalSettings';
 import { getGeneralSettings, saveGeneralSettings } from '../../repository/generalSettings';
 import { AlertCircle, CheckCircle2, Save, FolderTree, Info } from 'lucide-react';
-import { NAVIDROME_SAVE_FORMAT } from '../../../core/config';
+import { NAVIDROME_SAVE_FORMAT_DEFAULT } from '../../../core/config';
 
 const placeholderMeta = {
   genre: 'Rock',
@@ -27,7 +27,7 @@ function buildPreview(format: string): string {
 }
 
 const GeneralSettings: React.FC = () => {
-  const [form, setForm] = useState<GeneralSettings>({ navidromeSaveFormat: NAVIDROME_SAVE_FORMAT });
+  const [form, setForm] = useState<GeneralSettings>({ navidromeSaveFormat: NAVIDROME_SAVE_FORMAT_DEFAULT });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

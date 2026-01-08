@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { generalSettingsService } from '../services/generalSettings';
-import { NAVIDROME_SAVE_FORMAT } from '../../core/config';
+import { NAVIDROME_SAVE_FORMAT_DEFAULT } from '../../core/config';
 
 
 export async function getGeneralSettings(_req: Request, res: Response) {
@@ -23,7 +23,7 @@ export async function saveGeneralSettings(req: Request, res: Response) {
 
   const navidromeSaveFormat = typeof body.navidromeSaveFormat === 'string' && body.navidromeSaveFormat.trim()
     ? body.navidromeSaveFormat.trim()
-    : NAVIDROME_SAVE_FORMAT;
+    : NAVIDROME_SAVE_FORMAT_DEFAULT;
 
   try {
     const result = await generalSettingsService.saveGeneralSettings(navidromeSaveFormat);

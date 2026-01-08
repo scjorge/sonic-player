@@ -4,9 +4,9 @@ export const DATABASE_PATH = "/app/database.sqlite";
 
 // NAVIDROME
 export const NAVIDROME_BASE_PATH = "/app/downloads_navidrome";
-export const NAVIDROME_SAVE_FORMAT = "{genre}/Artists/{artist}/{album} ({year})/{track} - {title}.{ext}";
-export const NAVIDROME_DATABASE_SQLITE_PATH = "/app/navidrome_database/navidrome.db";
 export const NAVIDROME_PREPARATION_PATH = "/app/downloads";
+export const NAVIDROME_DATABASE_SQLITE_PATH = "/app/navidrome_database/navidrome.db";
+export const NAVIDROME_SAVE_FORMAT_DEFAULT = "{genre}/Artists/{artist}/{album} ({year})/{track} - {title}.{ext}";
 
 // SPOTIFY
 export const SPOTIFY_API_BASE_V1 = 'https://api.spotify.com/v1';
