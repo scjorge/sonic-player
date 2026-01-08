@@ -4,7 +4,7 @@ import { NAVIDROME_SAVE_FORMAT_DEFAULT } from '../../core/config';
 
 
 export const generalSettingsService = {
-  async getGeneralSettings() {
+  async getGeneralSettings(): Promise<any> {
     try {
       const repo = AppDataSource.getRepository(GeneralSettingsEntity);
       let settings = await repo.findOne({ where: {} });
@@ -20,7 +20,7 @@ export const generalSettingsService = {
       return settings;
     } catch (e) {
       console.error('Failed to load general settings from DB', e);
-      return { navidromeSaveFormat: NAVIDROME_SAVE_FORMAT_DEFAULT, error: 'Failed to load general settings' };
+      return { error: `Failed to load general settings: ${e?.message || 'Unknown error'}` };
     }
   },
 
@@ -29,16 +29,18 @@ export const generalSettingsService = {
       const repo = AppDataSource.getRepository(GeneralSettingsEntity);
       let settings = await repo.findOne({ where: {} });
       if (!settings) {
-        settings = repo.create({ navidromeSaveFormat });
+        settings = repo.create({
+          navidromeSaveFormat: navidromeSaveFormat
+        });
       } else {
         settings.navidromeSaveFormat = navidromeSaveFormat;
       }
 
       const saved = await repo.save(settings);
-      return { navidromeSaveFormat: saved.navidromeSaveFormat || NAVIDROME_SAVE_FORMAT_DEFAULT };
+      return { settings: saved, error: null };
     } catch (e) {
       console.error('Failed to save general settings to DB', e);
-      return { navidromeSaveFormat, error: 'Failed to save general settings' };
+      return { error: `Failed to save general settings: ${e?.message || 'Unknown error'}` };
     }
   }
 };

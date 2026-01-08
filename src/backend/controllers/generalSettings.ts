@@ -17,12 +17,12 @@ export async function getGeneralSettings(_req: Request, res: Response) {
 
 export async function saveGeneralSettings(req: Request, res: Response) {
   const body = req.body || {};
-  if (!body.navidromeSaveFormat) {
-    return res.status(400).json({ error: 'navidromeSaveFormat é obrigatório' });
+  if (!body.settings) {
+    return res.status(400).json({ error: 'settings é obrigatório' });
   }
 
-  const navidromeSaveFormat = typeof body.navidromeSaveFormat === 'string' && body.navidromeSaveFormat.trim()
-    ? body.navidromeSaveFormat.trim()
+  const navidromeSaveFormat = typeof body.settings.navidromeSaveFormat === 'string' && body.settings.navidromeSaveFormat.trim()
+    ? body.settings.navidromeSaveFormat.trim()
     : NAVIDROME_SAVE_FORMAT_DEFAULT;
 
   try {

@@ -14,8 +14,9 @@ export async function saveGeneralSettings(settings: GeneralSettings): Promise<Ge
   const res = await fetch(`${BACKEND_BASE_URL}/api/general-settings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(settings),
+    body: JSON.stringify({ settings }),
   });
   if (!res.ok) throw new Error('Falha ao salvar configurações gerais');
-  return res.json();
+  const result = await res.json();
+  return result.settings;
 }
