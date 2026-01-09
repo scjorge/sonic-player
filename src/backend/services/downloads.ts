@@ -656,7 +656,7 @@ class DownloadService {
     const args = [
       '-y',
       '-i', inputPath,
-      '-lavfi', 'showspectrumpic=s=2048x1024:scale=log:win_func=hann',
+      '-lavfi', 'showspectrumpic=s=1024x512:scale=log:win_func=hann',
       outputPath,
     ];
 

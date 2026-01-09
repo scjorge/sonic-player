@@ -1622,9 +1622,9 @@ const SongTable: React.FC<SongTableProps> = ({
       {spectrogramState.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div
-            className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col relative overflow-hidden"
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col relative overflow-hidden max-h-[90vh]"
             style={{
-              // Largura = largura da imagem + bordas, respeitando apenas a tela
+              // Largura = largura da imagem + bordas, respeitando a tela
               width: Math.min(spectrogramState.width, window.innerWidth - 32),
             }}
           >
@@ -1660,7 +1660,7 @@ const SongTable: React.FC<SongTableProps> = ({
               </button>
             </div>
 
-            <div className="flex-1 flex items-center justify-center bg-black">
+            <div className="flex-1 flex items-center justify-center bg-black overflow-auto">
               {spectrogramState.loading && (
                 <p className="text-sm text-zinc-400">Gerando espectro com ffmpeg...</p>
               )}
