@@ -648,18 +648,15 @@ class DownloadService {
       throw new Error('Arquivo de áudio não encontrado');
     }
 
-    const outputDir = path.join(path.dirname(inputPath), 'spectrograms');
+    const outputDir = path.join('/tmp', 'spectrograms');
     await fs.promises.mkdir(outputDir, { recursive: true });
-
     const baseName = path.basename(inputPath, path.extname(inputPath));
     const outputPath = path.join(outputDir, `${baseName}-spectrogram.png`);
 
     const args = [
       '-y',
       '-i', inputPath,
-      // showspectrumpic com legenda ativada para exibir escala de frequência (eixo Y)
-      // e intensidade/volume em dB na barra de cores
-      '-lavfi', 'showspectrumpic=s=1024x512:scale=1',
+      '-lavfi', 'showspectrumpic=s=2048x1024:scale=log:win_func=hann',
       outputPath,
     ];
 

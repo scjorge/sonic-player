@@ -1369,18 +1369,22 @@ const SongTable: React.FC<SongTableProps> = ({
             </button>
           )}
 
-          {/* Converter option for preparation table */}
-          {isNaviTableDownload && contextMenu.song?.path && (
+          {/* Converter option for preparation table + Ver espectro
+              Também habilitar "Ver espectro" na biblioteca Navidrome quando edição de tags estiver ativa
+          */}
+          {(isNaviTableDownload || (isNavidromeLibraryTable && isTagEditMode)) && contextMenu.song?.path && (
             <>
-              <button
-                onClick={() => {
-                  setConvertState({ open: true, song: contextMenu.song!, loading: false });
-                  setContextMenu({ ...contextMenu, visible: false });
-                }}
-                className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" /> Converter
-              </button>
+              {isNaviTableDownload && (
+                <button
+                  onClick={() => {
+                    setConvertState({ open: true, song: contextMenu.song!, loading: false });
+                    setContextMenu({ ...contextMenu, visible: false });
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" /> Converter
+                </button>
+              )}
               <button
                 onClick={async () => {
                   const song = contextMenu.song!;
@@ -1425,15 +1429,17 @@ const SongTable: React.FC<SongTableProps> = ({
               >
                 <Activity className="w-4 h-4" /> Ver espectro
               </button>
-              <button
-                onClick={() => {
-                  setDeleteState({ open: true, song: contextMenu.song!, loading: false });
-                  setContextMenu({ ...contextMenu, visible: false });
-                }}
-                className="w-full text-left px-3 py-2 text-sm text-red-300 hover:bg-red-900/40 hover:text-red-200 flex items-center gap-2"
-              >
-                <Trash2 className="w-4 h-4" /> Excluir arquivo
-              </button>
+              {isNaviTableDownload && (
+                <button
+                  onClick={() => {
+                    setDeleteState({ open: true, song: contextMenu.song!, loading: false });
+                    setContextMenu({ ...contextMenu, visible: false });
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm text-red-300 hover:bg-red-900/40 hover:text-red-200 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" /> Excluir arquivo
+                </button>
+              )}
             </>
           )}
 
