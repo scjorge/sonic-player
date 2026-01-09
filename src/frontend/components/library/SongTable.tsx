@@ -195,15 +195,8 @@ const SongTable: React.FC<SongTableProps> = ({
     }
   };
 
-  const handleUploadPreparationClick = () => {
-    if (!isNaviTableDownload) return;
-    if (uploadInputRef.current) {
-      uploadInputRef.current.click();
-    }
-  };
-
+  // Upload de arquivos para a pasta de preparo (tabela de downloads Navidrome)
   const handleUploadPreparationFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isNaviTableDownload) return;
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -260,6 +253,39 @@ const SongTable: React.FC<SongTableProps> = ({
     }
   };
 
+  const handleUploadPreparationClick = () => {
+    if (uploadInputRef.current) {
+      uploadInputRef.current.click();
+    }
+  };
+
+  // Estado do espectrograma com suporte a zoom/pan
+  const [spectrogramState, setSpectrogramState] = useState<{
+    open: boolean;
+    loading: boolean;
+    error: string | null;
+    imagePath: string | null;
+    song: NaviSong | null;
+    width: number;
+    height: number;
+    zoom: number;
+    offsetX: number;
+    offsetY: number;
+    isPanning: boolean;
+  }>({
+    open: false,
+    loading: false,
+    error: null,
+    imagePath: null,
+    song: null,
+    width: 2048,
+    height: 1024,
+    zoom: 1,
+    offsetX: 0,
+    offsetY: 0,
+    isPanning: false,
+  });
+
 
   // Context Menu State
   const [contextMenu, setContextMenu] = useState<{
@@ -272,16 +298,6 @@ const SongTable: React.FC<SongTableProps> = ({
   // Drag & drop de linhas (somente playlist Navidrome)
   const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
   const [dragOverRowIndex, setDragOverRowIndex] = useState<number | null>(null);
-
-  const [spectrogramState, setSpectrogramState] = useState<{
-    open: boolean;
-    loading: boolean;
-    error: string | null;
-    imagePath: string | null;
-    song: NaviSong | null;
-    width: number;
-    height: number;
-  }>({ open: false, loading: false, error: null, imagePath: null, song: null, width: 900, height: 520 });
 
   const [isResizingSpectrogram, setIsResizingSpectrogram] = useState(false);
 
@@ -316,6 +332,74 @@ const SongTable: React.FC<SongTableProps> = ({
       window.removeEventListener('mouseup', handleUp);
     };
   }, [isResizingSpectrogram]);
+
+  const resetSpectrogramView = () => {
+    setSpectrogramState(prev => ({
+      ...prev,
+      zoom: 1,
+      offsetX: 0,
+      offsetY: 0,
+      isPanning: false,
+    }));
+  };
+
+  const handleSpectrogramWheel: React.WheelEventHandler<HTMLDivElement> = (e) => {
+    if (!spectrogramState.imagePath) return;
+    e.preventDefault();
+
+    const delta = -e.deltaY;
+    const zoomFactor = delta > 0 ? 1.1 : 0.9;
+
+    setSpectrogramState(prev => {
+      const newZoom = Math.min(Math.max(1, prev.zoom * zoomFactor), 10);
+      return { ...prev, zoom: newZoom };
+    });
+  };
+
+  const handleSpectrogramMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    if (e.button !== 0) return; // apenas botão esquerdo para pan
+    e.preventDefault();
+    if (!spectrogramState.imagePath) return;
+    setSpectrogramState(prev => ({ ...prev, isPanning: true }));
+  };
+
+  useEffect(() => {
+    if (!spectrogramState.isPanning) return;
+
+    const start = { x: 0, y: 0 };
+    let lastX = 0;
+    let lastY = 0;
+
+    const handleMove = (e: MouseEvent) => {
+      if (!spectrogramState.isPanning) return;
+      if (start.x === 0 && start.y === 0) {
+        start.x = e.clientX;
+        start.y = e.clientY;
+      }
+      const dx = e.clientX - (lastX || start.x);
+      const dy = e.clientY - (lastY || start.y);
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      setSpectrogramState(prev => ({
+        ...prev,
+        offsetX: prev.offsetX + dx,
+        offsetY: prev.offsetY + dy,
+      }));
+    };
+
+    const handleUp = () => {
+      setSpectrogramState(prev => ({ ...prev, isPanning: false }));
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [spectrogramState.isPanning]);
 
 
   // --- FILTER STATE ---
@@ -1389,7 +1473,19 @@ const SongTable: React.FC<SongTableProps> = ({
                 onClick={async () => {
                   const song = contextMenu.song!;
                   setContextMenu({ ...contextMenu, visible: false });
-                  setSpectrogramState({ open: true, loading: true, error: null, imagePath: null, song, width: 900, height: 520 });
+                  setSpectrogramState({
+                    open: true,
+                    loading: true,
+                    error: null,
+                    imagePath: null,
+                    song,
+                    width: 2048,
+                    height: 1024,
+                    zoom: 1,
+                    offsetX: 0,
+                    offsetY: 0,
+                    isPanning: false,
+                  });
                   try {
                     const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/spectrogram`, {
                       method: 'POST',
@@ -1526,12 +1622,10 @@ const SongTable: React.FC<SongTableProps> = ({
       {spectrogramState.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div
-            className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col relative"
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col relative overflow-hidden"
             style={{
+              // Largura = largura da imagem + bordas, respeitando apenas a tela
               width: Math.min(spectrogramState.width, window.innerWidth - 32),
-              height: Math.min(spectrogramState.height, window.innerHeight - 64),
-              maxWidth: '100%',
-              maxHeight: '80vh',
             }}
           >
             <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
@@ -1547,14 +1641,26 @@ const SongTable: React.FC<SongTableProps> = ({
                 </div>
               </div>
               <button
-                onClick={() => setSpectrogramState({ open: false, loading: false, error: null, imagePath: null, song: null, width: 900, height: 520 })}
+                onClick={() => setSpectrogramState({
+                  open: false,
+                  loading: false,
+                  error: null,
+                  imagePath: null,
+                  song: null,
+                  width: 2048,
+                  height: 1024,
+                  zoom: 1,
+                  offsetX: 0,
+                  offsetY: 0,
+                  isPanning: false,
+                })}
                 className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-5 flex-1 overflow-auto flex items-center justify-center bg-zinc-950/80">
+            <div className="flex-1 flex items-center justify-center bg-black">
               {spectrogramState.loading && (
                 <p className="text-sm text-zinc-400">Gerando espectro com ffmpeg...</p>
               )}
@@ -1562,11 +1668,31 @@ const SongTable: React.FC<SongTableProps> = ({
                 <p className="text-sm text-red-400">{spectrogramState.error}</p>
               )}
               {!spectrogramState.loading && !spectrogramState.error && spectrogramState.imagePath && (
-                <img
-                  src={spectrogramState.imagePath}
-                  alt="Espectrograma de áudio"
-                  className="max-h-[60vh] max-w-full rounded-lg border border-zinc-800 object-contain bg-black"
-                />
+                <div
+                  onWheel={handleSpectrogramWheel}
+                  onMouseDown={handleSpectrogramMouseDown}
+                  onDoubleClick={resetSpectrogramView}
+                  className="relative flex items-center justify-center overflow-hidden bg-black"
+                  style={{
+                    cursor: spectrogramState.zoom > 1 ? 'grab' : 'default',
+                    width: spectrogramState.width,
+                    height: spectrogramState.height,
+                  }}
+                >
+                  <img
+                    src={spectrogramState.imagePath}
+                    alt="Espectrograma de áudio"
+                    className="select-none"
+                    style={{
+                      transform: `translate(${spectrogramState.offsetX}px, ${spectrogramState.offsetY}px) scale(${spectrogramState.zoom})`,
+                      transformOrigin: 'center center',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'fill',
+                      display: 'block',
+                    }}
+                  />
+                </div>
               )}
             </div>
 
