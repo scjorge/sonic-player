@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NaviSong } from '../../../../types';
-import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download, Trash2 } from 'lucide-react';
+import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download, Trash2, Upload } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
@@ -272,6 +272,50 @@ const SongTable: React.FC<SongTableProps> = ({
   // Drag & drop de linhas (somente playlist Navidrome)
   const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
   const [dragOverRowIndex, setDragOverRowIndex] = useState<number | null>(null);
+
+  const [spectrogramState, setSpectrogramState] = useState<{
+    open: boolean;
+    loading: boolean;
+    error: string | null;
+    imagePath: string | null;
+    song: NaviSong | null;
+    width: number;
+    height: number;
+  }>({ open: false, loading: false, error: null, imagePath: null, song: null, width: 900, height: 520 });
+
+  const [isResizingSpectrogram, setIsResizingSpectrogram] = useState(false);
+
+  const handleSpectrogramResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizingSpectrogram(true);
+  };
+
+  useEffect(() => {
+    if (!isResizingSpectrogram) return;
+
+    const handleMove = (e: MouseEvent) => {
+      setSpectrogramState(prev => {
+        const maxWidth = window.innerWidth - 64; // margem
+        const maxHeight = window.innerHeight - 120;
+        const newWidth = Math.min(Math.max(480, e.clientX - 32), maxWidth);
+        const newHeight = Math.min(Math.max(300, e.clientY - 80), maxHeight);
+        return { ...prev, width: newWidth, height: newHeight };
+      });
+    };
+
+    const handleUp = () => {
+      setIsResizingSpectrogram(false);
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [isResizingSpectrogram]);
 
 
   // --- FILTER STATE ---
@@ -1338,6 +1382,50 @@ const SongTable: React.FC<SongTableProps> = ({
                 <Download className="w-4 h-4" /> Converter
               </button>
               <button
+                onClick={async () => {
+                  const song = contextMenu.song!;
+                  setContextMenu({ ...contextMenu, visible: false });
+                  setSpectrogramState({ open: true, loading: true, error: null, imagePath: null, song, width: 900, height: 520 });
+                  try {
+                    const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/spectrogram`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ path: song.path }),
+                    });
+                    if (!resp.ok) {
+                      let message = resp.statusText;
+                      try {
+                        const err = await resp.json();
+                        message = err.error || message;
+                      } catch {
+                        // ignore parse error
+                      }
+                      throw new Error(message);
+                    }
+
+                    const blob = await resp.blob();
+                    const imageUrl = URL.createObjectURL(blob);
+
+                    setSpectrogramState(prev => ({
+                      ...prev,
+                      loading: false,
+                      imagePath: imageUrl,
+                    }));
+                  } catch (e: any) {
+                    const message = e?.message || 'Falha ao gerar espectro';
+                    showToast(message, 'error');
+                    setSpectrogramState(prev => ({
+                      ...prev,
+                      loading: false,
+                      error: message,
+                    }));
+                  }
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+              >
+                <Activity className="w-4 h-4" /> Ver espectro
+              </button>
+              <button
                 onClick={() => {
                   setDeleteState({ open: true, song: contextMenu.song!, loading: false });
                   setContextMenu({ ...contextMenu, visible: false });
@@ -1425,6 +1513,65 @@ const SongTable: React.FC<SongTableProps> = ({
               <Download className="w-4 h-4" /> Download MP3 (320kbps)
             </button>
           )}
+        </div>
+      )}
+
+      {/* Spectrogram Modal */}
+      {spectrogramState.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col relative"
+            style={{
+              width: Math.min(spectrogramState.width, window.innerWidth - 32),
+              height: Math.min(spectrogramState.height, window.innerHeight - 64),
+              maxWidth: '100%',
+              maxHeight: '80vh',
+            }}
+          >
+            <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-indigo-400" />
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-white">Espectro de áudio</span>
+                  {spectrogramState.song && (
+                    <span className="text-xs text-zinc-500 truncate max-w-xs">
+                      {spectrogramState.song.artist} — {spectrogramState.song.title}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setSpectrogramState({ open: false, loading: false, error: null, imagePath: null, song: null, width: 900, height: 520 })}
+                className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 flex-1 overflow-auto flex items-center justify-center bg-zinc-950/80">
+              {spectrogramState.loading && (
+                <p className="text-sm text-zinc-400">Gerando espectro com ffmpeg...</p>
+              )}
+              {!spectrogramState.loading && spectrogramState.error && (
+                <p className="text-sm text-red-400">{spectrogramState.error}</p>
+              )}
+              {!spectrogramState.loading && !spectrogramState.error && spectrogramState.imagePath && (
+                <img
+                  src={spectrogramState.imagePath}
+                  alt="Espectrograma de áudio"
+                  className="max-h-[60vh] max-w-full rounded-lg border border-zinc-800 object-contain bg-black"
+                />
+              )}
+            </div>
+
+            {/* Resize handle */}
+            <div
+              onMouseDown={handleSpectrogramResizeMouseDown}
+              className="absolute bottom-1.5 right-1.5 w-4 h-4 cursor-se-resize flex items-end justify-end text-zinc-600 hover:text-zinc-300"
+            >
+              <div className="border-r border-b border-current w-3 h-3" />
+            </div>
+          </div>
         </div>
       )}
 

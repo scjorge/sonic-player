@@ -247,3 +247,21 @@ export async function convertDownload(req: Request, res: Response) {
     return res.status(500).json({ error: e?.message || 'failed to convert download' });
   }
 }
+
+export async function generateSpectrogram(req: Request, res: Response) {
+  const { path: filePath } = req.body as { path?: string };
+  if (!filePath) {
+    return res.status(400).json({ error: 'path is required' });
+  }
+
+  try {
+    const { outputPath } = await downloadService.generateSpectrogram(filePath);
+
+    const buffer = await fs.promises.readFile(outputPath);
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Length', buffer.length);
+    return res.end(buffer);
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'failed to generate spectrogram' });
+  }
+}
