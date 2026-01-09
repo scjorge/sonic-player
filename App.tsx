@@ -13,7 +13,7 @@ import { BACKEND_BASE_URL, TIDAL_QUALITY } from './src/core/config.ts';
 import { getSpotifyCredentials } from './src/frontend/repository/spotify';
 import { getStoredGroups } from './src/frontend/repository/metadata.ts';
 import showToast from './src/frontend/components/utils/toast.ts';
-import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, ArrowLeft, Navigation, AlertCircle, Download, FolderTree } from 'lucide-react';
+import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, ArrowLeft, Navigation, AlertCircle, Download, Settings2 } from 'lucide-react';
 import SongTable from './src/frontend/components/library/SongTable.tsx';
 import CreatePlaylistModal from './src/frontend/components/library/CreatePlaylistModal.tsx';
 import PlaylistSelectorModal from './src/frontend/components/library/PlaylistSelectorModal.tsx';
@@ -2100,7 +2100,7 @@ const App: React.FC = () => {
                 onClick={() => setActiveSettingsTab('general')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isSidebarCollapsed ? 'justify-center' : ''} ${activeSettingsTab === 'general' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'}`}
               >
-                <FolderTree className="w-4 h-4 flex-shrink-0" />
+                <Settings2 className="w-4 h-4 flex-shrink-0" />
                 {!isSidebarCollapsed && "Geral"}
               </button>
             </div>

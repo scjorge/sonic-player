@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { GeneralSettings } from '../../repository/generalSettings';
 import { getGeneralSettings, saveGeneralSettings } from '../../repository/generalSettings';
-import { AlertCircle, CheckCircle2, Save, FolderTree, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Save, Info, Settings2 } from 'lucide-react';
 import { NAVIDROME_SAVE_FORMAT_DEFAULT } from '../../../core/config';
 
 const placeholderMeta = {
@@ -80,7 +80,7 @@ const GeneralSettings: React.FC = () => {
     <div className="max-w-4xl mx-auto p-8 space-y-8 animate-fade-in relative">
       <div className="flex flex-col gap-2 border-b border-zinc-800 pb-6">
         <div className="flex items-center gap-3 mb-4">
-          <FolderTree className="w-7 h-7 text-indigo-400" />
+          <Settings2 className="w-7 h-7 text-indigo-400" />
           <div className="flex flex-col">
             <h2 className="text-3xl font-bold text-white tracking-tight">
               Geral
