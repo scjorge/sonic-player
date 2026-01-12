@@ -175,6 +175,27 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     }
   };
 
+  const addBlankTrack = () => {
+    const defaultDuration = 60; // 60 seconds default
+    
+    const newTrack: AudioTrack = {
+      id: `blank-track-${Date.now()}-${Math.random()}`,
+      name: `Faixa em Branco ${tracks.length + 1}`,
+      audioBuffer: null,
+      audioUrl: '',
+      file: null,
+      volume: 1,
+      muted: false,
+      startOffset: 0,
+      duration: defaultDuration,
+      regions: [],
+    };
+    
+    setTracks(prev => [...prev, newTrack]);
+    setSelectedTrackId(newTrack.id);
+    showToast(`Faixa em branco adicionada (${defaultDuration}s)`, 'success');
+  };
+
   const handleImportFromSource = async () => {
     setLoadingImport(true);
     try {
@@ -362,7 +383,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
   const drawWaveform = (canvas: HTMLCanvasElement, audioBuffer: AudioBuffer | null, trackWidth: number) => {
     const ctx = canvas.getContext('2d');
-    if (!ctx || !audioBuffer) return;
+    if (!ctx) return;
 
     // Ensure canvas width matches requested trackWidth (in pixels)
     const w = Math.max(1, Math.floor(trackWidth));
@@ -370,6 +391,32 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     if (canvas.width !== w) canvas.width = w;
 
     ctx.clearRect(0, 0, w, h);
+    
+    if (!audioBuffer) {
+      // Draw blank track background
+      ctx.fillStyle = '#09090b';
+      ctx.fillRect(0, 0, w, h);
+      
+      // Draw dotted line pattern for blank track
+      ctx.strokeStyle = '#3f3f46';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Add text indicating it's a blank track
+      ctx.fillStyle = '#71717a';
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('Faixa em Branco', w / 2, h / 2 - 8);
+      ctx.font = '10px monospace';
+      ctx.fillText('(Arraste áudio aqui ou use controles)', w / 2, h / 2 + 8);
+      return;
+    }
+
     ctx.fillStyle = '#18181b';
     ctx.fillRect(0, 0, w, h);
 
@@ -642,6 +689,13 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           >
             <Upload className="w-4 h-4" />
             Adicionar Faixas
+          </button>
+          <button
+            onClick={addBlankTrack}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-zinc-600 text-zinc-400 hover:text-white hover:bg-zinc-800"
+          >
+            <Plus className="w-4 h-4" />
+            Adicionar Faixa em Branco
           </button>
           <button
             onClick={() => {
