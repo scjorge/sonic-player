@@ -39,7 +39,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const [zoom, setZoom] = useState(100);
   const [globalSelection, setGlobalSelection] = useState<{ start: number; end: number } | null>(null);
   const [controlsWidth, setControlsWidth] = useState<number>(192); // fallback for w-48 (12rem)
-  const [isPanningMode, setIsPanningMode] = useState(false);
   
   // Import/Export states
   const [showImportModal, setShowImportModal] = useState(false);
@@ -60,7 +59,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const isPanningRef = useRef(false);
   const panStartXRef = useRef(0);
   const panStartScrollRef = useRef(0);
-  const isAltPressedRef = useRef(false);
 
   useEffect(() => {
     console.log('AudioEditor montado!');
@@ -112,32 +110,14 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     };
   }, [tracks.length]); // Re-run when tracks change
 
-  // Spacebar + drag or middle-click drag to pan horizontally.
+  // Right-click drag to pan horizontally.
   useEffect(() => {
-    const tracks = () => tracksScrollRef.current;
-
-    const onKeyDown = (e) => {
-      if (e.altKey) {
-        isAltPressedRef.current = true;
-        setIsPanningMode(true);
-        e.preventDefault();
-      }
-    };
-
-    const onKeyUp = (e) => {
-      if (!e.altKey) {
-        isAltPressedRef.current = false;
-        setIsPanningMode(false);
-      }
-    };
-
     // Use capture so we start panning before React's handlers (prevents track-drag conflict)
     const onMouseDown = (e) => {
       const tr = tracksScrollRef.current;
       if (!tr) return;
-      const isMiddle = e.button === 1;
-      const shouldPan = isMiddle || isAltPressedRef.current;
-      if (!shouldPan) return;
+      const isRightClick = e.button === 2;
+      if (!isRightClick) return;
       
       // Check if the mouse is over the tracks area
       const tracksRect = tr.getBoundingClientRect();
@@ -173,22 +153,16 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       // nothing else needed; scroll handler will sync timeline
     };
 
-    window.addEventListener('keydown', onKeyDown, { passive: false });
-    window.addEventListener('keyup', onKeyUp);
     window.addEventListener('mousedown', onMouseDown, true);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
 
     return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('mousedown', onMouseDown, true);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
       document.body.style.cursor = '';
       isPanningRef.current = false;
-      isAltPressedRef.current = false;
-      setIsPanningMode(false);
       isSyncingScrollRef.current = false;
     };
   }, []);
@@ -704,7 +678,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   console.log('AudioEditor renderizando, tracks:', tracks.length);
 
   return (
-    <div className={`h-full flex flex-col bg-zinc-950 ${isPanningMode ? 'cursor-grab' : ''}`}>
+    <div className="h-full flex flex-col bg-zinc-950">
       {/* Toolbar */}
       <div className="border-b border-zinc-800 bg-zinc-900/50 p-4 space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
@@ -911,13 +885,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                 >
                   <ZoomIn className="w-4 h-4" />
                 </button>
-              </div>
-              
-              {/* Pan hint */}
-              <div className="flex items-center gap-2 text-xs text-zinc-500">
-                <span className={`transition-colors duration-200 ${isPanningMode ? 'text-indigo-400' : ''}`}>
-                  {isPanningMode ? '🖱️ Arraste para fazer pan' : '↔️ Scrollbar, Alt+arrastar ou botão do meio'}
-                </span>
               </div>
             </div>
           </div>
