@@ -8,12 +8,13 @@ import TidalBrowse from './src/frontend/components/tidal/TidalBrowse.tsx';
 import TidalLiked from './src/frontend/components/tidal/TidalLiked.tsx';
 import TidalPlaylists from './src/frontend/components/tidal/TidalPlaylists.tsx';
 import NaviDownloads from './src/frontend/components/library/Downloads.tsx';
+import AudioEditor from './src/frontend/components/library/AudioEditor.tsx';
 import { TIDAL_COLUMN_CONFIG } from './src/frontend/components/tidal/tidalConstants.ts';
 import { BACKEND_BASE_URL, TIDAL_QUALITY } from './src/core/config.ts';
 import { getSpotifyCredentials } from './src/frontend/repository/spotify';
 import { getStoredGroups } from './src/frontend/repository/metadata.ts';
 import showToast from './src/frontend/components/utils/toast.ts';
-import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, ArrowLeft, Navigation, AlertCircle, Download, Settings2 } from 'lucide-react';
+import { Disc3, Radio, Mic2, Library, ListMusic, Play, Pause, SkipBack, SkipForward, Volume2, List, ChevronDown, ChevronRight, Plus, X, Trash2, ListX, Heart, PanelLeftClose, PanelLeftOpen, Settings, Tag, ArrowLeft, Navigation, AlertCircle, Download, Settings2, Scissors } from 'lucide-react';
 import SongTable from './src/frontend/components/library/SongTable.tsx';
 import CreatePlaylistModal from './src/frontend/components/library/CreatePlaylistModal.tsx';
 import PlaylistSelectorModal from './src/frontend/components/library/PlaylistSelectorModal.tsx';
@@ -33,7 +34,7 @@ import { SPOTIFY_COLUMN_CONFIG } from './src/frontend/components/spotify/spotify
 import { YOUTUBE_COLUMN_CONFIG } from './src/frontend/components/youtube/youtubeConstants.ts';
 import { getUserState, getLastViewMode, setLastViewMode, setUserState } from './src/frontend/repository/userStates.ts';
 
-type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'navi_downloads' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks' | 'youtube_browse';
+type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'navi_downloads' | 'navi_editor' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks' | 'youtube_browse';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'youtube' | 'general';
 type QuickListType = 'newest' | 'recent' | 'frequent' | 'highest' | null;
 
@@ -1818,6 +1819,14 @@ const App: React.FC = () => {
       );
     }
 
+    if (viewMode === 'navi_editor') {
+      return (
+        <AudioEditor
+          onNavigateToLibrary={handleLibrarySongsClick}
+        />
+      );
+    }
+
     if (viewMode === 'tidal_playlist_tracks') {
       if (!tidalService.isAuthenticated()) {
         return (
@@ -2135,6 +2144,14 @@ const App: React.FC = () => {
                     {!isSidebarCollapsed && <span>Downloads</span>}
                   </button>
 
+                  <button
+                    onClick={() => setViewMode('navi_editor')}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'navi_editor' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                  >
+                    <Scissors className="w-4 h-4 flex-shrink-0" />
+                    {!isSidebarCollapsed && <span>Edição</span>}
+                  </button>
+
                   {!isSidebarCollapsed && (
                     <div className="animate-fade-in !mt-3">
                       <div className="flex items-center justify-between px-3 mb-2 group">
@@ -2268,6 +2285,7 @@ const App: React.FC = () => {
             {viewMode === 'navi_artists' && <><Mic2 className="w-5 h-5 text-indigo-500" /> Artistas</>}
             {viewMode === 'navi_favorites' && <><Heart className="w-5 h-5 text-indigo-500 fill-indigo-500" /> Favoritos</>}
             {viewMode === 'navi_downloads' && <><Download className="w-5 h-5 text-indigo-500" /> Downloads</>}
+            {viewMode === 'navi_editor' && <><Scissors className="w-5 h-5 text-indigo-500" /> Edição de Áudio</>}
             {viewMode === 'navi_playlist' && <><List className="w-5 h-5 text-indigo-500" /> {naviPlaylists.find(p => p.id === selectedPlaylistId)?.name || 'Playlist'}</>}
             {viewMode === 'spotify_browse' && <><Navigation className="w-4 h-4 flex-shrink-0 text-green-500" /> Navegador</>}
             {viewMode === 'spotify_liked' && <><Heart className="w-5 h-5 text-green-500 fill-green-500" /> Músicas Curtidas</>}
