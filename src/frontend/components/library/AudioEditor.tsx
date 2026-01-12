@@ -39,6 +39,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const [zoom, setZoom] = useState(100);
   const [globalSelection, setGlobalSelection] = useState<{ start: number; end: number } | null>(null);
   const [controlsWidth, setControlsWidth] = useState<number>(192); // fallback for w-48 (12rem)
+  const [isPanningMode, setIsPanningMode] = useState(false);
   
   // Import/Export states
   const [showImportModal, setShowImportModal] = useState(false);
@@ -51,10 +52,15 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const sourceNodesRef = useRef<Map<string, AudioBufferSourceNode>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const timelineInnerRef = useRef<HTMLDivElement>(null);
   const tracksScrollRef = useRef<HTMLDivElement>(null);
   const playbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const isSyncingScrollRef = useRef(false);
+  const isPanningRef = useRef(false);
+  const panStartXRef = useRef(0);
+  const panStartScrollRef = useRef(0);
+  const isAltPressedRef = useRef(false);
 
   useEffect(() => {
     console.log('AudioEditor montado!');
@@ -87,15 +93,103 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
     const onTracksScroll = () => {
       if (isSyncingScrollRef.current) return;
-      isSyncingScrollRef.current = true;
-      timeline.scrollLeft = tracks.scrollLeft;
-      requestAnimationFrame(() => { isSyncingScrollRef.current = false; });
+      const inner = timelineInnerRef.current;
+      if (inner && tracks) {
+        inner.style.transform = `translateX(${-tracks.scrollLeft}px)`;
+      }
     };
 
-    tracks.addEventListener('scroll', onTracksScroll);
+    // Add both scroll and input events to catch all scrollbar interactions
+    tracks.addEventListener('scroll', onTracksScroll, { passive: true });
+    tracks.addEventListener('input', onTracksScroll, { passive: true });
+    
+    // Force initial sync
+    onTracksScroll();
 
     return () => {
       tracks.removeEventListener('scroll', onTracksScroll);
+      tracks.removeEventListener('input', onTracksScroll);
+    };
+  }, [tracks.length]); // Re-run when tracks change
+
+  // Spacebar + drag or middle-click drag to pan horizontally.
+  useEffect(() => {
+    const tracks = () => tracksScrollRef.current;
+
+    const onKeyDown = (e) => {
+      if (e.altKey) {
+        isAltPressedRef.current = true;
+        setIsPanningMode(true);
+        e.preventDefault();
+      }
+    };
+
+    const onKeyUp = (e) => {
+      if (!e.altKey) {
+        isAltPressedRef.current = false;
+        setIsPanningMode(false);
+      }
+    };
+
+    // Use capture so we start panning before React's handlers (prevents track-drag conflict)
+    const onMouseDown = (e) => {
+      const tr = tracksScrollRef.current;
+      if (!tr) return;
+      const isMiddle = e.button === 1;
+      const shouldPan = isMiddle || isAltPressedRef.current;
+      if (!shouldPan) return;
+      
+      // Check if the mouse is over the tracks area
+      const tracksRect = tr.getBoundingClientRect();
+      const isOverTracksArea = e.clientX >= tracksRect.left && e.clientX <= tracksRect.right &&
+                               e.clientY >= tracksRect.top && e.clientY <= tracksRect.bottom;
+      
+      if (!isOverTracksArea) return;
+      
+      e.preventDefault();
+      isPanningRef.current = true;
+      panStartXRef.current = e.clientX;
+      panStartScrollRef.current = tr.scrollLeft;
+      document.body.style.cursor = 'grabbing';
+    };
+
+    const onMouseMove = (e) => {
+      if (!isPanningRef.current) return;
+      const tr = tracksScrollRef.current;
+      if (!tr) return;
+      const delta = e.clientX - panStartXRef.current;
+      const target = Math.max(0, Math.round(panStartScrollRef.current - delta));
+      tr.scrollLeft = target;
+      
+      // Sync timeline during panning since scroll event might not fire
+      const inner = timelineInnerRef.current;
+      if (inner) inner.style.transform = `translateX(${-target}px)`;
+    };
+
+    const onMouseUp = () => {
+      if (!isPanningRef.current) return;
+      isPanningRef.current = false;
+      document.body.style.cursor = '';
+      // nothing else needed; scroll handler will sync timeline
+    };
+
+    window.addEventListener('keydown', onKeyDown, { passive: false });
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('mousedown', onMouseDown, true);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('mousedown', onMouseDown, true);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+      isPanningRef.current = false;
+      isAltPressedRef.current = false;
+      setIsPanningMode(false);
+      isSyncingScrollRef.current = false;
     };
   }, []);
 
@@ -321,24 +415,20 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     if (playX < viewLeft + margin) {
       const target = Math.max(0, playX - margin);
       tracks.scrollLeft = target;
-      if (timeline) timeline.scrollLeft = target;
     } else if (playX > viewRight - margin) {
       const target = Math.max(0, playX - tracks.clientWidth + margin);
       tracks.scrollLeft = target;
-      if (timeline) timeline.scrollLeft = target;
     }
   };
 
   // Center timeline scroll around current playhead when zoom changes
   const centerTimelineOnPlayhead = (newZoom: number) => {
-    const timeline = timelineRef.current;
     const tracks = tracksScrollRef.current;
-    if (!timeline || !tracks) return;
+    if (!tracks) return;
     const center = tracks.clientWidth / 2;
     const target = controlsWidth + currentTime * newZoom - center;
     const final = Math.max(0, target);
     tracks.scrollLeft = final;
-    timeline.scrollLeft = final;
   };
 
   const handleZoomIn = () => {
@@ -614,7 +704,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   console.log('AudioEditor renderizando, tracks:', tracks.length);
 
   return (
-    <div className="h-full flex flex-col bg-zinc-950">
+    <div className={`h-full flex flex-col bg-zinc-950 ${isPanningMode ? 'cursor-grab' : ''}`}>
       {/* Toolbar */}
       <div className="border-b border-zinc-800 bg-zinc-900/50 p-4 space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
@@ -719,7 +809,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           <div className="flex-1 flex flex-col">
             {/* Timeline ruler */}
             <div className="h-8 border-b border-zinc-800 bg-zinc-900/30 overflow-x-hidden" ref={timelineRef}>
-              <div className="relative h-full" style={{ width: `${controlsWidth + maxDuration * zoom}px`, minWidth: '100%' }} onClick={handleTimelineClick}>
+              <div ref={timelineInnerRef} className="relative h-full" style={{ width: `${controlsWidth + maxDuration * zoom}px`, minWidth: '100%' }} onClick={handleTimelineClick}>
               <div className="absolute inset-0">
                 {Array.from({ length: Math.ceil(maxDuration / 10) + 1 }).map((_, i) => {
                   const left = controlsWidth + i * 10 * zoom;
@@ -821,6 +911,13 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                 >
                   <ZoomIn className="w-4 h-4" />
                 </button>
+              </div>
+              
+              {/* Pan hint */}
+              <div className="flex items-center gap-2 text-xs text-zinc-500">
+                <span className={`transition-colors duration-200 ${isPanningMode ? 'text-indigo-400' : ''}`}>
+                  {isPanningMode ? '🖱️ Arraste para fazer pan' : '↔️ Scrollbar, Alt+arrastar ou botão do meio'}
+                </span>
               </div>
             </div>
           </div>
