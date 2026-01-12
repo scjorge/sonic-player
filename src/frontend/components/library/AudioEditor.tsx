@@ -38,6 +38,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   // `zoom` is pixels per second (px/s). Higher => more zoomed in.
   const [zoom, setZoom] = useState(100);
   const [globalSelection, setGlobalSelection] = useState<{ start: number; end: number } | null>(null);
+  const [controlsWidth, setControlsWidth] = useState<number>(192); // fallback for w-48 (12rem)
   
   // Import/Export states
   const [showImportModal, setShowImportModal] = useState(false);
@@ -50,7 +51,10 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const sourceNodesRef = useRef<Map<string, AudioBufferSourceNode>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const tracksScrollRef = useRef<HTMLDivElement>(null);
   const playbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isSyncingScrollRef = useRef(false);
 
   useEffect(() => {
     console.log('AudioEditor montado!');
@@ -72,6 +76,40 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       sourceNodesRef.current.forEach(node => node.stop());
       sourceNodesRef.current.clear();
     };
+  }, []);
+
+  // Sync horizontal scrolling: only listen to the lower tracks scroll and
+  // update the (non-scrollable) timeline header so there is a single scrollbar.
+  useEffect(() => {
+    const timeline = timelineRef.current;
+    const tracks = tracksScrollRef.current;
+    if (!timeline || !tracks) return;
+
+    const onTracksScroll = () => {
+      if (isSyncingScrollRef.current) return;
+      isSyncingScrollRef.current = true;
+      timeline.scrollLeft = tracks.scrollLeft;
+      requestAnimationFrame(() => { isSyncingScrollRef.current = false; });
+    };
+
+    tracks.addEventListener('scroll', onTracksScroll);
+
+    return () => {
+      tracks.removeEventListener('scroll', onTracksScroll);
+    };
+  }, []);
+
+  // Measure controls width (first track-controls) and update on resize
+  useEffect(() => {
+    const measure = () => {
+      const el = document.querySelector('.track-controls') as HTMLElement | null;
+      if (el) {
+        setControlsWidth(el.getBoundingClientRect().width);
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
   }, []);
 
   useEffect(() => {
@@ -242,6 +280,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           setCurrentTime(0);
         } else {
           setCurrentTime(newTime);
+          // keep playhead visible while playing
+          try { ensurePlayheadVisibleAt(newTime); } catch (e) { /* ignore */ }
         }
       }, 50);
       
@@ -251,26 +291,54 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
   const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!timelineRef.current) return;
-    
+
     const rect = timelineRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const percent = x / rect.width;
-    const time = percent * maxDuration;
-    
-    setCurrentTime(Math.max(0, Math.min(maxDuration, time)));
+    const tracksScroll = tracksScrollRef.current;
+    const scrollLeft = tracksScroll ? tracksScroll.scrollLeft : timelineRef.current.scrollLeft;
+    const absoluteX = scrollLeft + x; // account for bottom scroll
+    const time = (absoluteX - controlsWidth) / zoom;
+
+    const targetTime = Math.max(0, Math.min(maxDuration, time));
+    setCurrentTime(targetTime);
+    ensurePlayheadVisibleAt(targetTime);
     
     if (isPlaying) {
       togglePlayPause();
     }
   };
 
+  const ensurePlayheadVisibleAt = (time: number) => {
+    const tracks = tracksScrollRef.current;
+    const timeline = timelineRef.current;
+    if (!tracks) return;
+
+    const playX = controlsWidth + time * zoom;
+    const viewLeft = tracks.scrollLeft;
+    const viewRight = viewLeft + tracks.clientWidth;
+    const margin = Math.min(200, Math.floor(tracks.clientWidth * 0.25));
+
+    if (playX < viewLeft + margin) {
+      const target = Math.max(0, playX - margin);
+      tracks.scrollLeft = target;
+      if (timeline) timeline.scrollLeft = target;
+    } else if (playX > viewRight - margin) {
+      const target = Math.max(0, playX - tracks.clientWidth + margin);
+      tracks.scrollLeft = target;
+      if (timeline) timeline.scrollLeft = target;
+    }
+  };
+
   // Center timeline scroll around current playhead when zoom changes
   const centerTimelineOnPlayhead = (newZoom: number) => {
-    if (!timelineRef.current) return;
-    const container = timelineRef.current;
-    const center = container.clientWidth / 2;
-    const target = currentTime * newZoom - center;
-    container.scrollLeft = Math.max(0, target);
+    const timeline = timelineRef.current;
+    const tracks = tracksScrollRef.current;
+    if (!timeline || !tracks) return;
+    const center = tracks.clientWidth / 2;
+    const target = controlsWidth + currentTime * newZoom - center;
+    const final = Math.max(0, target);
+    tracks.scrollLeft = final;
+    timeline.scrollLeft = final;
   };
 
   const handleZoomIn = () => {
@@ -650,26 +718,29 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         ) : (
           <div className="flex-1 flex flex-col">
             {/* Timeline ruler */}
-            <div className="h-8 border-b border-zinc-800 bg-zinc-900/30 overflow-x-auto custom-scrollbar" ref={timelineRef}>
-              <div className="relative h-full flex items-center px-4" style={{ width: `${maxDuration * zoom}px`, minWidth: '100%' }} onClick={handleTimelineClick}>
-              <div className="absolute inset-0 flex items-center px-4">
-                {Array.from({ length: Math.ceil(maxDuration / 10) + 1 }).map((_, i) => (
-                  <div key={i} className="flex flex-col items-center" style={{ marginLeft: i === 0 ? 0 : 'auto', marginRight: 0 }}>
-                    <div className="text-[10px] text-zinc-600">{formatTime(i * 10)}</div>
-                  </div>
-                ))}
+            <div className="h-8 border-b border-zinc-800 bg-zinc-900/30 overflow-x-hidden" ref={timelineRef}>
+              <div className="relative h-full" style={{ width: `${controlsWidth + maxDuration * zoom}px`, minWidth: '100%' }} onClick={handleTimelineClick}>
+              <div className="absolute inset-0">
+                {Array.from({ length: Math.ceil(maxDuration / 10) + 1 }).map((_, i) => {
+                  const left = controlsWidth + i * 10 * zoom;
+                  return (
+                    <div key={i} className="absolute flex flex-col items-center" style={{ left: `${left}px`, transform: 'translateX(-50%)' }}>
+                      <div className="text-[10px] text-zinc-600">{formatTime(i * 10)}</div>
+                    </div>
+                  );
+                })}
               </div>
               {/* Playhead */}
               <div
                 className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none"
-                style={{ left: `${currentTime * zoom}px` }}
+                style={{ left: `${controlsWidth + currentTime * zoom}px` }}
               />
               {/* Selection overlay */}
               {globalSelection && (
                 <div
                   className="absolute top-0 bottom-0 bg-indigo-500/20 border-l-2 border-r-2 border-indigo-500 pointer-events-none"
                   style={{
-                    left: `${globalSelection.start * zoom}px`,
+                    left: `${controlsWidth + globalSelection.start * zoom}px`,
                     width: `${(globalSelection.end - globalSelection.start) * zoom}px`,
                   }}
                 />
@@ -678,8 +749,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             </div>
 
             {/* Tracks */}
-            <div className="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar">
-              <div style={{ width: `${maxDuration * zoom}px`, minWidth: '100%' }}>
+            <div className="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar" ref={tracksScrollRef}>
+              <div style={{ width: `${controlsWidth + maxDuration * zoom}px`, minWidth: '100%' }}>
               {tracks.map((track, index) => (
                 <TrackRow
                   key={track.id}
@@ -930,8 +1001,8 @@ const TrackRow: React.FC<TrackRowProps> = ({
         <div
           className="absolute h-full"
           style={{
-            left: `${(track.startOffset / maxDuration) * 100}%`,
-            width: `${(track.duration / maxDuration) * 100}%`,
+            left: `${track.startOffset * zoom}px`,
+            width: `${track.duration * zoom}px`,
           }}
         >
           <canvas
