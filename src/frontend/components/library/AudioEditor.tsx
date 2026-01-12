@@ -829,6 +829,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                   onOffsetChange={(startOffset) => {
                     setTracks(prev => prev.map(t => t.id === track.id ? { ...t, startOffset } : t));
                   }}
+                  onDurationChange={(duration) => {
+                    setTracks(prev => prev.map(t => t.id === track.id ? { ...t, duration } : t));
+                  }}
                   drawWaveform={drawWaveform}
                   zoom={zoom}
                 />
@@ -955,6 +958,7 @@ interface TrackRowProps {
   onVolumeChange: (volume: number) => void;
   onMuteToggle: () => void;
   onOffsetChange: (offset: number) => void;
+  onDurationChange: (duration: number) => void;
   drawWaveform: (canvas: HTMLCanvasElement, buffer: AudioBuffer | null, width: number) => void;
   zoom: number;
 }
@@ -968,21 +972,25 @@ const TrackRow: React.FC<TrackRowProps> = ({
   onVolumeChange,
   onMuteToggle,
   onOffsetChange,
+  onDurationChange,
   drawWaveform,
   zoom,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const dragStartClientX = useRef<number | null>(null);
   const dragStartOffset = useRef<number>(0);
+  const resizeStartClientX = useRef<number | null>(null);
+  const resizeStartDuration = useRef<number>(0);
 
   useEffect(() => {
-    if (canvasRef.current && track.audioBuffer) {
+    if (canvasRef.current) {
       const trackWidth = Math.max(1, track.duration * zoom);
       // set canvas height appropriately (keep existing height attribute)
       drawWaveform(canvasRef.current, track.audioBuffer, trackWidth);
     }
-  }, [track.audioBuffer, maxDuration, zoom]);
+  }, [track.audioBuffer, track.duration, maxDuration, zoom]);
 
   const handleDragBarMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -1010,23 +1018,45 @@ const TrackRow: React.FC<TrackRowProps> = ({
     setIsDragging(false);
   };
 
-  // Add global mouse move and up listeners when dragging
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    // Only allow resizing for blank tracks (no audioBuffer)
+    if (track.audioBuffer) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    resizeStartClientX.current = e.clientX;
+    resizeStartDuration.current = track.duration;
+  };
+
+  // Add global mouse move and up listeners when dragging or resizing
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isDragging && !isResizing) return;
 
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (!isDragging || dragStartClientX.current === null) return;
-
-      const deltaPx = e.clientX - dragStartClientX.current;
-      const deltaSeconds = deltaPx / zoom;
-      let newOffset = dragStartOffset.current + deltaSeconds;
-
-      newOffset = Math.max(0, newOffset);
-      onOffsetChange(newOffset);
+      if (isDragging && dragStartClientX.current !== null) {
+        const deltaPx = e.clientX - dragStartClientX.current;
+        const deltaSeconds = deltaPx / zoom;
+        let newOffset = dragStartOffset.current + deltaSeconds;
+        newOffset = Math.max(0, newOffset);
+        onOffsetChange(newOffset);
+      }
+      
+      if (isResizing && resizeStartClientX.current !== null) {
+        const deltaPx = e.clientX - resizeStartClientX.current;
+        const deltaSeconds = deltaPx / zoom;
+        let newDuration = resizeStartDuration.current + deltaSeconds;
+        
+        // Minimum duration of 1 second
+        newDuration = Math.max(1, newDuration);
+        
+        onDurationChange(newDuration);
+      }
     };
 
     const handleGlobalMouseUp = () => {
       setIsDragging(false);
+      setIsResizing(false);
     };
 
     document.addEventListener('mousemove', handleGlobalMouseMove);
@@ -1036,7 +1066,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [isDragging, zoom, onOffsetChange]);
+  }, [isDragging, isResizing, zoom, onOffsetChange, onDurationChange]);
 
   return (
     <div
@@ -1112,6 +1142,20 @@ const TrackRow: React.FC<TrackRowProps> = ({
             className="w-full h-full"
           />
         </div>
+        
+        {/* Resize handle at the end - only for blank tracks */}
+        {!track.audioBuffer && (
+          <div
+            className="absolute top-0 bottom-0 w-2 bg-indigo-500/30 hover:bg-indigo-500/50 cursor-ew-resize z-20 flex items-center justify-center transition-colors"
+            style={{
+              left: `${(track.startOffset + track.duration) * zoom - 2}px`,
+            }}
+            onMouseDown={handleResizeMouseDown}
+            title="Arrastar para redimensionar faixa em branco"
+          >
+            <div className="w-0.5 h-8 bg-indigo-400 rounded"></div>
+          </div>
+        )}
       </div>
     </div>
   );
