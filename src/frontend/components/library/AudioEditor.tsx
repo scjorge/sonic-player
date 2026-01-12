@@ -118,8 +118,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       ...tracks.map(t => t.startOffset + t.duration),
       10
     );
-    // Adicionar margem extra para facilitar arrastar além do final
-    setMaxDuration(newMaxDuration * 1.2);
+    // Keep a small padding at the end (1s) instead of a large 20% extra space
+    setMaxDuration(newMaxDuration);
   }, [tracks]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
