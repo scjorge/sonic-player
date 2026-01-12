@@ -110,63 +110,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     };
   }, [tracks.length]); // Re-run when tracks change
 
-  // Right-click drag to pan horizontally.
-  useEffect(() => {
-    // Use capture so we start panning before React's handlers (prevents track-drag conflict)
-    const onMouseDown = (e) => {
-      const tr = tracksScrollRef.current;
-      if (!tr) return;
-      const isRightClick = e.button === 2;
-      if (!isRightClick) return;
-      
-      // Check if the mouse is over the tracks area
-      const tracksRect = tr.getBoundingClientRect();
-      const isOverTracksArea = e.clientX >= tracksRect.left && e.clientX <= tracksRect.right &&
-                               e.clientY >= tracksRect.top && e.clientY <= tracksRect.bottom;
-      
-      if (!isOverTracksArea) return;
-      
-      e.preventDefault();
-      isPanningRef.current = true;
-      panStartXRef.current = e.clientX;
-      panStartScrollRef.current = tr.scrollLeft;
-      document.body.style.cursor = 'grabbing';
-    };
-
-    const onMouseMove = (e) => {
-      if (!isPanningRef.current) return;
-      const tr = tracksScrollRef.current;
-      if (!tr) return;
-      const delta = e.clientX - panStartXRef.current;
-      const target = Math.max(0, Math.round(panStartScrollRef.current - delta));
-      tr.scrollLeft = target;
-      
-      // Sync timeline during panning since scroll event might not fire
-      const inner = timelineInnerRef.current;
-      if (inner) inner.style.transform = `translateX(${-target}px)`;
-    };
-
-    const onMouseUp = () => {
-      if (!isPanningRef.current) return;
-      isPanningRef.current = false;
-      document.body.style.cursor = '';
-      // nothing else needed; scroll handler will sync timeline
-    };
-
-    window.addEventListener('mousedown', onMouseDown, true);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-
-    return () => {
-      window.removeEventListener('mousedown', onMouseDown, true);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-      document.body.style.cursor = '';
-      isPanningRef.current = false;
-      isSyncingScrollRef.current = false;
-    };
-  }, []);
-
   // Measure controls width (first track-controls) and update on resize
   useEffect(() => {
     const measure = () => {
@@ -987,15 +930,15 @@ const TrackRow: React.FC<TrackRowProps> = ({
     }
   }, [track.audioBuffer, maxDuration, zoom]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.track-controls')) return;
+  const handleDragBarMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
     dragStartClientX.current = e.clientX;
     dragStartOffset.current = track.startOffset || 0;
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleDragBarMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || dragStartClientX.current === null) return;
 
     // Calculate delta in pixels and convert to seconds using zoom (px/s)
@@ -1009,9 +952,37 @@ const TrackRow: React.FC<TrackRowProps> = ({
     onOffsetChange(newOffset);
   };
 
-  const handleMouseUp = () => {
+  const handleDragBarMouseUp = () => {
     setIsDragging(false);
   };
+
+  // Add global mouse move and up listeners when dragging
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!isDragging || dragStartClientX.current === null) return;
+
+      const deltaPx = e.clientX - dragStartClientX.current;
+      const deltaSeconds = deltaPx / zoom;
+      let newOffset = dragStartOffset.current + deltaSeconds;
+
+      newOffset = Math.max(0, newOffset);
+      onOffsetChange(newOffset);
+    };
+
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, zoom, onOffsetChange]);
 
   return (
     <div
@@ -1055,13 +1026,24 @@ const TrackRow: React.FC<TrackRowProps> = ({
       </div>
 
       {/* Waveform */}
-      <div
-        className="flex-1 relative cursor-move"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
+      <div className="flex-1 relative">
+        {/* Drag handle bar */}
+        <div
+          className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-indigo-500/20 to-transparent border-b border-indigo-500/30 cursor-move z-10 flex items-center justify-center"
+          style={{
+            left: `${track.startOffset * zoom}px`,
+            width: `${track.duration * zoom}px`,
+          }}
+          onMouseDown={handleDragBarMouseDown}
+          onMouseMove={handleDragBarMouseMove}
+          onMouseUp={handleDragBarMouseUp}
+        >
+          <div className="text-xs text-indigo-300 font-medium select-none opacity-75">
+            ⋮⋮⋮ Arrastar
+          </div>
+        </div>
+        
+        {/* Waveform container */}
         <div
           className="absolute h-full"
           style={{
