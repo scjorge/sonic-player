@@ -881,9 +881,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   console.log('AudioEditor renderizando, tracks:', tracks.length);
 
   return (
-    <div className="h-full flex flex-col bg-zinc-950">
+    <div className="w-full h-full flex flex-col bg-zinc-950 relative">
       {/* Toolbar */}
-      <div className="border-b border-zinc-800 bg-zinc-900/50 p-4 space-y-4">
+      <div className="border-b border-zinc-800 bg-zinc-900/50 p-4 space-y-4 flex-shrink-0">
         <div className="flex items-center gap-2 flex-wrap">
           <input
             ref={fileInputRef}
@@ -1016,7 +1016,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       </div>
 
       {/* Multi-track view */}
-      <div className="flex-1 flex flex-col overflow-hidden" onClick={(e) => {
+      <div className="flex-1 flex flex-col overflow-hidden" style={{ paddingBottom: '80px' }} onClick={(e) => {
         // Clear selection when clicking outside of tracks
         if (e.target === e.currentTarget) {
           setGlobalSelection(null);
@@ -1033,9 +1033,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Timeline ruler */}
-            <div className="h-8 border-b border-zinc-800 bg-zinc-900/30 overflow-x-hidden" ref={timelineRef}>
+            <div className="h-8 border-b border-zinc-800 bg-zinc-900/30 overflow-x-hidden flex-shrink-0" ref={timelineRef}>
               <div ref={timelineInnerRef} className="relative h-full" style={{ width: `${controlsWidth + maxDuration * zoom}px`, minWidth: '100%' }} onClick={handleTimelineClick}>
               <div className="absolute inset-0">
                 {Array.from({ length: Math.ceil(maxDuration / 10) + 1 }).map((_, i) => {
@@ -1110,7 +1110,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         )}
         
         {/* Playback Controls - Always visible */}
-        <div className="h-16 border-t border-zinc-800 bg-zinc-900/50 flex items-center justify-center gap-4 px-6">
+        <div className="fixed bottom-0 left-0 right-0 h-16 border-t border-zinc-800 bg-zinc-900/95 backdrop-blur-sm flex items-center justify-center gap-4 px-6 z-10">
           <button
             onClick={() => setCurrentTime(Math.max(0, currentTime - 5))}
             className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
