@@ -47,7 +47,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     duration: number;
     trackId: string;
   } | null>(null);
-  const [isSelectingMode, setIsSelectingMode] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ trackId: string; time: number } | null>(null);
   
   // Import/Export states
@@ -935,18 +934,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           <div className="h-6 w-px bg-zinc-700 mx-2" />
           
           <button
-            onClick={() => setIsSelectingMode(!isSelectingMode)}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border ${
-              isSelectingMode 
-                ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300' 
-                : 'border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800'
-            }`}
-          >
-            <Edit3 className="w-4 h-4" />
-            {isSelectingMode ? 'Seleção Ativa' : 'Modo Seleção'}
-          </button>
-          
-          <button
             onClick={handleCopySelection}
             disabled={!globalSelection}
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-blue-600 text-blue-300 hover:bg-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1025,17 +1012,16 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
               <span>Clipboard: {formatTime(clipboard.duration)} pronto para colar</span>
             </div>
           )}
-          {isSelectingMode && (
-            <div className="flex items-center gap-1.5 text-yellow-400">
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Modo Seleção Ativo - Clique e arraste sobre uma faixa</span>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Multi-track view */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden" onClick={(e) => {
+        // Clear selection when clicking outside of tracks
+        if (e.target === e.currentTarget) {
+          setGlobalSelection(null);
+        }
+      }}>
         {tracks.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-center p-6">
             <div className="space-y-4">
@@ -1089,7 +1075,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                   isSelected={selectedTrackId === track.id}
                   maxDuration={maxDuration}
                   globalSelection={globalSelection}
-                  isSelectingMode={isSelectingMode}
+                  isSelectingMode={true}
                   controlsWidth={controlsWidth}
                   clipboard={clipboard}
                   onSelect={() => setSelectedTrackId(track.id)}
@@ -1324,7 +1310,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
   };
 
   const handleWaveformMouseDown = (e: React.MouseEvent) => {
-    if (!isSelectingMode || !track.audioBuffer) return;
+    if (!track.audioBuffer) return;
     
     e.preventDefault();
     e.stopPropagation();
@@ -1339,7 +1325,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
   };
 
   const handleWaveformMouseMove = (e: React.MouseEvent) => {
-    if (!isSelecting || !isSelectingMode || selectionStartX.current === null) return;
+    if (!isSelecting || selectionStartX.current === null) return;
     
     const rect = waveformRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -1385,7 +1371,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
         onDurationChange(newDuration);
       }
       
-      if (isSelecting && isSelectingMode && selectionStartX.current !== null && waveformRef.current) {
+      if (isSelecting && selectionStartX.current !== null && waveformRef.current) {
         const rect = waveformRef.current.getBoundingClientRect();
         const currentX = e.clientX - rect.left;
         const startX = selectionStartX.current;
@@ -1411,7 +1397,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [isDragging, isResizing, isSelecting, isSelectingMode, zoom, onOffsetChange, onDurationChange, onSelectionChange, track.startOffset, track.originalDuration]);
+  }, [isDragging, isResizing, isSelecting, zoom, onOffsetChange, onDurationChange, onSelectionChange, track.startOffset, track.originalDuration]);
 
   return (
     <div
@@ -1476,11 +1462,9 @@ const TrackRow: React.FC<TrackRowProps> = ({
         <div
           ref={waveformRef}
           className={`absolute h-full ${
-            isSelectingMode && track.audioBuffer 
+            track.audioBuffer 
               ? 'cursor-crosshair' 
-              : track.audioBuffer === null && clipboard 
-                ? 'cursor-pointer' 
-                : 'cursor-default'
+              : 'cursor-default'
           }`}
           style={{
             left: `${track.startOffset * zoom}px`,
@@ -1490,7 +1474,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
           onMouseMove={handleWaveformMouseMove}
           onMouseUp={handleWaveformMouseUp}
           title={
-            isSelectingMode && track.audioBuffer
+            track.audioBuffer
               ? 'Clique e arraste para selecionar'
               : ''
           }
