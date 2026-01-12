@@ -939,7 +939,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-blue-600 text-blue-300 hover:bg-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Copy className="w-4 h-4" />
-            Copiar Seleção
+            Copiar
           </button>
           
           <button
@@ -954,28 +954,16 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-green-600 text-green-300 hover:bg-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Edit3 className="w-4 h-4" />
-            Colar na Faixa Selecionada
+            Colar
           </button>
-          
-          <div className="h-6 w-px bg-zinc-700 mx-2" />
-          
           <button
             onClick={handleCutTrack}
             disabled={!selectedTrackId || !globalSelection}
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Scissors className="w-4 h-4" />
-            Cortar Faixa
+            Cortar
           </button>
-          <button
-            onClick={handleJoinTracks}
-            disabled={tracks.length < 2}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Link className="w-4 h-4" />
-            Juntar Faixas
-          </button>
-          
           <div className="h-6 w-px bg-zinc-700 mx-2" />
           
           <button
