@@ -187,7 +187,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   };
 
   const addBlankTrack = () => {
-    const defaultDuration = 60; // 60 seconds default
+    const defaultDuration = 5; // 5 seconds default
     
     const newTrack: AudioTrack = {
       id: `blank-track-${Date.now()}-${Math.random()}`,
@@ -751,7 +751,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     showToast('Trecho copiado para a área de transferência', 'success');
   };
 
-  const handlePasteToBlankTrack = (targetTrackId: string) => {
+  const handlePasteToBlankTrack = async (targetTrackId: string) => {
     if (!clipboard) {
       showToast('Nada na área de transferência para colar', 'error');
       return;
@@ -777,35 +777,18 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       return;
     }
     
-    // Check if there's enough space in the track
     const relativePosition = pastePosition - targetTrack.startOffset;
-    const remainingSpace = targetTrack.duration - relativePosition;
-    
-    if (remainingSpace < clipboard.duration) {
-      showToast(`Espaço insuficiente. Precisa de ${formatTime(clipboard.duration)}, mas há apenas ${formatTime(remainingSpace)}`, 'error');
-      return;
-    }
 
-    // If target track already has audio, create a new track with the pasted content
-    if (targetTrack.audioBuffer !== null) {
-      const newTrack: AudioTrack = {
-        id: `paste-${Date.now()}-${Math.random()}`,
-        name: `Colagem - ${clipboard.duration.toFixed(1)}s`,
-        audioBuffer: clipboard.audioData,
-        audioUrl: '',
-        file: null,
-        volume: 1,
-        muted: false,
-        startOffset: pastePosition,
-        duration: clipboard.duration,
-        originalDuration: clipboard.duration,
-        regions: [],
-      };
+    // If target track is blank, simply transform it into an audio track
+    if (targetTrack.audioBuffer === null) {
+      // Check if there's enough space in the blank track
+      const remainingSpace = targetTrack.duration - relativePosition;
       
-      setTracks(prev => [...prev, newTrack]);
-      showToast(`Novo trecho criado na posição ${formatTime(pastePosition)}`, 'success');
-    } else {
-      // Transform blank track into audio track
+      if (remainingSpace < clipboard.duration) {
+        showToast(`Espaço insuficiente. Precisa de ${formatTime(clipboard.duration)}, mas há apenas ${formatTime(remainingSpace)}`, 'error');
+        return;
+      }
+
       const updatedTrack: AudioTrack = {
         ...targetTrack,
         name: `${targetTrack.name} - Com Áudio`,
@@ -817,6 +800,67 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       
       setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
       showToast(`Trecho colado na faixa selecionada em ${formatTime(pastePosition)}`, 'success');
+      return;
+    }
+
+    // If target track has audio, insert/mix the clipboard audio into the existing track
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+
+      const existingBuffer = targetTrack.audioBuffer;
+      const clipboardBuffer = clipboard.audioData;
+      
+      // Calculate the new buffer dimensions
+      const sampleRate = existingBuffer.sampleRate;
+      const channels = Math.max(existingBuffer.numberOfChannels, clipboardBuffer.numberOfChannels);
+      const insertStartSample = Math.floor(relativePosition * sampleRate);
+      const clipboardLengthSamples = clipboardBuffer.length;
+      const newLengthSamples = Math.max(existingBuffer.length, insertStartSample + clipboardLengthSamples);
+      
+      // Create the new mixed buffer
+      const newBuffer = audioContextRef.current.createBuffer(channels, newLengthSamples, sampleRate);
+      
+      // Copy existing audio
+      for (let ch = 0; ch < channels; ch++) {
+        const newChannelData = newBuffer.getChannelData(ch);
+        
+        // Copy existing track data (if channel exists)
+        if (ch < existingBuffer.numberOfChannels) {
+          const existingData = existingBuffer.getChannelData(ch);
+          newChannelData.set(existingData);
+        }
+        
+        // Mix clipboard data at the paste position
+        if (ch < clipboardBuffer.numberOfChannels) {
+          const clipboardData = clipboardBuffer.getChannelData(ch);
+          for (let i = 0; i < clipboardLengthSamples; i++) {
+            const targetIndex = insertStartSample + i;
+            if (targetIndex < newLengthSamples) {
+              // Mix the audio (average to prevent clipping)
+              const existingValue = newChannelData[targetIndex] || 0;
+              const clipboardValue = clipboardData[i];
+              newChannelData[targetIndex] = (existingValue + clipboardValue) / 2;
+            }
+          }
+        }
+      }
+      
+      // Update the track with the new mixed buffer
+      const newDuration = newLengthSamples / sampleRate;
+      const updatedTrack: AudioTrack = {
+        ...targetTrack,
+        audioBuffer: newBuffer,
+        duration: Math.max(targetTrack.duration, newDuration),
+        originalDuration: newDuration,
+      };
+      
+      setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
+      showToast(`Áudio colado e mixado na faixa em ${formatTime(pastePosition)}`, 'success');
+      
+    } catch (error: any) {
+      showToast(`Erro ao colar áudio: ${error?.message || String(error)}`, 'error');
     }
   };
 
@@ -1482,13 +1526,13 @@ const TrackRow: React.FC<TrackRowProps> = ({
           )}
           
           {/* Paste indicator for selected tracks */}
-          {clipboard && isSelected && (
+          {/* {clipboard && isSelected && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="bg-green-900/80 text-green-200 px-3 py-1 rounded text-xs">
                 Duplo clique ou botão para colar na posição do playhead ({formatTime(clipboard.duration)})
               </div>
             </div>
-          )}
+          )} */}
         </div>
         
         {/* Resize handle at the end - for all tracks */}
