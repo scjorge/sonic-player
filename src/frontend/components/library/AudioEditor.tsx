@@ -757,32 +757,67 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       return;
     }
 
-    const targetTrack = tracks.find(t => t.id === targetTrackId);
-    if (!targetTrack || targetTrack.audioBuffer !== null) {
-      showToast('Só é possível colar em faixas em branco', 'error');
+    if (!selectedTrackId) {
+      showToast('Selecione uma faixa primeiro', 'error');
       return;
     }
 
-    // Use currentTime (playhead position) as paste position
+    const targetTrack = tracks.find(t => t.id === selectedTrackId);
+    if (!targetTrack) {
+      showToast('Faixa selecionada não encontrada', 'error');
+      return;
+    }
+
+    // Use currentTime (playhead position) as paste position relative to track start
     const pastePosition = currentTime;
+    
+    // Check if paste position is within the track bounds
+    if (pastePosition < targetTrack.startOffset || pastePosition > targetTrack.startOffset + targetTrack.duration) {
+      showToast('Posicione o playhead dentro da faixa selecionada', 'error');
+      return;
+    }
+    
+    // Check if there's enough space in the track
+    const relativePosition = pastePosition - targetTrack.startOffset;
+    const remainingSpace = targetTrack.duration - relativePosition;
+    
+    if (remainingSpace < clipboard.duration) {
+      showToast(`Espaço insuficiente. Precisa de ${formatTime(clipboard.duration)}, mas há apenas ${formatTime(remainingSpace)}`, 'error');
+      return;
+    }
 
-    // Create a new audio track with the clipboard content
-    const newTrack: AudioTrack = {
-      id: `paste-${Date.now()}-${Math.random()}`,
-      name: `Trecho Colado`,
-      audioBuffer: clipboard.audioData,
-      audioUrl: '',
-      file: null,
-      volume: 1,
-      muted: false,
-      startOffset: pastePosition,
-      duration: clipboard.duration,
-      originalDuration: clipboard.duration,
-      regions: [],
-    };
-
-    setTracks(prev => [...prev, newTrack]);
-    showToast(`Trecho colado na posição ${formatTime(pastePosition)}`, 'success');
+    // If target track already has audio, create a new track with the pasted content
+    if (targetTrack.audioBuffer !== null) {
+      const newTrack: AudioTrack = {
+        id: `paste-${Date.now()}-${Math.random()}`,
+        name: `Colagem - ${clipboard.duration.toFixed(1)}s`,
+        audioBuffer: clipboard.audioData,
+        audioUrl: '',
+        file: null,
+        volume: 1,
+        muted: false,
+        startOffset: pastePosition,
+        duration: clipboard.duration,
+        originalDuration: clipboard.duration,
+        regions: [],
+      };
+      
+      setTracks(prev => [...prev, newTrack]);
+      showToast(`Novo trecho criado na posição ${formatTime(pastePosition)}`, 'success');
+    } else {
+      // Transform blank track into audio track
+      const updatedTrack: AudioTrack = {
+        ...targetTrack,
+        name: `${targetTrack.name} - Com Áudio`,
+        audioBuffer: clipboard.audioData,
+        startOffset: pastePosition,
+        duration: clipboard.duration,
+        originalDuration: clipboard.duration,
+      };
+      
+      setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
+      showToast(`Trecho colado na faixa selecionada em ${formatTime(pastePosition)}`, 'success');
+    }
   };
 
   const handleSaveToPreparation = async () => {
@@ -878,18 +913,17 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           
           <button
             onClick={() => {
-              const blankTrack = tracks.find(t => t.audioBuffer === null);
-              if (blankTrack) {
-                handlePasteToBlankTrack(blankTrack.id);
+              if (selectedTrackId) {
+                handlePasteToBlankTrack(selectedTrackId);
               } else {
-                showToast('Crie uma faixa em branco primeiro', 'error');
+                showToast('Selecione uma faixa primeiro', 'error');
               }
             }}
-            disabled={!clipboard}
+            disabled={!clipboard || !selectedTrackId}
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-green-600 text-green-300 hover:bg-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Edit3 className="w-4 h-4" />
-            Colar no Playhead
+            Colar na Faixa Selecionada
           </button>
           
           <div className="h-6 w-px bg-zinc-700 mx-2" />
@@ -1281,9 +1315,9 @@ const TrackRow: React.FC<TrackRowProps> = ({
   };
 
   const handleWaveformDoubleClick = (e: React.MouseEvent) => {
-    if (!track.audioBuffer || !clipboard) return;
+    if (!clipboard || !isSelected) return;
     
-    // Use playhead position for pasting
+    // Use playhead position for pasting in selected track
     onPaste(track.id);
   };
 
@@ -1418,7 +1452,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
           onMouseUp={handleWaveformMouseUp}
           onDoubleClick={handleWaveformDoubleClick}
           title={
-            track.audioBuffer === null && clipboard
+            clipboard && isSelected
               ? 'Duplo clique para colar na posição do playhead'
               : isSelectingMode && track.audioBuffer
               ? 'Clique e arraste para selecionar'
@@ -1447,11 +1481,11 @@ const TrackRow: React.FC<TrackRowProps> = ({
             </div>
           )}
           
-          {/* Paste indicator for blank tracks */}
-          {track.audioBuffer === null && clipboard && (
+          {/* Paste indicator for selected tracks */}
+          {clipboard && isSelected && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="bg-green-900/80 text-green-200 px-3 py-1 rounded text-xs">
-                Duplo clique para colar na posição do playhead ({formatTime(clipboard.duration)})
+                Duplo clique ou botão para colar na posição do playhead ({formatTime(clipboard.duration)})
               </div>
             </div>
           )}
