@@ -14,7 +14,8 @@ interface AudioTrack {
   volume: number;
   muted: boolean;
   startOffset: number; // Position in timeline (seconds)
-  duration: number;
+  duration: number; // Visual duration (can be extended with blank space)
+  originalDuration: number; // Original audio duration (cannot be reduced below this)
   regions: AudioRegion[];
 }
 
@@ -37,8 +38,17 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const [maxDuration, setMaxDuration] = useState(0);
   // `zoom` is pixels per second (px/s). Higher => more zoomed in.
   const [zoom, setZoom] = useState(100);
-  const [globalSelection, setGlobalSelection] = useState<{ start: number; end: number } | null>(null);
+  const [globalSelection, setGlobalSelection] = useState<{ start: number; end: number; trackId: string } | null>(null);
   const [controlsWidth, setControlsWidth] = useState<number>(192); // fallback for w-48 (12rem)
+  
+  // Selection and clipboard states
+  const [clipboard, setClipboard] = useState<{
+    audioData: AudioBuffer;
+    duration: number;
+    trackId: string;
+  } | null>(null);
+  const [isSelectingMode, setIsSelectingMode] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<{ trackId: string; time: number } | null>(null);
   
   // Import/Export states
   const [showImportModal, setShowImportModal] = useState(false);
@@ -164,6 +174,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         muted: false,
         startOffset: 0,
         duration: audioBuffer.duration,
+        originalDuration: audioBuffer.duration,
         regions: [],
       };
       
@@ -188,6 +199,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       muted: false,
       startOffset: 0,
       duration: defaultDuration,
+      originalDuration: defaultDuration,
       regions: [],
     };
     
@@ -381,7 +393,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     centerTimelineOnPlayhead(newZoom);
   };
 
-  const drawWaveform = (canvas: HTMLCanvasElement, audioBuffer: AudioBuffer | null, trackWidth: number) => {
+  const drawWaveform = (canvas: HTMLCanvasElement, audioBuffer: AudioBuffer | null, trackWidth: number, originalDuration: number, totalDuration: number) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -417,19 +429,24 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       return;
     }
 
+    // Calculate audio portion width and blank space width
+    const audioPortionWidth = Math.floor((originalDuration / totalDuration) * w);
+    const blankSpaceWidth = w - audioPortionWidth;
+
+    // Draw audio portion background
     ctx.fillStyle = '#18181b';
-    ctx.fillRect(0, 0, w, h);
+    ctx.fillRect(0, 0, audioPortionWidth, h);
 
     // Draw waveform from audio buffer
     const data = audioBuffer.getChannelData(0);
-    const step = Math.max(1, Math.floor(data.length / w));
+    const step = Math.max(1, Math.floor(data.length / audioPortionWidth));
     const amp = h / 2;
 
     ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 1;
     ctx.beginPath();
 
-    for (let i = 0; i < w; i++) {
+    for (let i = 0; i < audioPortionWidth; i++) {
       let min = 1.0;
       let max = -1.0;
       
@@ -449,6 +466,30 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     }
     
     ctx.stroke();
+
+    // Draw blank space portion if there is extended duration
+    if (blankSpaceWidth > 0) {
+      ctx.fillStyle = '#0a0a0b';
+      ctx.fillRect(audioPortionWidth, 0, blankSpaceWidth, h);
+      
+      // Draw dotted line pattern for extended blank space
+      ctx.strokeStyle = '#2d2d30';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(audioPortionWidth, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Add separator line
+      ctx.strokeStyle = '#404040';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(audioPortionWidth, 0);
+      ctx.lineTo(audioPortionWidth, h);
+      ctx.stroke();
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -500,6 +541,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           name: `${track.name} (início)`,
           audioBuffer: beforeBuffer,
           duration: beforeLength / sampleRate,
+          originalDuration: beforeLength / sampleRate,
         });
       }
 
@@ -517,6 +559,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           name: `${track.name} (fim)`,
           audioBuffer: afterBuffer,
           duration: afterLength / sampleRate,
+          originalDuration: afterLength / sampleRate,
           startOffset: track.startOffset + relativeEnd,
         });
       }
@@ -650,6 +693,98 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     return new Blob([arrayBuffer], { type: 'audio/wav' });
   };
 
+  const extractAudioSegment = (track: AudioTrack, startTime: number, endTime: number): AudioBuffer | null => {
+    if (!track.audioBuffer || !audioContextRef.current) return null;
+
+    const sampleRate = track.audioBuffer.sampleRate;
+    const channels = track.audioBuffer.numberOfChannels;
+    
+    // Convert global times to track-relative times
+    const trackRelativeStart = Math.max(0, startTime - track.startOffset);
+    const trackRelativeEnd = Math.min(track.originalDuration, endTime - track.startOffset);
+    
+    if (trackRelativeStart >= trackRelativeEnd) return null;
+
+    const startSample = Math.floor(trackRelativeStart * sampleRate);
+    const endSample = Math.floor(trackRelativeEnd * sampleRate);
+    const segmentLength = endSample - startSample;
+
+    if (segmentLength <= 0 || startSample < 0 || endSample > track.audioBuffer.length) {
+      return null;
+    }
+
+    const segmentBuffer = audioContextRef.current.createBuffer(channels, segmentLength, sampleRate);
+    
+    for (let ch = 0; ch < channels; ch++) {
+      const channelData = track.audioBuffer.getChannelData(ch);
+      const segmentData = channelData.slice(startSample, endSample);
+      segmentBuffer.copyToChannel(segmentData, ch);
+    }
+
+    return segmentBuffer;
+  };
+
+  const handleCopySelection = () => {
+    if (!globalSelection) {
+      showToast('Selecione um trecho de áudio primeiro', 'error');
+      return;
+    }
+
+    const track = tracks.find(t => t.id === globalSelection.trackId);
+    if (!track || !track.audioBuffer) {
+      showToast('Faixa não encontrada ou sem áudio', 'error');
+      return;
+    }
+
+    const audioData = extractAudioSegment(track, globalSelection.start, globalSelection.end);
+    if (!audioData) {
+      showToast('Erro ao extrair segmento de áudio', 'error');
+      return;
+    }
+
+    setClipboard({
+      audioData,
+      duration: globalSelection.end - globalSelection.start,
+      trackId: globalSelection.trackId,
+    });
+
+    showToast('Trecho copiado para a área de transferência', 'success');
+  };
+
+  const handlePasteToBlankTrack = (targetTrackId: string) => {
+    if (!clipboard) {
+      showToast('Nada na área de transferência para colar', 'error');
+      return;
+    }
+
+    const targetTrack = tracks.find(t => t.id === targetTrackId);
+    if (!targetTrack || targetTrack.audioBuffer !== null) {
+      showToast('Só é possível colar em faixas em branco', 'error');
+      return;
+    }
+
+    // Use currentTime (playhead position) as paste position
+    const pastePosition = currentTime;
+
+    // Create a new audio track with the clipboard content
+    const newTrack: AudioTrack = {
+      id: `paste-${Date.now()}-${Math.random()}`,
+      name: `Trecho Colado`,
+      audioBuffer: clipboard.audioData,
+      audioUrl: '',
+      file: null,
+      volume: 1,
+      muted: false,
+      startOffset: pastePosition,
+      duration: clipboard.duration,
+      originalDuration: clipboard.duration,
+      regions: [],
+    };
+
+    setTracks(prev => [...prev, newTrack]);
+    showToast(`Trecho colado na posição ${formatTime(pastePosition)}`, 'success');
+  };
+
   const handleSaveToPreparation = async () => {
     if (tracks.length === 0) {
       showToast('Nenhuma faixa para salvar', 'error');
@@ -721,6 +856,45 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           <div className="h-6 w-px bg-zinc-700 mx-2" />
           
           <button
+            onClick={() => setIsSelectingMode(!isSelectingMode)}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border ${
+              isSelectingMode 
+                ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300' 
+                : 'border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800'
+            }`}
+          >
+            <Edit3 className="w-4 h-4" />
+            {isSelectingMode ? 'Seleção Ativa' : 'Modo Seleção'}
+          </button>
+          
+          <button
+            onClick={handleCopySelection}
+            disabled={!globalSelection}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-blue-600 text-blue-300 hover:bg-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Copy className="w-4 h-4" />
+            Copiar Seleção
+          </button>
+          
+          <button
+            onClick={() => {
+              const blankTrack = tracks.find(t => t.audioBuffer === null);
+              if (blankTrack) {
+                handlePasteToBlankTrack(blankTrack.id);
+              } else {
+                showToast('Crie uma faixa em branco primeiro', 'error');
+              }
+            }}
+            disabled={!clipboard}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-green-600 text-green-300 hover:bg-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Edit3 className="w-4 h-4" />
+            Colar no Playhead
+          </button>
+          
+          <div className="h-6 w-px bg-zinc-700 mx-2" />
+          
+          <button
             onClick={handleCutTrack}
             disabled={!selectedTrackId || !globalSelection}
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -759,6 +933,24 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             <div className="flex items-center gap-1.5">
               <Music className="w-3.5 h-3.5" />
               <span>Selecionada: {tracks.find(t => t.id === selectedTrackId)?.name}</span>
+            </div>
+          )}
+          {globalSelection && (
+            <div className="flex items-center gap-1.5 text-indigo-400">
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Seleção: {formatTime(globalSelection.start)} - {formatTime(globalSelection.end)} ({formatTime(globalSelection.end - globalSelection.start)})</span>
+            </div>
+          )}
+          {clipboard && (
+            <div className="flex items-center gap-1.5 text-green-400">
+              <Copy className="w-3.5 h-3.5" />
+              <span>Clipboard: {formatTime(clipboard.duration)} pronto para colar</span>
+            </div>
+          )}
+          {isSelectingMode && (
+            <div className="flex items-center gap-1.5 text-yellow-400">
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Modo Seleção Ativo - Clique e arraste sobre uma faixa</span>
             </div>
           )}
         </div>
@@ -818,6 +1010,10 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                   track={track}
                   isSelected={selectedTrackId === track.id}
                   maxDuration={maxDuration}
+                  globalSelection={globalSelection}
+                  isSelectingMode={isSelectingMode}
+                  controlsWidth={controlsWidth}
+                  clipboard={clipboard}
                   onSelect={() => setSelectedTrackId(track.id)}
                   onDelete={() => handleDeleteTrack(track.id)}
                   onVolumeChange={(volume) => {
@@ -832,63 +1028,71 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                   onDurationChange={(duration) => {
                     setTracks(prev => prev.map(t => t.id === track.id ? { ...t, duration } : t));
                   }}
+                  onSelectionChange={(start, end) => {
+                    if (start !== null && end !== null) {
+                      setGlobalSelection({ start, end, trackId: track.id });
+                    } else {
+                      setGlobalSelection(null);
+                    }
+                  }}
+                  onPaste={handlePasteToBlankTrack}
                   drawWaveform={drawWaveform}
                   zoom={zoom}
                 />
               ))}
               </div>
             </div>
-
-            {/* Playback Controls */}
-            <div className="h-16 border-t border-zinc-800 bg-zinc-900/50 flex items-center justify-center gap-4 px-6">
-              <button
-                onClick={() => setCurrentTime(Math.max(0, currentTime - 5))}
-                className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
-              >
-                <SkipBack className="w-5 h-5" />
-              </button>
-              
-              <button
-                onClick={togglePlayPause}
-                disabled={tracks.length === 0}
-                className="p-3 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
-              </button>
-              
-              <button
-                onClick={() => setCurrentTime(Math.min(maxDuration, currentTime + 5))}
-                className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
-              >
-                <SkipForward className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-center gap-2 ml-4">
-                <span className="text-xs text-zinc-500 font-mono w-24">
-                  {formatTime(currentTime)} / {formatTime(maxDuration)}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 ml-4">
-                <button
-                  onClick={handleZoomOut}
-                  className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
-                  disabled={zoom <= 20}
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </button>
-                <span className="text-xs text-zinc-500 w-24 text-center">{zoom.toFixed(0)} px/s</span>
-                <button
-                  onClick={handleZoomIn}
-                  className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
-                  disabled={zoom >= 2000}
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
           </div>
         )}
+        
+        {/* Playback Controls - Always visible */}
+        <div className="h-16 border-t border-zinc-800 bg-zinc-900/50 flex items-center justify-center gap-4 px-6">
+          <button
+            onClick={() => setCurrentTime(Math.max(0, currentTime - 5))}
+            className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
+          >
+            <SkipBack className="w-5 h-5" />
+          </button>
+          
+          <button
+            onClick={togglePlayPause}
+            disabled={tracks.length === 0}
+            className="p-3 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
+          </button>
+          
+          <button
+            onClick={() => setCurrentTime(Math.min(maxDuration, currentTime + 5))}
+            className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
+          >
+            <SkipForward className="w-5 h-5" />
+          </button>
+
+          <div className="flex items-center gap-2 ml-4">
+            <span className="text-xs text-zinc-500 font-mono w-24">
+              {formatTime(currentTime)} / {formatTime(maxDuration)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 ml-4">
+            <button
+              onClick={handleZoomOut}
+              className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
+              disabled={zoom <= 20}
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <span className="text-xs text-zinc-500 w-24 text-center">{zoom.toFixed(0)} px/s</span>
+            <button
+              onClick={handleZoomIn}
+              className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
+              disabled={zoom >= 2000}
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Import Modal */}
@@ -953,13 +1157,19 @@ interface TrackRowProps {
   track: AudioTrack;
   isSelected: boolean;
   maxDuration: number;
+  globalSelection: { start: number; end: number; trackId: string } | null;
+  isSelectingMode: boolean;
+  controlsWidth: number;
+  clipboard: { audioData: AudioBuffer; duration: number; trackId: string } | null;
   onSelect: () => void;
   onDelete: () => void;
   onVolumeChange: (volume: number) => void;
   onMuteToggle: () => void;
   onOffsetChange: (offset: number) => void;
   onDurationChange: (duration: number) => void;
-  drawWaveform: (canvas: HTMLCanvasElement, buffer: AudioBuffer | null, width: number) => void;
+  onSelectionChange: (start: number | null, end: number | null) => void;
+  onPaste: (trackId: string) => void;
+  drawWaveform: (canvas: HTMLCanvasElement, buffer: AudioBuffer | null, width: number, originalDuration: number, totalDuration: number) => void;
   zoom: number;
 }
 
@@ -967,30 +1177,39 @@ const TrackRow: React.FC<TrackRowProps> = ({
   track,
   isSelected,
   maxDuration,
+  globalSelection,
+  isSelectingMode,
+  controlsWidth,
+  clipboard,
   onSelect,
   onDelete,
   onVolumeChange,
   onMuteToggle,
   onOffsetChange,
   onDurationChange,
+  onSelectionChange,
+  onPaste,
   drawWaveform,
   zoom,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const waveformRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
   const dragStartClientX = useRef<number | null>(null);
   const dragStartOffset = useRef<number>(0);
   const resizeStartClientX = useRef<number | null>(null);
   const resizeStartDuration = useRef<number>(0);
+  const selectionStartX = useRef<number | null>(null);
 
   useEffect(() => {
     if (canvasRef.current) {
       const trackWidth = Math.max(1, track.duration * zoom);
       // set canvas height appropriately (keep existing height attribute)
-      drawWaveform(canvasRef.current, track.audioBuffer, trackWidth);
+      drawWaveform(canvasRef.current, track.audioBuffer, trackWidth, track.originalDuration, track.duration);
     }
-  }, [track.audioBuffer, track.duration, maxDuration, zoom]);
+  }, [track.audioBuffer, track.duration, track.originalDuration, maxDuration, zoom]);
 
   const handleDragBarMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -1019,9 +1238,6 @@ const TrackRow: React.FC<TrackRowProps> = ({
   };
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
-    // Only allow resizing for blank tracks (no audioBuffer)
-    if (track.audioBuffer) return;
-    
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
@@ -1029,9 +1245,51 @@ const TrackRow: React.FC<TrackRowProps> = ({
     resizeStartDuration.current = track.duration;
   };
 
-  // Add global mouse move and up listeners when dragging or resizing
+  const handleWaveformMouseDown = (e: React.MouseEvent) => {
+    if (!isSelectingMode || !track.audioBuffer) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const rect = waveformRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const x = e.clientX - rect.left;
+    setIsSelecting(true);
+    selectionStartX.current = x;
+    onSelect(); // Select this track
+  };
+
+  const handleWaveformMouseMove = (e: React.MouseEvent) => {
+    if (!isSelecting || !isSelectingMode || selectionStartX.current === null) return;
+    
+    const rect = waveformRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const currentX = e.clientX - rect.left;
+    const startX = selectionStartX.current;
+    
+    const startTime = track.startOffset + (Math.min(startX, currentX) / zoom);
+    const endTime = track.startOffset + (Math.max(startX, currentX) / zoom);
+    
+    onSelectionChange(startTime, endTime);
+  };
+
+  const handleWaveformMouseUp = () => {
+    setIsSelecting(false);
+    selectionStartX.current = null;
+  };
+
+  const handleWaveformDoubleClick = (e: React.MouseEvent) => {
+    if (!track.audioBuffer || !clipboard) return;
+    
+    // Use playhead position for pasting
+    onPaste(track.id);
+  };
+
+  // Add global mouse move and up listeners when dragging, resizing or selecting
   useEffect(() => {
-    if (!isDragging && !isResizing) return;
+    if (!isDragging && !isResizing && !isSelecting) return;
 
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (isDragging && dragStartClientX.current !== null) {
@@ -1047,16 +1305,30 @@ const TrackRow: React.FC<TrackRowProps> = ({
         const deltaSeconds = deltaPx / zoom;
         let newDuration = resizeStartDuration.current + deltaSeconds;
         
-        // Minimum duration of 1 second
-        newDuration = Math.max(1, newDuration);
+        // Cannot reduce below original duration - capture from the track in closure
+        const minDuration = track.originalDuration;
+        newDuration = Math.max(minDuration, newDuration);
         
         onDurationChange(newDuration);
+      }
+      
+      if (isSelecting && isSelectingMode && selectionStartX.current !== null && waveformRef.current) {
+        const rect = waveformRef.current.getBoundingClientRect();
+        const currentX = e.clientX - rect.left;
+        const startX = selectionStartX.current;
+        
+        const startTime = track.startOffset + (Math.min(startX, currentX) / zoom);
+        const endTime = track.startOffset + (Math.max(startX, currentX) / zoom);
+        
+        onSelectionChange(startTime, endTime);
       }
     };
 
     const handleGlobalMouseUp = () => {
       setIsDragging(false);
       setIsResizing(false);
+      setIsSelecting(false);
+      selectionStartX.current = null;
     };
 
     document.addEventListener('mousemove', handleGlobalMouseMove);
@@ -1066,7 +1338,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [isDragging, isResizing, zoom, onOffsetChange, onDurationChange]);
+  }, [isDragging, isResizing, isSelecting, isSelectingMode, zoom, onOffsetChange, onDurationChange, onSelectionChange, track.startOffset, track.originalDuration]);
 
   return (
     <div
@@ -1129,33 +1401,73 @@ const TrackRow: React.FC<TrackRowProps> = ({
         
         {/* Waveform container */}
         <div
-          className="absolute h-full"
+          ref={waveformRef}
+          className={`absolute h-full ${
+            isSelectingMode && track.audioBuffer 
+              ? 'cursor-crosshair' 
+              : track.audioBuffer === null && clipboard 
+                ? 'cursor-pointer' 
+                : 'cursor-default'
+          }`}
           style={{
             left: `${track.startOffset * zoom}px`,
             width: `${track.duration * zoom}px`,
           }}
+          onMouseDown={handleWaveformMouseDown}
+          onMouseMove={handleWaveformMouseMove}
+          onMouseUp={handleWaveformMouseUp}
+          onDoubleClick={handleWaveformDoubleClick}
+          title={
+            track.audioBuffer === null && clipboard
+              ? 'Duplo clique para colar na posição do playhead'
+              : isSelectingMode && track.audioBuffer
+              ? 'Clique e arraste para selecionar'
+              : ''
+          }
         >
           <canvas
             ref={canvasRef}
             width={800}
             height={100}
-            className="w-full h-full"
+            className="w-full h-full pointer-events-none"
           />
+          
+          {/* Selection overlay for this track */}
+          {globalSelection && globalSelection.trackId === track.id && (
+            <div
+              className="absolute top-0 bottom-0 bg-indigo-500/30 border-l-2 border-r-2 border-indigo-500 pointer-events-none"
+              style={{
+                left: `${Math.max(0, (globalSelection.start - track.startOffset) * zoom)}px`,
+                width: `${(globalSelection.end - globalSelection.start) * zoom}px`,
+              }}
+            >
+              <div className="absolute top-1 left-1 text-xs text-indigo-200 bg-indigo-900/80 px-1 rounded">
+                {formatTime(globalSelection.end - globalSelection.start)}
+              </div>
+            </div>
+          )}
+          
+          {/* Paste indicator for blank tracks */}
+          {track.audioBuffer === null && clipboard && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-green-900/80 text-green-200 px-3 py-1 rounded text-xs">
+                Duplo clique para colar na posição do playhead ({formatTime(clipboard.duration)})
+              </div>
+            </div>
+          )}
         </div>
         
-        {/* Resize handle at the end - only for blank tracks */}
-        {!track.audioBuffer && (
-          <div
-            className="absolute top-0 bottom-0 w-2 bg-indigo-500/30 hover:bg-indigo-500/50 cursor-ew-resize z-20 flex items-center justify-center transition-colors"
-            style={{
-              left: `${(track.startOffset + track.duration) * zoom - 2}px`,
-            }}
-            onMouseDown={handleResizeMouseDown}
-            title="Arrastar para redimensionar faixa em branco"
-          >
-            <div className="w-0.5 h-8 bg-indigo-400 rounded"></div>
-          </div>
-        )}
+        {/* Resize handle at the end - for all tracks */}
+        <div
+          className="absolute top-0 bottom-0 w-2 bg-indigo-500/30 hover:bg-indigo-500/50 cursor-ew-resize z-20 flex items-center justify-center transition-colors"
+          style={{
+            left: `${(track.startOffset + track.duration) * zoom - 2}px`,
+          }}
+          onMouseDown={handleResizeMouseDown}
+          title="Arrastar para redimensionar faixa"
+        >
+          <div className="w-0.5 h-8 bg-indigo-400 rounded"></div>
+        </div>
       </div>
     </div>
   );
