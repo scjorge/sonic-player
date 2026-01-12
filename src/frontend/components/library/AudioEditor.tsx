@@ -841,6 +841,8 @@ const TrackRow: React.FC<TrackRowProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const dragStartClientX = useRef<number | null>(null);
+  const dragStartOffset = useRef<number>(0);
 
   useEffect(() => {
     if (canvasRef.current && track.audioBuffer) {
@@ -852,25 +854,24 @@ const TrackRow: React.FC<TrackRowProps> = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.track-controls')) return;
+    e.preventDefault();
     setIsDragging(true);
+    dragStartClientX.current = e.clientX;
+    dragStartOffset.current = track.startOffset || 0;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percent = x / rect.width;
-    
-    // Permitir arrastar além do limite atual, a timeline expande automaticamente
-    let newOffset = percent * maxDuration;
-    
-    // Expandir timeline se arrastar além de 80% do espaço
-    if (percent > 0.8) {
-      const extraSpace = (percent - 0.8) * maxDuration * 2;
-      newOffset = maxDuration * 0.8 + extraSpace;
-    }
-    
-    onOffsetChange(Math.max(0, newOffset));
+    if (!isDragging || dragStartClientX.current === null) return;
+
+    // Calculate delta in pixels and convert to seconds using zoom (px/s)
+    const deltaPx = e.clientX - dragStartClientX.current;
+    const deltaSeconds = deltaPx / zoom;
+    let newOffset = dragStartOffset.current + deltaSeconds;
+
+    // Prevent negative start
+    newOffset = Math.max(0, newOffset);
+
+    onOffsetChange(newOffset);
   };
 
   const handleMouseUp = () => {
