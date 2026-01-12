@@ -1358,12 +1358,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
     selectionStartX.current = null;
   };
 
-  const handleWaveformDoubleClick = (e: React.MouseEvent) => {
-    if (!clipboard || !isSelected) return;
-    
-    // Use playhead position for pasting in selected track
-    onPaste(track.id);
-  };
+
 
   // Add global mouse move and up listeners when dragging, resizing or selecting
   useEffect(() => {
@@ -1494,11 +1489,8 @@ const TrackRow: React.FC<TrackRowProps> = ({
           onMouseDown={handleWaveformMouseDown}
           onMouseMove={handleWaveformMouseMove}
           onMouseUp={handleWaveformMouseUp}
-          onDoubleClick={handleWaveformDoubleClick}
           title={
-            clipboard && isSelected
-              ? 'Duplo clique para colar na posição do playhead'
-              : isSelectingMode && track.audioBuffer
+            isSelectingMode && track.audioBuffer
               ? 'Clique e arraste para selecionar'
               : ''
           }
@@ -1525,14 +1517,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
             </div>
           )}
           
-          {/* Paste indicator for selected tracks */}
-          {/* {clipboard && isSelected && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="bg-green-900/80 text-green-200 px-3 py-1 rounded text-xs">
-                Duplo clique ou botão para colar na posição do playhead ({formatTime(clipboard.duration)})
-              </div>
-            </div>
-          )} */}
+
         </div>
         
         {/* Resize handle at the end - for all tracks */}
