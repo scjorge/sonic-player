@@ -40,6 +40,14 @@ interface AudioEditorProps {
   onNavigateToLibrary?: () => void;
 }
 
+interface EditorSnapshot {
+  tracks: AudioTrack[];
+  selectedTrackId: string | null;
+  currentTime: number;
+  zoom: number;
+  globalSelection: { start: number; end: number; trackId: string } | null;
+}
+
 interface SerializedTrack {
   id: string;
   name: string;
@@ -179,6 +187,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const [globalSelection, setGlobalSelection] = useState<{ start: number; end: number; trackId: string } | null>(null);
   const [controlsWidth, setControlsWidth] = useState<number>(192); // fallback for w-48 (12rem)
   const [isRestoringState, setIsRestoringState] = useState(false);
+  const [history, setHistory] = useState<EditorSnapshot[]>([]);
   
   // Selection and clipboard states
   const [clipboard, setClipboard] = useState<{
@@ -208,12 +217,53 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const panStartXRef = useRef(0);
   const panStartScrollRef = useRef(0);
 
+  const pushHistory = (custom?: Partial<EditorSnapshot>) => {
+    setHistory(prev => {
+      const snapshot: EditorSnapshot = {
+        tracks: tracks.map(t => ({ ...t, regions: [...t.regions] })),
+        selectedTrackId,
+        currentTime,
+        zoom,
+        globalSelection,
+        ...custom,
+      };
+      const next = [...prev, snapshot];
+      // Limita tamanho do histórico para evitar uso excessivo de memória
+      const MAX_HISTORY = 50;
+      return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next;
+    });
+  };
+
+  const handleUndo = () => {
+    setHistory(prev => {
+      if (prev.length === 0) return prev;
+      const newHistory = [...prev];
+      const last = newHistory.pop()!;
+      setTracks(last.tracks);
+      setSelectedTrackId(last.selectedTrackId);
+      setCurrentTime(last.currentTime);
+      setZoom(last.zoom);
+      setGlobalSelection(last.globalSelection);
+      return newHistory;
+    });
+  };
+
   useEffect(() => {
     console.log('AudioEditor montado!');
     // Initialize Web Audio API
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      if (isCtrlOrCmd && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        handleUndo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       // Cleanup
@@ -222,6 +272,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       }
       sourceNodesRef.current.forEach(node => node.stop());
       sourceNodesRef.current.clear();
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -315,7 +366,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         contentType,
       };
       
-      setTracks(prev => [...prev, newTrack]);
+  pushHistory();
+  setTracks(prev => [...prev, newTrack]);
       setSelectedTrackId(newTrack.id);
       // Salva o blob original no IndexedDB para evitar novo download no futuro
       saveTrackBlobToIndexedDB(trackId, file);
@@ -343,7 +395,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       originType: 'blank',
     };
     
-    setTracks(prev => [...prev, newTrack]);
+  pushHistory();
+  setTracks(prev => [...prev, newTrack]);
     setSelectedTrackId(newTrack.id);
     showToast(`Faixa em branco adicionada (${defaultDuration}s)`, 'success');
   };
@@ -560,7 +613,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       togglePlayPause();
     }
 
-    setTracks([]);
+  pushHistory();
+  setTracks([]);
     setSelectedTrackId(null);
     setCurrentTime(0);
     setGlobalSelection(null);
@@ -651,7 +705,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     const time = (absoluteX - controlsWidth) / zoom;
 
     const targetTime = Math.max(0, Math.min(maxDuration, time));
-    setCurrentTime(targetTime);
+  pushHistory({ currentTime: targetTime });
+  setCurrentTime(targetTime);
     ensurePlayheadVisibleAt(targetTime);
     
     if (isPlaying) {
@@ -871,7 +926,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       }
 
       // Replace old track with new tracks
-      setTracks(prev => {
+  pushHistory();
+  setTracks(prev => {
         const filtered = prev.filter(t => t.id !== selectedTrackId);
         return [...filtered, ...newTracks];
       });
@@ -897,7 +953,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const handleDeleteTrack = (trackId: string) => {
     const track = tracks.find(t => t.id === trackId);
 
-    setTracks(prev => prev.filter(t => t.id !== trackId));
+  pushHistory();
+  setTracks(prev => prev.filter(t => t.id !== trackId));
     if (selectedTrackId === trackId) {
       setSelectedTrackId(null);
     }
@@ -1117,7 +1174,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         originalDuration: clipboard.duration,
       };
       
-      setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
+  pushHistory();
+  setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
       showToast(`Trecho colado na faixa selecionada em ${formatTime(pastePosition)}`, 'success');
       return;
     }
@@ -1175,7 +1233,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         originalDuration: newDuration,
       };
       
-      setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
+  pushHistory();
+  setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
       showToast(`Áudio colado e mixado na faixa em ${formatTime(pastePosition)}`, 'success');
       
     } catch (error: any) {
