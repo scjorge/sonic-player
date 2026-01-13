@@ -1172,10 +1172,34 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         startOffset: pastePosition,
         duration: clipboard.duration,
         originalDuration: clipboard.duration,
+        // Deixa de ser uma faixa "em branco" para não ser recriada vazia na restauração
+        // e passa a ser tratada como faixa com áudio gerado localmente
+        originType: 'upload',
       };
       
   pushHistory();
   setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
+      // Como este áudio é gerado localmente (a partir de cópia), também salvamos o blob
+      // correspondente no IndexedDB para tentar restaurar em sessões futuras.
+      try {
+        if (audioContextRef.current) {
+          const sampleRate = clipboard.audioData.sampleRate;
+          const channels = clipboard.audioData.numberOfChannels;
+          const length = clipboard.audioData.length;
+
+          // Converte o AudioBuffer do clipboard em WAV Blob reutilizando audioBufferToWav
+          const tempBuffer = audioContextRef.current.createBuffer(channels, length, sampleRate);
+          for (let ch = 0; ch < channels; ch++) {
+            const src = clipboard.audioData.getChannelData(ch);
+            tempBuffer.copyToChannel(src, ch);
+          }
+
+          const blob = audioBufferToWav(tempBuffer);
+          saveTrackBlobToIndexedDB(updatedTrack.id, blob);
+        }
+      } catch (e) {
+        console.error('Erro ao salvar blob de faixa colada no IndexedDB', e);
+      }
       showToast(`Trecho colado na faixa selecionada em ${formatTime(pastePosition)}`, 'success');
       return;
     }
