@@ -732,7 +732,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       ctx.textAlign = 'center';
       ctx.fillText('Faixa em Branco', w / 2, h / 2 - 8);
       ctx.font = '10px monospace';
-      ctx.fillText('(Arraste áudio aqui ou use controles)', w / 2, h / 2 + 8);
       return;
     }
 
