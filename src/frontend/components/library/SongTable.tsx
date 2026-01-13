@@ -290,6 +290,7 @@ const SongTable: React.FC<SongTableProps> = ({
 
   const handleAddToEditor = async (song: NaviSong) => {
     try {
+      console.log(song)
       const currentState = await apiGetAudioEditorState();
 
       const baseState = currentState && Array.isArray(currentState.tracks)
@@ -314,8 +315,8 @@ const SongTable: React.FC<SongTableProps> = ({
         volume: 1,
         muted: false,
         startOffset: 0,
-        duration: 5,
-        originalDuration: 5,
+        duration: song.duration || 5,
+        originalDuration: song.duration || 5,
         regions: [] as any[],
         originType,
         songId: song.id,
