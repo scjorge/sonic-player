@@ -903,6 +903,35 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     showToast('Faixa removida', 'success');
   };
 
+  const renderMixToWav = async (): Promise<Blob> => {
+    if (!audioContextRef.current) {
+      throw new Error('Contexto de áudio não inicializado');
+    }
+
+    const sampleRate = 44100;
+    const channels = 2;
+    const lengthInSamples = Math.ceil(maxDuration * sampleRate);
+    const offlineContext = new OfflineAudioContext(channels, lengthInSamples, sampleRate);
+
+    tracks.forEach(track => {
+      if (track.audioBuffer && !track.muted) {
+        const source = offlineContext.createBufferSource();
+        source.buffer = track.audioBuffer;
+        
+        const gainNode = offlineContext.createGain();
+        gainNode.gain.value = track.volume;
+        
+        source.connect(gainNode);
+        gainNode.connect(offlineContext.destination);
+        
+        source.start(track.startOffset);
+      }
+    });
+
+    const renderedBuffer = await offlineContext.startRendering();
+    return audioBufferToWav(renderedBuffer);
+  };
+
   const handleExportMix = async () => {
     if (tracks.length === 0) {
       showToast('Nenhuma faixa para exportar', 'error');
@@ -912,45 +941,12 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     setExportLoading(true);
     
     try {
-      if (!audioContextRef.current) {
-        throw new Error('Contexto de áudio não inicializado');
-      }
-
-      // Create offline context for rendering
-      const sampleRate = 44100;
-      const channels = 2;
-      const lengthInSamples = Math.ceil(maxDuration * sampleRate);
-      
-      const offlineContext = new OfflineAudioContext(channels, lengthInSamples, sampleRate);
-
-      // Mix all tracks
-      tracks.forEach(track => {
-        if (track.audioBuffer && !track.muted) {
-          const source = offlineContext.createBufferSource();
-          source.buffer = track.audioBuffer;
-          
-          const gainNode = offlineContext.createGain();
-          gainNode.gain.value = track.volume;
-          
-          source.connect(gainNode);
-          gainNode.connect(offlineContext.destination);
-          
-          source.start(track.startOffset);
-        }
-      });
-
-      const renderedBuffer = await offlineContext.startRendering();
-      
-      // Convert to WAV
-      const wavBlob = audioBufferToWav(renderedBuffer);
+      const wavBlob = await renderMixToWav();
       const url = URL.createObjectURL(wavBlob);
-      
-      // Download
       const a = document.createElement('a');
       a.href = url;
       a.download = `mixagem-${Date.now()}.wav`;
       a.click();
-      
       URL.revokeObjectURL(url);
       showToast('Mixagem exportada com sucesso', 'success');
     } catch (error: any) {
@@ -1178,11 +1174,37 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     }
 
     try {
-      // Export mix as before
-      await handleExportMix();
-      showToast('Use o arquivo exportado e faça upload na aba Preparo', 'warning');
+      setExportLoading(true);
+
+      const wavBlob = await renderMixToWav();
+      const timestamp = new Date();
+      const yyyy = timestamp.getFullYear();
+      const mm = String(timestamp.getMonth() + 1).padStart(2, '0');
+      const dd = String(timestamp.getDate()).padStart(2, '0');
+      const hh = String(timestamp.getHours()).padStart(2, '0');
+      const mi = String(timestamp.getMinutes()).padStart(2, '0');
+      const ss = String(timestamp.getSeconds()).padStart(2, '0');
+      const filename = `mixagem-${yyyy}${mm}${dd}-${hh}${mi}${ss}.wav`;
+
+      const file = new File([wavBlob], filename, { type: 'audio/wav' });
+      const formData = new FormData();
+      formData.append('files', file);
+
+      const res = await fetch(`${BACKEND_BASE_URL}/api/downloads/upload-preparation`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Falha ao salvar mixagem no preparo');
+      }
+
+      showToast('Mixagem salva no diretório de preparo', 'success');
     } catch (error: any) {
       showToast(`Erro ao salvar: ${error?.message || String(error)}`, 'error');
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -1292,6 +1314,15 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           >
             <Download className="w-4 h-4" />
             {exportLoading ? 'Exportando...' : 'Exportar Mixagem'}
+          </button>
+
+          <button
+            onClick={handleSaveToPreparation}
+            disabled={tracks.length === 0 || exportLoading}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="w-4 h-4" />
+            {exportLoading ? 'Salvando...' : 'Salvar no Preparo'}
           </button>
         </div>
 
