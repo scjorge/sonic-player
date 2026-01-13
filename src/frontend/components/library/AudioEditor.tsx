@@ -896,10 +896,27 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   };
 
   const handleDeleteTrack = (trackId: string) => {
+    const track = tracks.find(t => t.id === trackId);
+
     setTracks(prev => prev.filter(t => t.id !== trackId));
     if (selectedTrackId === trackId) {
       setSelectedTrackId(null);
     }
+
+    if (track) {
+      if (track.audioUrl && track.audioUrl.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(track.audioUrl);
+        } catch (e) {
+          console.error('Erro ao revogar URL de blob da faixa removida', e);
+        }
+      }
+
+      if (track.originType !== 'blank') {
+        deleteTrackBlobFromIndexedDB(track.id);
+      }
+    }
+
     showToast('Faixa removida', 'success');
   };
 
