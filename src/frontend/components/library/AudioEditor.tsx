@@ -5,6 +5,8 @@ import showToast from '../utils/toast';
 import { Play, Pause, Download, Save, Upload, Scissors, Copy, Trash2, FolderOpen, Volume2, VolumeX, ZoomIn, ZoomOut, SkipBack, SkipForward, Plus, Layers, Music, Edit3, Link } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 
+type TrackOriginType = 'upload' | 'library' | 'preparo' | 'blank';
+
 interface AudioTrack {
   id: string;
   name: string;
@@ -17,6 +19,9 @@ interface AudioTrack {
   duration: number; // Visual duration (can be extended with blank space)
   originalDuration: number; // Original audio duration (cannot be reduced below this)
   regions: AudioRegion[];
+  originType: TrackOriginType;
+  songId?: string;
+  contentType?: string;
 }
 
 interface AudioRegion {
@@ -28,6 +33,29 @@ interface AudioRegion {
 
 interface AudioEditorProps {
   onNavigateToLibrary?: () => void;
+}
+
+interface SerializedTrack {
+  id: string;
+  name: string;
+  audioUrl: string;
+  volume: number;
+  muted: boolean;
+  startOffset: number;
+  duration: number;
+  originalDuration: number;
+  regions: AudioRegion[];
+  originType: TrackOriginType;
+  songId?: string;
+  contentType?: string;
+}
+
+interface AudioEditorPersistedState {
+  tracks: SerializedTrack[];
+  zoom: number;
+  currentTime: number;
+  selectedTrackId: string | null;
+  globalSelection: { start: number; end: number; trackId: string } | null;
 }
 
 const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
@@ -78,11 +106,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
     return () => {
       // Cleanup
-      tracks.forEach(track => {
-        if (track.audioUrl) {
-          URL.revokeObjectURL(track.audioUrl);
-        }
-      });
       if (playbackIntervalRef.current) {
         clearInterval(playbackIntervalRef.current);
       }
@@ -146,13 +169,13 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     const files = e.target.files;
     if (files) {
       for (let i = 0; i < files.length; i++) {
-        await addTrackFromFile(files[i]);
+        await addTrackFromFile(files[i], 'upload');
       }
     }
     e.target.value = ''; // Reset input
   };
 
-  const addTrackFromFile = async (file: File) => {
+  const addTrackFromFile = async (file: File, originType: TrackOriginType, songId?: string, contentType?: string) => {
     try {
       const url = URL.createObjectURL(file);
       const arrayBuffer = await file.arrayBuffer();
@@ -175,6 +198,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         duration: audioBuffer.duration,
         originalDuration: audioBuffer.duration,
         regions: [],
+        originType,
+        songId,
+        contentType,
       };
       
       setTracks(prev => [...prev, newTrack]);
@@ -200,6 +226,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       duration: defaultDuration,
       originalDuration: defaultDuration,
       regions: [],
+      originType: 'blank',
     };
     
     setTracks(prev => [...prev, newTrack]);
@@ -255,11 +282,166 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       const blob = await response.blob();
       const file = new File([blob], `${song.title || 'audio'}.mp3`, { type: blob.type });
       
-      await addTrackFromFile(file);
+      const originType: TrackOriginType = song.contentType === 'audio/preparation' ? 'preparo' : 'library';
+      await addTrackFromFile(file, originType, song.id, song.contentType);
       showToast(`"${song.title}" importado com sucesso`, 'success');
     } catch (error: any) {
       showToast(`Erro ao importar: ${error?.message || String(error)}`, 'error');
     }
+  };
+
+  // Restaura estado salvo do editor (tracks, seleção, zoom etc.)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const saved = window.localStorage.getItem('audioEditor_state');
+    if (!saved) return;
+
+    try {
+      const parsed = JSON.parse(saved) as AudioEditorPersistedState;
+      if (!parsed || !Array.isArray(parsed.tracks)) return;
+
+      const restore = async () => {
+        if (!audioContextRef.current) {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+
+        const restoredTracks: AudioTrack[] = [];
+
+        for (const st of parsed.tracks) {
+          let audioBuffer: AudioBuffer | null = null;
+          let audioUrl = st.audioUrl || '';
+
+          if (st.originType === 'blank') {
+            audioBuffer = null;
+            audioUrl = '';
+          } else {
+            try {
+              let fetchUrl: string | null = null;
+
+              if (st.originType === 'library' && st.songId) {
+                fetchUrl = navidromeService.getStreamUrl(st.songId);
+              } else if (st.originType === 'preparo' && st.songId) {
+                fetchUrl = `${BACKEND_BASE_URL}/api/downloads/stream?id=${encodeURIComponent(st.songId)}`;
+              } else if (st.originType === 'upload' && st.audioUrl) {
+                fetchUrl = st.audioUrl;
+              }
+
+              if (fetchUrl) {
+                const res = await fetch(fetchUrl);
+                if (res.ok) {
+                  const arrayBuffer = await res.arrayBuffer();
+                  audioBuffer = await audioContextRef.current!.decodeAudioData(arrayBuffer);
+                  if (!audioUrl && (st.originType === 'upload')) {
+                    const blob = new Blob([arrayBuffer]);
+                    audioUrl = URL.createObjectURL(blob);
+                  }
+                } else {
+                  console.warn('Falha ao restaurar faixa do editor:', st.name);
+                }
+              }
+            } catch (e) {
+              console.error('Erro ao restaurar faixa do editor', e);
+            }
+          }
+
+          restoredTracks.push({
+            id: st.id,
+            name: st.name,
+            audioBuffer,
+            audioUrl,
+            file: null,
+            volume: st.volume,
+            muted: st.muted,
+            startOffset: st.startOffset,
+            duration: st.duration,
+            originalDuration: st.originalDuration,
+            regions: st.regions || [],
+            originType: st.originType,
+            songId: st.songId,
+            contentType: st.contentType,
+          });
+        }
+
+        setTracks(restoredTracks);
+        setZoom(parsed.zoom || 100);
+        setCurrentTime(parsed.currentTime || 0);
+        setSelectedTrackId(parsed.selectedTrackId || null);
+        setGlobalSelection(parsed.globalSelection || null);
+      };
+
+      restore();
+    } catch (e) {
+      console.error('Erro ao restaurar estado do AudioEditor', e);
+    }
+  }, []);
+
+  // Salva automaticamente o estado do editor no localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const serializableTracks: SerializedTrack[] = tracks.map((t) => ({
+        id: t.id,
+        name: t.name,
+        audioUrl: t.audioUrl,
+        volume: t.volume,
+        muted: t.muted,
+        startOffset: t.startOffset,
+        duration: t.duration,
+        originalDuration: t.originalDuration,
+        regions: t.regions,
+        originType: t.originType,
+        songId: t.songId,
+        contentType: t.contentType,
+      }));
+
+      const payload: AudioEditorPersistedState = {
+        tracks: serializableTracks,
+        zoom,
+        currentTime,
+        selectedTrackId,
+        globalSelection,
+      };
+
+      window.localStorage.setItem('audioEditor_state', JSON.stringify(payload));
+    } catch (e) {
+      console.error('Erro ao salvar estado do AudioEditor', e);
+    }
+  }, [tracks, zoom, currentTime, selectedTrackId, globalSelection]);
+
+  const clearEditorState = () => {
+    try {
+      // Revoga URLs de blob criadas para as faixas
+      tracks.forEach((track) => {
+        if (track.audioUrl && track.audioUrl.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(track.audioUrl);
+          } catch (e) {
+            console.error('Erro ao revogar URL de blob', e);
+          }
+        }
+      });
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('audioEditor_state');
+      }
+    } catch (e) {
+      console.error('Erro ao limpar estado do AudioEditor', e);
+    }
+
+    if (isPlaying) {
+      togglePlayPause();
+    }
+
+    setTracks([]);
+    setSelectedTrackId(null);
+    setCurrentTime(0);
+    setGlobalSelection(null);
+    setClipboard(null);
+    setZoom(100);
+
+    showToast('Editor limpo e estado salvo removido', 'success');
   };
 
   const togglePlayPause = async () => {
