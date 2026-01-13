@@ -1439,7 +1439,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-green-600 text-green-300 hover:bg-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-4 h-4" />
-            {exportLoading ? 'Exportando...' : 'Exportar Mixagem'}
+            {exportLoading ? 'Exportando...' : 'Exportar'}
           </button>
 
           <button
