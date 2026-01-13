@@ -987,11 +987,20 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         });
       }
 
-      // Replace old track with new tracks
+      // Replace old track with new tracks, preservando a ordem da lista
   pushHistory();
   setTracks(prev => {
-        const filtered = prev.filter(t => t.id !== selectedTrackId);
-        return [...filtered, ...newTracks];
+        const index = prev.findIndex(t => t.id === selectedTrackId);
+        if (index === -1) {
+          // fallback: se não achar a faixa, mantém comportamento antigo
+          const filtered = prev.filter(t => t.id !== selectedTrackId);
+          return [...filtered, ...newTracks];
+        }
+
+        const beforeList = prev.slice(0, index);
+        const afterList = prev.slice(index + 1); // remove a faixa original
+        // newTracks já está em ordem: [beforePart?, afterPart?]
+        return [...beforeList, ...newTracks, ...afterList];
       });
 
       setGlobalSelection(null);
