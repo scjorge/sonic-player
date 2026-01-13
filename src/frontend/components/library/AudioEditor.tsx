@@ -213,6 +213,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const [loadingImport, setLoadingImport] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
+  // Faixa em "solo" (escutar apenas essa faixa)
+  const [soloTrackId, setSoloTrackId] = useState<string | null>(null);
+
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodesRef = useRef<Map<string, AudioBufferSourceNode>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -698,9 +701,15 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       const startTime = audioContextRef.current.currentTime;
       const offsetTime = currentTime;
       
-      // Schedule all tracks
+      const isSoloActive = soloTrackId !== null;
+
+      // Schedule all tracks (respeitando solo se ativo)
       tracks.forEach(track => {
-        if (track.audioBuffer && !track.muted) {
+        const shouldPlay =
+          track.audioBuffer &&
+          (!isSoloActive ? !track.muted : track.id === soloTrackId);
+
+        if (shouldPlay) {
           const source = audioContextRef.current!.createBufferSource();
           source.buffer = track.audioBuffer;
           
@@ -1568,6 +1577,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                   key={track.id}
                   track={track}
                   isSelected={selectedTrackId === track.id}
+                  isSolo={soloTrackId === track.id}
                   maxDuration={maxDuration}
                   globalSelection={globalSelection}
                   isSelectingMode={true}
@@ -1580,6 +1590,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                   }}
                   onMuteToggle={() => {
                     setTracks(prev => prev.map(t => t.id === track.id ? { ...t, muted: !t.muted } : t));
+                  }}
+                  onSoloToggle={() => {
+                    setSoloTrackId(prev => (prev === track.id ? null : track.id));
                   }}
                   onOffsetChange={(startOffset) => {
                     setTracks(prev => prev.map(t => t.id === track.id ? { ...t, startOffset } : t));
@@ -1667,6 +1680,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 interface TrackRowProps {
   track: AudioTrack;
   isSelected: boolean;
+  isSolo: boolean;
   maxDuration: number;
   globalSelection: { start: number; end: number; trackId: string } | null;
   isSelectingMode: boolean;
@@ -1676,6 +1690,7 @@ interface TrackRowProps {
   onDelete: () => void;
   onVolumeChange: (volume: number) => void;
   onMuteToggle: () => void;
+  onSoloToggle: () => void;
   onOffsetChange: (offset: number) => void;
   onDurationChange: (duration: number) => void;
   onSelectionChange: (start: number | null, end: number | null) => void;
@@ -1687,6 +1702,7 @@ interface TrackRowProps {
 const TrackRow: React.FC<TrackRowProps> = ({
   track,
   isSelected,
+  isSolo,
   maxDuration,
   globalSelection,
   isSelectingMode,
@@ -1696,6 +1712,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
   onDelete,
   onVolumeChange,
   onMuteToggle,
+  onSoloToggle,
   onOffsetChange,
   onDurationChange,
   onSelectionChange,
@@ -1863,12 +1880,19 @@ const TrackRow: React.FC<TrackRowProps> = ({
           </button>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex-1 items-center gap-0">
           <button
             onClick={(e) => { e.stopPropagation(); onMuteToggle(); }}
             className={`p-1.5 rounded ${track.muted ? 'bg-red-500/20 text-red-400' : 'hover:bg-zinc-800 text-zinc-400'}`}
           >
             {track.muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onSoloToggle(); }}
+            className={`p-1.5 rounded ${isSolo ? 'bg-emerald-500/20 text-emerald-400' : 'hover:bg-zinc-800 text-zinc-400'}`}
+            title="Escutar apenas essa faixa"
+          >
+            <Music className="w-3.5 h-3.5" />
           </button>
           <input
             type="range"
