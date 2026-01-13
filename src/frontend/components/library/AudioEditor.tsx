@@ -7,6 +7,10 @@ import { navidromeService } from '../../services/navidromeService';
 
 type TrackOriginType = 'upload' | 'library' | 'preparo' | 'blank';
 
+const AUDIO_EDITOR_DB_NAME = 'audioEditorDB';
+const AUDIO_EDITOR_DB_VERSION = 1;
+const AUDIO_EDITOR_DB_STORE = 'audioBlobs';
+
 interface AudioTrack {
   id: string;
   name: string;
@@ -56,6 +60,111 @@ interface AudioEditorPersistedState {
   currentTime: number;
   selectedTrackId: string | null;
   globalSelection: { start: number; end: number; trackId: string } | null;
+}
+
+interface AudioBlobRecord {
+  id: string;
+  blob: Blob;
+  type: string;
+}
+
+function openAudioEditorDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined' || !('indexedDB' in window)) {
+      reject(new Error('IndexedDB não disponível'));
+      return;
+    }
+
+    const request = window.indexedDB.open(AUDIO_EDITOR_DB_NAME, AUDIO_EDITOR_DB_VERSION);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(AUDIO_EDITOR_DB_STORE)) {
+        db.createObjectStore(AUDIO_EDITOR_DB_STORE, { keyPath: 'id' });
+      }
+    };
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = () => {
+      reject(request.error || new Error('Falha ao abrir IndexedDB'));
+    };
+  });
+}
+
+async function saveTrackBlobToIndexedDB(id: string, blob: Blob): Promise<void> {
+  try {
+    const db = await openAudioEditorDB();
+    const tx = db.transaction(AUDIO_EDITOR_DB_STORE, 'readwrite');
+    const store = tx.objectStore(AUDIO_EDITOR_DB_STORE);
+    const record: AudioBlobRecord = { id, blob, type: blob.type };
+    store.put(record);
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error('Falha ao salvar blob de áudio'));
+      tx.onabort = () => reject(tx.error || new Error('Transação abortada ao salvar blob'));
+    });
+    db.close();
+  } catch (e) {
+    console.error('Erro ao salvar blob de faixa no IndexedDB', e);
+  }
+}
+
+async function getTrackBlobFromIndexedDB(id: string): Promise<Blob | null> {
+  try {
+    const db = await openAudioEditorDB();
+    const tx = db.transaction(AUDIO_EDITOR_DB_STORE, 'readonly');
+    const store = tx.objectStore(AUDIO_EDITOR_DB_STORE);
+    const request = store.get(id);
+
+    const record = await new Promise<AudioBlobRecord | undefined | null>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result as AudioBlobRecord | undefined | null);
+      request.onerror = () => reject(request.error || new Error('Falha ao ler blob de áudio'));
+    });
+
+    db.close();
+    if (!record) return null;
+    return record.blob;
+  } catch (e) {
+    console.error('Erro ao recuperar blob de faixa do IndexedDB', e);
+    return null;
+  }
+}
+
+async function deleteTrackBlobFromIndexedDB(id: string): Promise<void> {
+  try {
+    const db = await openAudioEditorDB();
+    const tx = db.transaction(AUDIO_EDITOR_DB_STORE, 'readwrite');
+    const store = tx.objectStore(AUDIO_EDITOR_DB_STORE);
+    store.delete(id);
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error('Falha ao apagar blob de áudio'));
+      tx.onabort = () => reject(tx.error || new Error('Transação abortada ao apagar blob'));
+    });
+    db.close();
+  } catch (e) {
+    console.error('Erro ao apagar blob de faixa do IndexedDB', e);
+  }
+}
+
+async function clearAllTrackBlobsFromIndexedDB(): Promise<void> {
+  try {
+    const db = await openAudioEditorDB();
+    const tx = db.transaction(AUDIO_EDITOR_DB_STORE, 'readwrite');
+    const store = tx.objectStore(AUDIO_EDITOR_DB_STORE);
+    store.clear();
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error('Falha ao limpar blobs de áudio'));
+      tx.onabort = () => reject(tx.error || new Error('Transação abortada ao limpar blobs'));
+    });
+    db.close();
+  } catch (e) {
+    console.error('Erro ao limpar blobs de faixa do IndexedDB', e);
+  }
 }
 
 const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
@@ -177,6 +286,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
   const addTrackFromFile = async (file: File, originType: TrackOriginType, songId?: string, contentType?: string) => {
     try {
+      const trackId = `track-${Date.now()}-${Math.random()}`;
       const url = URL.createObjectURL(file);
       const arrayBuffer = await file.arrayBuffer();
       
@@ -187,7 +297,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
       
       const newTrack: AudioTrack = {
-        id: `track-${Date.now()}-${Math.random()}`,
+        id: trackId,
         name: file.name,
         audioBuffer,
         audioUrl: url,
@@ -205,6 +315,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       
       setTracks(prev => [...prev, newTrack]);
       setSelectedTrackId(newTrack.id);
+      // Salva o blob original no IndexedDB para evitar novo download no futuro
+      saveTrackBlobToIndexedDB(trackId, file);
       showToast(`Faixa "${file.name}" adicionada`, 'success');
     } catch (error: any) {
       showToast(`Erro ao carregar arquivo: ${error?.message || String(error)}`, 'error');
@@ -317,27 +429,37 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             audioUrl = '';
           } else {
             try {
-              let fetchUrl: string | null = null;
+              // 1) Tenta restaurar a partir do IndexedDB (sem novo download)
+              const cachedBlob = await getTrackBlobFromIndexedDB(st.id);
 
-              if (st.originType === 'library' && st.songId) {
-                fetchUrl = navidromeService.getStreamUrl(st.songId);
-              } else if (st.originType === 'preparo' && st.songId) {
-                fetchUrl = `${BACKEND_BASE_URL}/api/downloads/stream?id=${encodeURIComponent(st.songId)}`;
-              } else if (st.originType === 'upload' && st.audioUrl) {
-                fetchUrl = st.audioUrl;
-              }
+              if (cachedBlob) {
+                const buf = await cachedBlob.arrayBuffer();
+                audioBuffer = await audioContextRef.current!.decodeAudioData(buf);
+                audioUrl = URL.createObjectURL(cachedBlob);
+              } else {
+                // 2) Fallback: baixa novamente quando for faixa de biblioteca/preparo
+                let fetchUrl: string | null = null;
 
-              if (fetchUrl) {
-                const res = await fetch(fetchUrl);
-                if (res.ok) {
-                  const arrayBuffer = await res.arrayBuffer();
-                  audioBuffer = await audioContextRef.current!.decodeAudioData(arrayBuffer);
-                  if (!audioUrl && (st.originType === 'upload')) {
-                    const blob = new Blob([arrayBuffer]);
+                if (st.originType === 'library' && st.songId) {
+                  fetchUrl = navidromeService.getStreamUrl(st.songId);
+                } else if (st.originType === 'preparo' && st.songId) {
+                  fetchUrl = `${BACKEND_BASE_URL}/api/downloads/stream?id=${encodeURIComponent(st.songId)}`;
+                }
+
+                if (fetchUrl) {
+                  const res = await fetch(fetchUrl);
+                  if (res.ok) {
+                    const blob = await res.blob();
+                    const buf = await blob.arrayBuffer();
+                    audioBuffer = await audioContextRef.current!.decodeAudioData(buf);
                     audioUrl = URL.createObjectURL(blob);
+                    // Armazena no cache para os próximos usos
+                    saveTrackBlobToIndexedDB(st.id, blob);
+                  } else {
+                    console.warn('Falha ao restaurar faixa do editor (download):', st.name);
                   }
-                } else {
-                  console.warn('Falha ao restaurar faixa do editor:', st.name);
+                } else if (st.originType === 'upload') {
+                  console.warn('Faixa de upload não pôde ser restaurada sem novo envio do arquivo:', st.name);
                 }
               }
             } catch (e) {
@@ -426,6 +548,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem('audioEditor_state');
       }
+      // Limpa também o cache de blobs no IndexedDB
+      clearAllTrackBlobsFromIndexedDB();
     } catch (e) {
       console.error('Erro ao limpar estado do AudioEditor', e);
     }
