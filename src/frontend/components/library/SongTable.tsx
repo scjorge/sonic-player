@@ -4,6 +4,7 @@ import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon,
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
+import { getAudioEditorState as apiGetAudioEditorState, saveAudioEditorState as apiSaveAudioEditorState } from '../../repository/audioEditor';
 import { sanitizeQuery } from '../../../commons/tools';
 import { BACKEND_BASE_URL } from '../../../core/config';
 import { getStoredGenres } from '../../repository/metadata';
@@ -285,6 +286,58 @@ const SongTable: React.FC<SongTableProps> = ({
     offsetY: 0,
     isPanning: false,
   });
+
+
+  const handleAddToEditor = async (song: NaviSong) => {
+    try {
+      const currentState = await apiGetAudioEditorState();
+
+      const baseState = currentState && Array.isArray(currentState.tracks)
+        ? currentState
+        : {
+            tracks: [] as any[],
+            zoom: 100,
+            currentTime: 0,
+            selectedTrackId: null as string | null,
+            globalSelection: null as { start: number; end: number; trackId: string } | null,
+          };
+
+      const originType: 'preparo' | 'library' = isNaviTableDownload ? 'preparo' : 'library';
+      const contentType = (song as any).contentType || (isNaviTableDownload ? 'audio/preparation' : 'audio/library');
+
+      const newTrackId = `ext-track-${Date.now()}-${Math.random()}`;
+
+      const newTrack = {
+        id: newTrackId,
+        name: song.title || 'Sem título',
+        audioUrl: '',
+        volume: 1,
+        muted: false,
+        startOffset: 0,
+        duration: 5,
+        originalDuration: 5,
+        regions: [] as any[],
+        originType,
+        songId: song.id,
+        contentType,
+      };
+
+      const updatedState = {
+        ...baseState,
+        tracks: [...baseState.tracks, newTrack],
+        selectedTrackId: newTrackId,
+        currentTime: 0,
+        globalSelection: null,
+      };
+
+      await apiSaveAudioEditorState(updatedState as any);
+
+      showToast('Faixa adicionada ao editor de áudio', 'success');
+    } catch (e: any) {
+      console.error('Erro ao adicionar faixa ao editor', e);
+      showToast(`Erro ao adicionar ao editor: ${e?.message || String(e)}`, 'error');
+    }
+  };
 
 
   // Context Menu State
@@ -1548,6 +1601,23 @@ const SongTable: React.FC<SongTableProps> = ({
                 className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
               >
                 <Info className="w-4 h-4" /> Informações
+              </button>
+            </>
+          )}
+
+          {/* Adicionar faixa diretamente ao editor de áudio (biblioteca ou preparo) */}
+          {contextMenu.song && (
+            <>
+              <div className="border-t border-zinc-800 my-1"></div>
+              <button
+                onClick={async () => {
+                  const song = contextMenu.song!;
+                  setContextMenu(prev => ({ ...prev, visible: false }));
+                  await handleAddToEditor(song);
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-indigo-300 hover:bg-indigo-800/40 hover:text-white flex items-center gap-2"
+              >
+                <Tags className="w-4 h-4" /> Adicionar para editar
               </button>
             </>
           )}
