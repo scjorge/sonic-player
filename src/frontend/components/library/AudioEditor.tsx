@@ -27,6 +27,9 @@ interface AudioTrack {
   originType: TrackOriginType;
   songId?: string;
   contentType?: string;
+  // Metadados de trim em relação ao áudio original (para saber de onde veio o subtrecho)
+  trimStart?: number; // segundos a partir do início do arquivo original
+  trimEnd?: number;   // segundos a partir do início do arquivo original
 }
 
 interface AudioRegion {
@@ -61,6 +64,8 @@ interface SerializedTrack {
   originType: TrackOriginType;
   songId?: string;
   contentType?: string;
+  trimStart?: number;
+  trimEnd?: number;
 }
 
 interface AudioEditorPersistedState {
@@ -194,6 +199,10 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     audioData: AudioBuffer;
     duration: number;
     trackId: string;
+    track: any;
+    // Limites do trecho copiado em relação ao áudio original da faixa de origem
+    trimStart?: number;
+    trimEnd?: number;
   } | null>(null);
   const [selectionStart, setSelectionStart] = useState<{ trackId: string; time: number } | null>(null);
   
@@ -364,6 +373,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         originType,
         songId,
         contentType,
+        trimStart: 0,
+        trimEnd: audioBuffer.duration,
       };
       
   pushHistory();
@@ -393,6 +404,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       originalDuration: defaultDuration,
       regions: [],
       originType: 'blank',
+      trimStart: 0,
+      trimEnd: defaultDuration,
     };
     
   pushHistory();
@@ -516,10 +529,40 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                   console.warn('Faixa de upload não pôde ser restaurada sem novo envio do arquivo:', st.name);
                 }
               }
+
+              // Se houver trimStart/trimEnd, recortamos o buffer restaurado
+              if (audioBuffer && typeof st.trimStart === 'number' && typeof st.trimEnd === 'number') {
+                const sampleRate = audioBuffer.sampleRate;
+                const channels = audioBuffer.numberOfChannels;
+
+                const totalDuration = audioBuffer.length / sampleRate;
+                const trimStartSec = Math.max(0, Math.min(st.trimStart, totalDuration));
+                const trimEndSec = Math.max(trimStartSec, Math.min(st.trimEnd, totalDuration));
+
+                const startSample = Math.floor(trimStartSec * sampleRate);
+                const endSample = Math.floor(trimEndSec * sampleRate);
+                const length = endSample - startSample;
+
+                if (length > 0 && endSample <= audioBuffer.length) {
+                  const trimmedBuffer = audioContextRef.current!.createBuffer(channels, length, sampleRate);
+
+                  for (let ch = 0; ch < channels; ch++) {
+                    const src = audioBuffer.getChannelData(ch);
+                    const dst = trimmedBuffer.getChannelData(ch);
+                    dst.set(src.subarray(startSample, endSample));
+                  }
+
+                  audioBuffer = trimmedBuffer;
+                }
+              }
             } catch (e) {
               console.error('Erro ao restaurar faixa do editor', e);
             }
           }
+
+          const effectiveDuration = audioBuffer
+            ? audioBuffer.length / (audioBuffer.sampleRate || 44100)
+            : st.duration;
 
           restoredTracks.push({
             id: st.id,
@@ -530,12 +573,14 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             volume: st.volume,
             muted: st.muted,
             startOffset: st.startOffset,
-            duration: st.duration,
-            originalDuration: st.originalDuration,
+            duration: effectiveDuration,
+            originalDuration: effectiveDuration,
             regions: st.regions || [],
             originType: st.originType,
             songId: st.songId,
             contentType: st.contentType,
+            trimStart: st.trimStart,
+            trimEnd: st.trimEnd,
           });
         }
 
@@ -571,6 +616,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           originType: t.originType,
           songId: t.songId,
           contentType: t.contentType,
+          trimStart: t.trimStart,
+          trimEnd: t.trimEnd,
         }));
 
         const payload: AudioEditorPersistedState = {
@@ -903,6 +950,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           audioBuffer: beforeBuffer,
           duration: beforeLength / sampleRate,
           originalDuration: beforeLength / sampleRate,
+          // Mantém trim relativo ao original (início continua igual, fim ajusta)
+          trimStart: track.trimStart ?? 0,
+          trimEnd: (track.trimStart ?? 0) + beforeLength / sampleRate,
         });
       }
 
@@ -922,6 +972,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           duration: afterLength / sampleRate,
           originalDuration: afterLength / sampleRate,
           startOffset: track.startOffset + relativeEnd,
+          // Trim do fim começa onde o corte começou em relação ao original
+          trimStart: (track.trimStart ?? 0) + relativeEnd,
+          trimEnd: track.trimEnd ?? track.originalDuration,
         });
       }
 
@@ -1074,11 +1127,14 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
     const sampleRate = track.audioBuffer.sampleRate;
     const channels = track.audioBuffer.numberOfChannels;
-    
-    // Convert global times to track-relative times
+
+    // duração real do buffer carregado
+    const bufferDuration = track.audioBuffer.length / sampleRate;
+
+    // tempos relativos à faixa, limitados ao que de fato existe no buffer
     const trackRelativeStart = Math.max(0, startTime - track.startOffset);
-    const trackRelativeEnd = Math.min(track.originalDuration, endTime - track.startOffset);
-    
+    const trackRelativeEnd = Math.min(bufferDuration, endTime - track.startOffset);
+
     if (trackRelativeStart >= trackRelativeEnd) return null;
 
     const startSample = Math.floor(trackRelativeStart * sampleRate);
@@ -1090,7 +1146,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     }
 
     const segmentBuffer = audioContextRef.current.createBuffer(channels, segmentLength, sampleRate);
-    
+
     for (let ch = 0; ch < channels; ch++) {
       const channelData = track.audioBuffer.getChannelData(ch);
       const segmentData = channelData.slice(startSample, endSample);
@@ -1118,10 +1174,17 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       return;
     }
 
+    // Calcula os trims originais: parte da faixa que está sendo copiada
+    const baseTrimStart = track.trimStart ?? 0;
+    const selectionRelativeStart = Math.max(0, globalSelection.start - track.startOffset);
+    const selectionRelativeEnd = Math.max(selectionRelativeStart, globalSelection.end - track.startOffset);
     setClipboard({
       audioData,
       duration: globalSelection.end - globalSelection.start,
       trackId: globalSelection.trackId,
+      track: track,
+      trimStart: baseTrimStart + selectionRelativeStart,
+      trimEnd: baseTrimStart + selectionRelativeEnd,
     });
 
     showToast('Trecho copiado para a área de transferência', 'success');
@@ -1164,7 +1227,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         showToast(`Espaço insuficiente. Precisa de ${formatTime(clipboard.duration)}, mas há apenas ${formatTime(remainingSpace)}`, 'error');
         return;
       }
-
+      console.log(clipboard)
       const updatedTrack: AudioTrack = {
         ...targetTrack,
         name: `${targetTrack.name} - Com Áudio`,
@@ -1174,7 +1237,11 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         originalDuration: clipboard.duration,
         // Deixa de ser uma faixa "em branco" para não ser recriada vazia na restauração
         // e passa a ser tratada como faixa com áudio gerado localmente
-        originType: 'upload',
+        trimStart: clipboard.trimStart ?? 0,
+        trimEnd: clipboard.trimEnd ?? clipboard.duration,
+        originType: clipboard.track.originType,
+        contentType: clipboard.track.contentType,
+        songId: clipboard.track.songId,
       };
       
   pushHistory();
@@ -1255,6 +1322,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         audioBuffer: newBuffer,
         duration: Math.max(targetTrack.duration, newDuration),
         originalDuration: newDuration,
+        // Ao mixar, mantemos o trim original da faixa base (não substitui)
       };
       
   pushHistory();
@@ -1306,8 +1374,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       setExportLoading(false);
     }
   };
-
-  console.log('AudioEditor renderizando, tracks:', tracks.length);
 
   return (
     <div className="w-full h-full flex flex-col bg-zinc-950 relative">
