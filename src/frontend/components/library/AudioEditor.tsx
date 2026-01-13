@@ -1609,6 +1609,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                   onDurationChange={(duration) => {
                     setTracks(prev => prev.map(t => t.id === track.id ? { ...t, duration } : t));
                   }}
+                  onNameChange={(name) => {
+                    setTracks(prev => prev.map(t => t.id === track.id ? { ...t, name } : t));
+                  }}
                   onSelectionChange={(start, end) => {
                     if (start !== null && end !== null) {
                       setGlobalSelection({ start, end, trackId: track.id });
@@ -1707,6 +1710,7 @@ interface TrackRowProps {
   onSoloToggle: () => void;
   onOffsetChange: (offset: number) => void;
   onDurationChange: (duration: number) => void;
+  onNameChange: (name: string) => void;
   onSelectionChange: (start: number | null, end: number | null) => void;
   onPaste: (trackId: string) => void;
   drawWaveform: (canvas: HTMLCanvasElement, buffer: AudioBuffer | null, width: number, originalDuration: number, totalDuration: number) => void;
@@ -1729,6 +1733,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
   onSoloToggle,
   onOffsetChange,
   onDurationChange,
+  onNameChange,
   onSelectionChange,
   onPaste,
   drawWaveform,
@@ -1739,11 +1744,14 @@ const TrackRow: React.FC<TrackRowProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(track.name);
   const dragStartClientX = useRef<number | null>(null);
   const dragStartOffset = useRef<number>(0);
   const resizeStartClientX = useRef<number | null>(null);
   const resizeStartDuration = useRef<number>(0);
   const selectionStartX = useRef<number | null>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -1822,6 +1830,42 @@ const TrackRow: React.FC<TrackRowProps> = ({
     selectionStartX.current = null;
   };
 
+  const handleNameDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditingName(true);
+    setEditedName(track.name);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedName(e.target.value);
+  };
+
+  const handleNameBlur = () => {
+    if (editedName.trim() !== '') {
+      onNameChange(editedName.trim());
+    } else {
+      setEditedName(track.name);
+    }
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    } else if (e.key === 'Escape') {
+      setEditedName(track.name);
+      setIsEditingName(false);
+    }
+  };
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (isEditingName && nameInputRef.current) {
+      nameInputRef.current.focus();
+      nameInputRef.current.select();
+    }
+  }, [isEditingName]);
+
 
 
   // Add global mouse move and up listeners when dragging, resizing or selecting
@@ -1885,7 +1929,26 @@ const TrackRow: React.FC<TrackRowProps> = ({
       {/* Controls */}
       <div className="w-48 flex-shrink-0 p-3 border-r border-zinc-800 flex flex-col gap-2 track-controls">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-zinc-300 truncate flex-1">{track.name}</span>
+          {isEditingName ? (
+            <input
+              ref={nameInputRef}
+              type="text"
+              value={editedName}
+              onChange={handleNameChange}
+              onBlur={handleNameBlur}
+              onKeyDown={handleNameKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs font-medium text-zinc-300 bg-zinc-800 border border-indigo-500 rounded px-1 py-0.5 flex-1 mr-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          ) : (
+            <span
+              className="text-xs font-medium text-zinc-300 truncate flex-1 cursor-text hover:text-white"
+              onDoubleClick={handleNameDoubleClick}
+              title="Clique duas vezes para editar"
+            >
+              {track.name}
+            </span>
+          )}
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             className="p-1 hover:bg-zinc-800 rounded text-zinc-500 hover:text-red-400"
