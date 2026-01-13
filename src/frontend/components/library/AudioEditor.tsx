@@ -4,6 +4,7 @@ import { BACKEND_BASE_URL } from '../../../core/config';
 import showToast from '../utils/toast';
 import { Play, Pause, Download, Save, Upload, Scissors, Copy, Trash2, FolderOpen, Volume2, VolumeX, ZoomIn, ZoomOut, SkipBack, SkipForward, Plus, Layers, Music, Edit3, Link } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
+import { getAudioEditorState as apiGetAudioEditorState, saveAudioEditorState as apiSaveAudioEditorState } from '../../repository/audioEditor';
 
 type TrackOriginType = 'upload' | 'library' | 'preparo' | 'blank';
 
@@ -405,18 +406,15 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
   // Restaura estado salvo do editor (tracks, seleção, zoom etc.)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const saved = window.localStorage.getItem('audioEditor_state');
-    if (!saved) return;
-
-    try {
-      const parsed = JSON.parse(saved) as AudioEditorPersistedState;
-      if (!parsed || !Array.isArray(parsed.tracks)) return;
-
+    const restoreFromApi = async () => {
       setIsRestoringState(true);
+      try {
+        const parsed = await apiGetAudioEditorState();
+        if (!parsed || !Array.isArray(parsed.tracks)) {
+          setIsRestoringState(false);
+          return;
+        }
 
-      const restore = async () => {
         if (!audioContextRef.current) {
           audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         }
@@ -493,48 +491,50 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         setCurrentTime(parsed.currentTime || 0);
         setSelectedTrackId(parsed.selectedTrackId || null);
         setGlobalSelection(parsed.globalSelection || null);
+      } catch (e) {
+        console.error('Erro ao restaurar estado do AudioEditor via API', e);
+      } finally {
         setIsRestoringState(false);
-      };
+      }
+    };
 
-      restore();
-    } catch (e) {
-      console.error('Erro ao restaurar estado do AudioEditor', e);
-      setIsRestoringState(false);
-    }
+    restoreFromApi();
   }, []);
 
   // Salva automaticamente o estado do editor no localStorage
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    const persist = async () => {
+      try {
+        const serializableTracks: SerializedTrack[] = tracks.map((t) => ({
+          id: t.id,
+          name: t.name,
+          audioUrl: t.audioUrl,
+          volume: t.volume,
+          muted: t.muted,
+          startOffset: t.startOffset,
+          duration: t.duration,
+          originalDuration: t.originalDuration,
+          regions: t.regions,
+          originType: t.originType,
+          songId: t.songId,
+          contentType: t.contentType,
+        }));
 
-    try {
-      const serializableTracks: SerializedTrack[] = tracks.map((t) => ({
-        id: t.id,
-        name: t.name,
-        audioUrl: t.audioUrl,
-        volume: t.volume,
-        muted: t.muted,
-        startOffset: t.startOffset,
-        duration: t.duration,
-        originalDuration: t.originalDuration,
-        regions: t.regions,
-        originType: t.originType,
-        songId: t.songId,
-        contentType: t.contentType,
-      }));
+        const payload: AudioEditorPersistedState = {
+          tracks: serializableTracks,
+          zoom,
+          currentTime,
+          selectedTrackId,
+          globalSelection,
+        };
 
-      const payload: AudioEditorPersistedState = {
-        tracks: serializableTracks,
-        zoom,
-        currentTime,
-        selectedTrackId,
-        globalSelection,
-      };
+        await apiSaveAudioEditorState(payload);
+      } catch (e) {
+        console.error('Erro ao salvar estado do AudioEditor via API', e);
+      }
+    };
 
-      window.localStorage.setItem('audioEditor_state', JSON.stringify(payload));
-    } catch (e) {
-      console.error('Erro ao salvar estado do AudioEditor', e);
-    }
+    persist();
   }, [tracks, zoom, currentTime, selectedTrackId, globalSelection]);
 
   const clearEditorState = () => {
@@ -550,9 +550,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         }
       });
 
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem('audioEditor_state');
-      }
       // Limpa também o cache de blobs no IndexedDB
       clearAllTrackBlobsFromIndexedDB();
     } catch (e) {

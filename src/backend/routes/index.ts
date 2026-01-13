@@ -7,6 +7,7 @@ import genresRouter from './genres';
 import shazamRouter from './shazam';
 import youtubeSettingsRouter from './youtubeSettings';
 import generalSettingsRouter from './generalSettings';
+import audioEditorStateRouter from './audioEditorState';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ router.use('/genres', genresRouter);
 router.use('/shazam', shazamRouter);
 router.use('/youtube-settings', youtubeSettingsRouter);
 router.use('/general-settings', generalSettingsRouter);
+router.use('/audio-editor-state', audioEditorStateRouter);
 
 export default router;
 
