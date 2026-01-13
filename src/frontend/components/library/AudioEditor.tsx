@@ -1562,7 +1562,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
               </div>
               {/* Playhead */}
               <div
-                className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none"
+                className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none"
                 style={{ left: `${controlsWidth + currentTime * zoom}px` }}
               />
               {/* Selection overlay */}
@@ -1623,7 +1623,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
               ))}
               {/* Playhead line through all tracks */}
               <div
-                className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-10"
+                className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-10"
                 style={{ left: `${controlsWidth + currentTime * zoom}px` }}
               />
               {/* Selection overlay through all tracks */}
