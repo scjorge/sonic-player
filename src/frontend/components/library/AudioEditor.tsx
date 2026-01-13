@@ -193,7 +193,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const [controlsWidth, setControlsWidth] = useState<number>(192); // fallback for w-48 (12rem)
   const [isRestoringState, setIsRestoringState] = useState(false);
   const [history, setHistory] = useState<EditorSnapshot[]>([]);
-  
+
   // Selection and clipboard states
   const [clipboard, setClipboard] = useState<{
     audioData: AudioBuffer;
@@ -205,7 +205,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     trimEnd?: number;
   } | null>(null);
   const [selectionStart, setSelectionStart] = useState<{ trackId: string; time: number } | null>(null);
-  
+
   // Import/Export states
   const [showImportModal, setShowImportModal] = useState(false);
   const [importSource, setImportSource] = useState<'library' | 'preparo'>('library');
@@ -307,7 +307,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     // Add both scroll and input events to catch all scrollbar interactions
     tracks.addEventListener('scroll', onTracksScroll, { passive: true });
     tracks.addEventListener('input', onTracksScroll, { passive: true });
-    
+
     // Force initial sync
     onTracksScroll();
 
@@ -355,13 +355,13 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       const trackId = `track-${Date.now()}-${Math.random()}`;
       const url = URL.createObjectURL(file);
       const arrayBuffer = await file.arrayBuffer();
-      
+
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
-      
+
       const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
-      
+
       const newTrack: AudioTrack = {
         id: trackId,
         name: file.name,
@@ -380,9 +380,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         trimStart: 0,
         trimEnd: audioBuffer.duration,
       };
-      
-  pushHistory();
-  setTracks(prev => [...prev, newTrack]);
+
+      pushHistory();
+      setTracks(prev => [...prev, newTrack]);
       setSelectedTrackId(newTrack.id);
       // Salva o blob original no IndexedDB para evitar novo download no futuro
       saveTrackBlobToIndexedDB(trackId, file);
@@ -394,7 +394,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
   const addBlankTrack = () => {
     const defaultDuration = 5; // 5 seconds default
-    
+
     const newTrack: AudioTrack = {
       id: `blank-track-${Date.now()}-${Math.random()}`,
       name: `Faixa em Branco ${tracks.length + 1}`,
@@ -411,9 +411,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       trimStart: 0,
       trimEnd: defaultDuration,
     };
-    
-  pushHistory();
-  setTracks(prev => [...prev, newTrack]);
+
+    pushHistory();
+    setTracks(prev => [...prev, newTrack]);
     setSelectedTrackId(newTrack.id);
     showToast(`Faixa em branco adicionada (${defaultDuration}s)`, 'success');
   };
@@ -440,15 +440,15 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           path: it.path,
           contentType: it.contentType,
         }));
-        
+
         // Filtra por query se houver
         const filtered = searchQuery
-          ? songs.filter(s => 
-              s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              s.artist?.toLowerCase().includes(searchQuery.toLowerCase())
-            )
+          ? songs.filter(s =>
+            s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            s.artist?.toLowerCase().includes(searchQuery.toLowerCase())
+          )
           : songs;
-        
+
         setImportSongs(filtered);
       }
     } catch (error: any) {
@@ -469,7 +469,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   // Debounce para busca
   useEffect(() => {
     if (!showImportModal) return;
-    
+
     const timeoutId = setTimeout(() => {
       handleImportFromSource(importSearchQuery);
     }, 300);
@@ -480,7 +480,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const handleImportSong = async (song: NaviSong) => {
     try {
       let audioUrl: string;
-      
+
       if (song.contentType === 'audio/preparation') {
         audioUrl = `${BACKEND_BASE_URL}/api/downloads/stream?id=${encodeURIComponent(song.id)}`;
       } else {
@@ -494,7 +494,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
       const blob = await response.blob();
       const file = new File([blob], `${song.title || 'audio'}.mp3`, { type: blob.type });
-      
+
       const originType: TrackOriginType = song.contentType === 'audio/preparation' ? 'preparo' : 'library';
       await addTrackFromFile(file, originType, song.id, song.contentType);
       showToast(`"${song.title}" importado com sucesso`, 'success');
@@ -693,8 +693,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       togglePlayPause();
     }
 
-  pushHistory();
-  setTracks([]);
+    pushHistory();
+    setTracks([]);
     setSelectedTrackId(null);
     setCurrentTime(0);
     setGlobalSelection(null);
@@ -706,7 +706,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
   const togglePlayPause = async () => {
     if (!audioContextRef.current) return;
-    
+
     if (isPlaying) {
       // Stop playback
       sourceNodesRef.current.forEach(node => {
@@ -727,10 +727,10 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       if (audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume();
       }
-      
+
       const startTime = audioContextRef.current.currentTime;
       const offsetTime = currentTime;
-      
+
       const isSoloActive = soloTrackId !== null;
 
       // Schedule all tracks (respeitando solo se ativo)
@@ -742,12 +742,12 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         if (shouldPlay) {
           const source = audioContextRef.current!.createBufferSource();
           source.buffer = track.audioBuffer;
-          
+
           const gainNode = audioContextRef.current!.createGain();
           gainNode.gain.value = track.volume;
           source.connect(gainNode);
           gainNode.connect(audioContextRef.current!.destination);
-          
+
           // Calculate when this track should start
           const trackStart = track.startOffset;
           if (offsetTime < trackStart + track.duration) {
@@ -755,17 +755,17 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             const offset = Math.max(0, offsetTime - trackStart);
             source.start(startTime + delay, offset);
           }
-          
+
           sourceNodesRef.current.set(track.id, source);
         }
       });
-      
+
       // Update playback position
       const playbackStartTime = Date.now();
       playbackIntervalRef.current = setInterval(() => {
         const elapsed = (Date.now() - playbackStartTime) / 1000;
         const newTime = offsetTime + elapsed;
-        
+
         if (newTime >= maxDuration) {
           togglePlayPause();
           setCurrentTime(0);
@@ -775,7 +775,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           try { ensurePlayheadVisibleAt(newTime); } catch (e) { /* ignore */ }
         }
       }, 50);
-      
+
       setIsPlaying(true);
     }
   };
@@ -791,10 +791,10 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     const time = (absoluteX - controlsWidth) / zoom;
 
     const targetTime = Math.max(0, Math.min(maxDuration, time));
-  pushHistory({ currentTime: targetTime });
-  setCurrentTime(targetTime);
+    pushHistory({ currentTime: targetTime });
+    setCurrentTime(targetTime);
     ensurePlayheadVisibleAt(targetTime);
-    
+
     if (isPlaying) {
       togglePlayPause();
     }
@@ -851,12 +851,12 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     if (canvas.width !== w) canvas.width = w;
 
     ctx.clearRect(0, 0, w, h);
-    
+
     if (!audioBuffer) {
       // Draw blank track background
       ctx.fillStyle = '#09090b';
       ctx.fillRect(0, 0, w, h);
-      
+
       // Draw dotted line pattern for blank track
       ctx.strokeStyle = '#3f3f46';
       ctx.lineWidth = 1;
@@ -866,7 +866,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       ctx.lineTo(w, h / 2);
       ctx.stroke();
       ctx.setLineDash([]);
-      
+
       // Add text indicating it's a blank track
       ctx.fillStyle = '#71717a';
       ctx.font = '12px monospace';
@@ -896,7 +896,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     for (let i = 0; i < audioPortionWidth; i++) {
       let min = 1.0;
       let max = -1.0;
-      
+
       for (let j = 0; j < step; j++) {
         const idx = (i * step) + j;
         if (idx >= data.length) break;
@@ -904,21 +904,21 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         if (datum < min) min = datum;
         if (datum > max) max = datum;
       }
-      
+
       const y1 = (1 + min) * amp;
       const y2 = (1 + max) * amp;
-      
+
       ctx.moveTo(i, y1);
       ctx.lineTo(i, y2);
     }
-    
+
     ctx.stroke();
 
     // Draw blank space portion if there is extended duration
     if (blankSpaceWidth > 0) {
       ctx.fillStyle = '#0a0a0b';
       ctx.fillRect(audioPortionWidth, 0, blankSpaceWidth, h);
-      
+
       // Draw dotted line pattern for extended blank space
       ctx.strokeStyle = '#2d2d30';
       ctx.lineWidth = 1;
@@ -928,7 +928,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       ctx.lineTo(w, h / 2);
       ctx.stroke();
       ctx.setLineDash([]);
-      
+
       // Add separator line
       ctx.strokeStyle = '#404040';
       ctx.lineWidth = 2;
@@ -966,7 +966,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     // Create two new tracks: before cut and after cut
     const sampleRate = track.audioBuffer.sampleRate;
     const channels = track.audioBuffer.numberOfChannels;
-    
+
     const beforeLength = Math.floor(relativeStart * sampleRate);
     const afterStart = Math.ceil(relativeEnd * sampleRate);
     const afterLength = track.audioBuffer.length - afterStart;
@@ -1018,8 +1018,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       }
 
       // Replace old track with new tracks, preservando a ordem da lista
-  pushHistory();
-  setTracks(prev => {
+      pushHistory();
+      setTracks(prev => {
         const index = prev.findIndex(t => t.id === selectedTrackId);
         if (index === -1) {
           // fallback: se não achar a faixa, mantém comportamento antigo
@@ -1035,6 +1035,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
       setGlobalSelection(null);
       showToast('Faixa cortada com sucesso', 'success');
+      if (isPlaying) {
+        togglePlayPause();
+      }
     } catch (error: any) {
       showToast(`Erro ao cortar: ${error?.message || String(error)}`, 'error');
     }
@@ -1042,7 +1045,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
   const handleJoinTracks = () => {
     const selectedTracks = tracks.filter(t => t.id === selectedTrackId || globalSelection);
-    
+
     if (tracks.length < 2) {
       showToast('Selecione pelo menos 2 faixas para juntar', 'error');
       return;
@@ -1054,8 +1057,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const handleDeleteTrack = (trackId: string) => {
     const track = tracks.find(t => t.id === trackId);
 
-  pushHistory();
-  setTracks(prev => prev.filter(t => t.id !== trackId));
+    pushHistory();
+    setTracks(prev => prev.filter(t => t.id !== trackId));
     if (selectedTrackId === trackId) {
       setSelectedTrackId(null);
     }
@@ -1075,6 +1078,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     }
 
     showToast('Faixa removida', 'success');
+    if (isPlaying) {
+      togglePlayPause();
+    }
   };
 
   const renderMixToWav = async (): Promise<Blob> => {
@@ -1091,13 +1097,13 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       if (track.audioBuffer && !track.muted) {
         const source = offlineContext.createBufferSource();
         source.buffer = track.audioBuffer;
-        
+
         const gainNode = offlineContext.createGain();
         gainNode.gain.value = track.volume;
-        
+
         source.connect(gainNode);
         gainNode.connect(offlineContext.destination);
-        
+
         source.start(track.startOffset);
       }
     });
@@ -1111,9 +1117,11 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       showToast('Nenhuma faixa para exportar', 'error');
       return;
     }
-
+    if (isPlaying) {
+      togglePlayPause();
+    }
     setExportLoading(true);
-    
+
     try {
       const wavBlob = await renderMixToWav();
       const url = URL.createObjectURL(wavBlob);
@@ -1235,7 +1243,12 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       trimEnd: baseTrimStart + selectionRelativeEnd,
     });
 
+
+
     showToast('Trecho copiado para a área de transferência', 'success');
+    if (isPlaying) {
+      togglePlayPause();
+    }
   };
 
   const handlePasteToBlankTrack = async (targetTrackId: string) => {
@@ -1263,20 +1276,20 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
     // Use currentTime (playhead position) as paste position relative to track start
     const pastePosition = currentTime;
-    
+
     // Check if paste position is within the track bounds
     if (pastePosition < targetTrack.startOffset || pastePosition > targetTrack.startOffset + targetTrack.duration) {
       showToast('Posicione o playhead dentro da faixa selecionada', 'error');
       return;
     }
-    
+
     const relativePosition = pastePosition - targetTrack.startOffset;
 
-  // Se a faixa é em branco (garantido acima), simplesmente a transformamos em faixa com áudio uma única vez
-  if (targetTrack.audioBuffer === null) {
+    // Se a faixa é em branco (garantido acima), simplesmente a transformamos em faixa com áudio uma única vez
+    if (targetTrack.audioBuffer === null) {
       // Check if there's enough space in the blank track
       const remainingSpace = targetTrack.duration - relativePosition;
-      
+
       if (remainingSpace < clipboard.duration) {
         showToast(`Espaço insuficiente. Precisa de ${formatTime(clipboard.duration)}, mas há apenas ${formatTime(remainingSpace)}`, 'error');
         return;
@@ -1297,9 +1310,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         contentType: clipboard.track.contentType,
         songId: clipboard.track.songId,
       };
-      
-  pushHistory();
-  setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
+
+      pushHistory();
+      setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
       // Como este áudio é gerado localmente (a partir de cópia), também salvamos o blob
       // correspondente no IndexedDB para tentar restaurar em sessões futuras.
       try {
@@ -1323,6 +1336,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       }
       showToast(`Trecho colado na faixa em branco em ${formatTime(pastePosition)}`, 'success');
       return;
+    }
+    if (isPlaying) {
+      togglePlayPause();
     }
   };
 
@@ -1364,6 +1380,9 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       showToast(`Erro ao salvar: ${error?.message || String(error)}`, 'error');
     } finally {
       setExportLoading(false);
+    }
+    if (isPlaying) {
+      togglePlayPause();
     }
   };
 
@@ -1421,7 +1440,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             <FolderOpen className="w-4 h-4" />
             Importar do Preparo
           </button>
-          
+
           <div className="h-6 w-px bg-zinc-700 mx-2" />
 
           <button
@@ -1462,7 +1481,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             Cortar
           </button>
           <div className="h-6 w-px bg-zinc-700 mx-2" />
-          
+
           <button
             onClick={handleExportMix}
             disabled={tracks.length === 0 || exportLoading}
@@ -1532,7 +1551,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           >
             <SkipBack className="w-4 h-4" />
           </button>
-          
+
           <button
             onClick={togglePlayPause}
             disabled={tracks.length === 0}
@@ -1540,7 +1559,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           >
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
           </button>
-          
+
           <button
             onClick={() => setCurrentTime(Math.min(maxDuration, currentTime + 5))}
             className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
@@ -1596,90 +1615,90 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             {/* Timeline ruler */}
             <div className="h-8 border-b border-zinc-800 bg-zinc-900/30 overflow-x-hidden flex-shrink-0" ref={timelineRef}>
               <div ref={timelineInnerRef} className="relative h-full" style={{ width: `${controlsWidth + maxDuration * zoom}px`, minWidth: '100%' }} onClick={handleTimelineClick}>
-              <div className="absolute inset-0">
-                {Array.from({ length: Math.ceil(maxDuration / 10) + 1 }).map((_, i) => {
-                  const left = controlsWidth + i * 10 * zoom;
-                  return (
-                    <div key={i} className="absolute flex flex-col items-center" style={{ left: `${left}px`, transform: 'translateX(-50%)' }}>
-                      <div className="text-[10px] text-zinc-600">{formatTime(i * 10)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Playhead */}
-              <div
-                className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none"
-                style={{ left: `${controlsWidth + currentTime * zoom}px` }}
-              />
-              {/* Selection overlay */}
-              {globalSelection && (
+                <div className="absolute inset-0">
+                  {Array.from({ length: Math.ceil(maxDuration / 10) + 1 }).map((_, i) => {
+                    const left = controlsWidth + i * 10 * zoom;
+                    return (
+                      <div key={i} className="absolute flex flex-col items-center" style={{ left: `${left}px`, transform: 'translateX(-50%)' }}>
+                        <div className="text-[10px] text-zinc-600">{formatTime(i * 10)}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Playhead */}
                 <div
-                  className="absolute top-0 bottom-0 bg-indigo-500/20 border-l-2 border-r-2 border-indigo-500 pointer-events-none"
-                  style={{
-                    left: `${controlsWidth + globalSelection.start * zoom}px`,
-                    width: `${(globalSelection.end - globalSelection.start) * zoom}px`,
-                  }}
+                  className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none"
+                  style={{ left: `${controlsWidth + currentTime * zoom}px` }}
                 />
-              )}
+                {/* Selection overlay */}
+                {globalSelection && (
+                  <div
+                    className="absolute top-0 bottom-0 bg-indigo-500/20 border-l-2 border-r-2 border-indigo-500 pointer-events-none"
+                    style={{
+                      left: `${controlsWidth + globalSelection.start * zoom}px`,
+                      width: `${(globalSelection.end - globalSelection.start) * zoom}px`,
+                    }}
+                  />
+                )}
               </div>
             </div>
 
             {/* Tracks */}
             <div className="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar" ref={tracksScrollRef}>
               <div className="relative" style={{ width: `${controlsWidth + maxDuration * zoom}px`, minWidth: '100%' }}>
-              {tracks.map((track, index) => (
-                <TrackRow
-                  key={track.id}
-                  track={track}
-                  isSelected={selectedTrackId === track.id}
-                  isSolo={soloTrackId === track.id}
-                  maxDuration={maxDuration}
-                  globalSelection={globalSelection}
-                  isSelectingMode={true}
-                  controlsWidth={controlsWidth}
-                  clipboard={clipboard}
-                  onSelect={() => setSelectedTrackId(track.id)}
-                  onDelete={() => handleDeleteTrack(track.id)}
-                  onVolumeChange={(volume) => {
-                    setTracks(prev => prev.map(t => t.id === track.id ? { ...t, volume } : t));
-                  }}
-                  onMuteToggle={() => {
-                    setTracks(prev => prev.map(t => t.id === track.id ? { ...t, muted: !t.muted } : t));
-                  }}
-                  onSoloToggle={() => {
-                    setSoloTrackId(prev => (prev === track.id ? null : track.id));
-                  }}
-                  onOffsetChange={(startOffset) => {
-                    setTracks(prev => prev.map(t => t.id === track.id ? { ...t, startOffset } : t));
-                  }}
-                  onDurationChange={(duration) => {
-                    setTracks(prev => prev.map(t => t.id === track.id ? { ...t, duration } : t));
-                  }}
-                  onNameChange={(name) => {
-                    setTracks(prev => prev.map(t => t.id === track.id ? { ...t, name } : t));
-                  }}
-                  onSelectionChange={(start, end) => {
-                    if (start !== null && end !== null) {
-                      setGlobalSelection({ start, end, trackId: track.id });
-                    } else {
-                      setGlobalSelection(null);
-                    }
-                  }}
-                  onPaste={handlePasteToBlankTrack}
-                  drawWaveform={drawWaveform}
-                  zoom={zoom}
+                {tracks.map((track, index) => (
+                  <TrackRow
+                    key={track.id}
+                    track={track}
+                    isSelected={selectedTrackId === track.id}
+                    isSolo={soloTrackId === track.id}
+                    maxDuration={maxDuration}
+                    globalSelection={globalSelection}
+                    isSelectingMode={true}
+                    controlsWidth={controlsWidth}
+                    clipboard={clipboard}
+                    onSelect={() => setSelectedTrackId(track.id)}
+                    onDelete={() => handleDeleteTrack(track.id)}
+                    onVolumeChange={(volume) => {
+                      setTracks(prev => prev.map(t => t.id === track.id ? { ...t, volume } : t));
+                    }}
+                    onMuteToggle={() => {
+                      setTracks(prev => prev.map(t => t.id === track.id ? { ...t, muted: !t.muted } : t));
+                    }}
+                    onSoloToggle={() => {
+                      setSoloTrackId(prev => (prev === track.id ? null : track.id));
+                    }}
+                    onOffsetChange={(startOffset) => {
+                      setTracks(prev => prev.map(t => t.id === track.id ? { ...t, startOffset } : t));
+                    }}
+                    onDurationChange={(duration) => {
+                      setTracks(prev => prev.map(t => t.id === track.id ? { ...t, duration } : t));
+                    }}
+                    onNameChange={(name) => {
+                      setTracks(prev => prev.map(t => t.id === track.id ? { ...t, name } : t));
+                    }}
+                    onSelectionChange={(start, end) => {
+                      if (start !== null && end !== null) {
+                        setGlobalSelection({ start, end, trackId: track.id });
+                      } else {
+                        setGlobalSelection(null);
+                      }
+                    }}
+                    onPaste={handlePasteToBlankTrack}
+                    drawWaveform={drawWaveform}
+                    zoom={zoom}
+                  />
+                ))}
+                {/* Playhead line through all tracks */}
+                <div
+                  className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-10"
+                  style={{ left: `${controlsWidth + currentTime * zoom}px` }}
                 />
-              ))}
-              {/* Playhead line through all tracks */}
-              <div
-                className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-10"
-                style={{ left: `${controlsWidth + currentTime * zoom}px` }}
-              />
               </div>
             </div>
           </div>
         )}
-        
+
       </div>
 
       {/* Import Modal */}
@@ -1856,13 +1875,13 @@ const TrackRow: React.FC<TrackRowProps> = ({
 
   const handleWaveformMouseDown = (e: React.MouseEvent) => {
     if (!track.audioBuffer) return;
-    
+
     e.preventDefault();
     e.stopPropagation();
-    
+
     const rect = waveformRef.current?.getBoundingClientRect();
     if (!rect) return;
-    
+
     const x = e.clientX - rect.left;
     setIsSelecting(true);
     selectionStartX.current = x;
@@ -1871,16 +1890,16 @@ const TrackRow: React.FC<TrackRowProps> = ({
 
   const handleWaveformMouseMove = (e: React.MouseEvent) => {
     if (!isSelecting || selectionStartX.current === null) return;
-    
+
     const rect = waveformRef.current?.getBoundingClientRect();
     if (!rect) return;
-    
+
     const currentX = e.clientX - rect.left;
     const startX = selectionStartX.current;
-    
+
     const startTime = track.startOffset + (Math.min(startX, currentX) / zoom);
     const endTime = track.startOffset + (Math.max(startX, currentX) / zoom);
-    
+
     onSelectionChange(startTime, endTime);
   };
 
@@ -1939,27 +1958,27 @@ const TrackRow: React.FC<TrackRowProps> = ({
         newOffset = Math.max(0, newOffset);
         onOffsetChange(newOffset);
       }
-      
+
       if (isResizing && resizeStartClientX.current !== null) {
         const deltaPx = e.clientX - resizeStartClientX.current;
         const deltaSeconds = deltaPx / zoom;
         let newDuration = resizeStartDuration.current + deltaSeconds;
-        
+
         // Cannot reduce below original duration - capture from the track in closure
         const minDuration = track.originalDuration;
         newDuration = Math.max(minDuration, newDuration);
-        
+
         onDurationChange(newDuration);
       }
-      
+
       if (isSelecting && selectionStartX.current !== null && waveformRef.current) {
         const rect = waveformRef.current.getBoundingClientRect();
         const currentX = e.clientX - rect.left;
         const startX = selectionStartX.current;
-        
+
         const startTime = track.startOffset + (Math.min(startX, currentX) / zoom);
         const endTime = track.startOffset + (Math.max(startX, currentX) / zoom);
-        
+
         onSelectionChange(startTime, endTime);
       }
     };
@@ -2015,7 +2034,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
-        
+
         <div className="flex-1 items-center gap-0">
           <button
             onClick={(e) => { e.stopPropagation(); onMuteToggle(); }}
@@ -2041,7 +2060,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
             disabled={track.muted}
           />
         </div>
-        
+
         <div className="text-[10px] text-zinc-600">
           {formatTime(track.duration)}
         </div>
@@ -2064,15 +2083,14 @@ const TrackRow: React.FC<TrackRowProps> = ({
             ⋮⋮⋮ Arrastar
           </div>
         </div>
-        
+
         {/* Waveform container */}
         <div
           ref={waveformRef}
-          className={`absolute h-full ${
-            track.audioBuffer 
-              ? 'cursor-crosshair' 
-              : 'cursor-default'
-          }`}
+          className={`absolute h-full ${track.audioBuffer
+            ? 'cursor-crosshair'
+            : 'cursor-default'
+            }`}
           style={{
             left: `${track.startOffset * zoom}px`,
             width: `${track.duration * zoom}px`,
@@ -2092,7 +2110,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
             height={100}
             className="w-full h-full pointer-events-none"
           />
-          
+
           {/* Selection overlay for this track */}
           {globalSelection && globalSelection.trackId === track.id && (
             <div
@@ -2107,10 +2125,10 @@ const TrackRow: React.FC<TrackRowProps> = ({
               </div>
             </div>
           )}
-          
+
 
         </div>
-        
+
         {/* Resize handle at the end - for all tracks */}
         <div
           className="absolute top-0 bottom-0 w-2 bg-indigo-500/30 hover:bg-indigo-500/50 cursor-ew-resize z-20 flex items-center justify-center transition-colors"
