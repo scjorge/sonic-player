@@ -177,6 +177,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const [zoom, setZoom] = useState(100);
   const [globalSelection, setGlobalSelection] = useState<{ start: number; end: number; trackId: string } | null>(null);
   const [controlsWidth, setControlsWidth] = useState<number>(192); // fallback for w-48 (12rem)
+  const [isRestoringState, setIsRestoringState] = useState(false);
   
   // Selection and clipboard states
   const [clipboard, setClipboard] = useState<{
@@ -413,6 +414,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       const parsed = JSON.parse(saved) as AudioEditorPersistedState;
       if (!parsed || !Array.isArray(parsed.tracks)) return;
 
+      setIsRestoringState(true);
+
       const restore = async () => {
         if (!audioContextRef.current) {
           audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -490,11 +493,13 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         setCurrentTime(parsed.currentTime || 0);
         setSelectedTrackId(parsed.selectedTrackId || null);
         setGlobalSelection(parsed.globalSelection || null);
+        setIsRestoringState(false);
       };
 
       restore();
     } catch (e) {
       console.error('Erro ao restaurar estado do AudioEditor', e);
+      setIsRestoringState(false);
     }
   }, []);
 
@@ -1188,6 +1193,17 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
 
   return (
     <div className="w-full h-full flex flex-col bg-zinc-950 relative">
+      {isRestoringState && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <div className="text-sm text-zinc-100 font-medium">Carregando sua edição salva...</div>
+            <div className="text-xs text-zinc-400 max-w-xs text-center">
+              Restaurando faixas e configurações da última sessão.
+            </div>
+          </div>
+        </div>
+      )}
       {/* Toolbar */}
       <div className="border-b border-zinc-800 bg-zinc-900/50 p-2 space-y-4 flex-shrink-0">
         <div className="flex items-center gap-2 flex-wrap">
