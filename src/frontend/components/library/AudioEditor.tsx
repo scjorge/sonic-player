@@ -1450,6 +1450,22 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             <Save className="w-4 h-4" />
             {exportLoading ? 'Salvando...' : 'Salvar no Preparo'}
           </button>
+
+          <div className="h-6 w-px bg-zinc-700 mx-2" />
+
+          <button
+            onClick={() => {
+              if (tracks.length === 0) return;
+              if (window.confirm('Tem certeza que deseja excluir todas as faixas? Esta ação não pode ser desfeita.')) {
+                clearEditorState();
+              }
+            }}
+            disabled={tracks.length === 0}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-red-600 text-red-300 hover:bg-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Trash2 className="w-4 h-4" />
+            Resetar Tudo
+          </button>
         </div>
 
         {/* Track count info */}
