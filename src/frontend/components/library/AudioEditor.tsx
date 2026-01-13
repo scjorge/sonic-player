@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NaviSong } from '../../../../types';
 import { BACKEND_BASE_URL } from '../../../core/config';
 import showToast from '../utils/toast';
-import { Play, Pause, Download, Save, Upload, Scissors, Copy, Trash2, FolderOpen, Volume2, VolumeX, ZoomIn, ZoomOut, SkipBack, SkipForward, Plus, Layers, Music, Edit3, Link } from 'lucide-react';
+import { Play, Pause, Download, Save, Upload, Scissors, Copy, Trash2, FolderOpen, Volume2, VolumeX, ZoomIn, ZoomOut, SkipBack, SkipForward, Plus, Layers, Music, Edit3, Link, Search } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { getAudioEditorState as apiGetAudioEditorState, saveAudioEditorState as apiSaveAudioEditorState } from '../../repository/audioEditor';
 
@@ -212,6 +212,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   const [importSongs, setImportSongs] = useState<NaviSong[]>([]);
   const [loadingImport, setLoadingImport] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [importSearchQuery, setImportSearchQuery] = useState('');
 
   // Faixa em "solo" (escutar apenas essa faixa)
   const [soloTrackId, setSoloTrackId] = useState<string | null>(null);
@@ -417,11 +418,12 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     showToast(`Faixa em branco adicionada (${defaultDuration}s)`, 'success');
   };
 
-  const handleImportFromSource = async () => {
+  const handleImportFromSource = async (searchQuery: string = '') => {
     setLoadingImport(true);
     try {
       if (importSource === 'library') {
-        const response = await navidromeService.getSongsByFilter('', '', '', 0, 50);
+        // Usa a busca específica se houver query, senão lista todas
+        const response = searchQuery ? await navidromeService.searchSongs(searchQuery, 100, 0) : { songs: [], total: 0 };
         setImportSongs(response.songs || []);
       } else {
         const res = await fetch(`${BACKEND_BASE_URL}/api/downloads/completed`);
@@ -438,7 +440,16 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           path: it.path,
           contentType: it.contentType,
         }));
-        setImportSongs(songs);
+        
+        // Filtra por query se houver
+        const filtered = searchQuery
+          ? songs.filter(s => 
+              s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              s.artist?.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+          : songs;
+        
+        setImportSongs(filtered);
       }
     } catch (error: any) {
       showToast(`Erro ao buscar músicas: ${error?.message || String(error)}`, 'error');
@@ -446,6 +457,25 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       setLoadingImport(false);
     }
   };
+
+  // Busca inicial quando o modal abre
+  useEffect(() => {
+    if (showImportModal) {
+      setImportSearchQuery('');
+      handleImportFromSource('');
+    }
+  }, [showImportModal, importSource]);
+
+  // Debounce para busca
+  useEffect(() => {
+    if (!showImportModal) return;
+    
+    const timeoutId = setTimeout(() => {
+      handleImportFromSource(importSearchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [importSearchQuery]);
 
   const handleImportSong = async (song: NaviSong) => {
     try {
@@ -1464,7 +1494,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-red-600 text-red-300 hover:bg-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-4 h-4" />
-            Resetar Tudo
+            Resetar
           </button>
         </div>
 
@@ -1671,19 +1701,32 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
               </button>
             </div>
 
-            <div className="p-4 flex-1 overflow-y-auto">
-              {importSongs.length === 0 ? (
+            {/* Search Bar */}
+            <div className="px-4 pt-4 pb-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="Buscar por título ou artista..."
+                  value={importSearchQuery}
+                  onChange={(e) => setImportSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div className="px-4 pb-4 flex-1 overflow-y-auto">
+              {loadingImport ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-zinc-500 text-sm">Carregando músicas...</p>
+                </div>
+              ) : importSongs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <Music className="w-12 h-12 text-zinc-700" />
                   <p className="text-zinc-500 text-sm">
-                    Clique em "Carregar" para buscar músicas
+                    {importSearchQuery ? 'Nenhuma música encontrada' : 'Nenhuma música disponível'}
                   </p>
-                  <button
-                    onClick={handleImportFromSource}
-                    disabled={loadingImport}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg disabled:opacity-50"
-                  >
-                    {loadingImport ? 'Carregando...' : 'Carregar'}
-                  </button>
                 </div>
               ) : (
                 <div className="space-y-2">
