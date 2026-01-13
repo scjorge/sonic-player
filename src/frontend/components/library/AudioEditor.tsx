@@ -883,7 +883,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
   return (
     <div className="w-full h-full flex flex-col bg-zinc-950 relative">
       {/* Toolbar */}
-      <div className="border-b border-zinc-800 bg-zinc-900/50 p-4 space-y-4 flex-shrink-0">
+      <div className="border-b border-zinc-800 bg-zinc-900/50 p-2 space-y-4 flex-shrink-0">
         <div className="flex items-center gap-2 flex-wrap">
           <input
             ref={fileInputRef}
@@ -1003,50 +1003,50 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         </div>
 
         {/* Playback Controls */}
-        <div className="border-t border-zinc-700 pt-3 flex items-center justify-start gap-4">
+        <div className="border-t border-zinc-700 pt-2 flex items-center justify-start gap-2">
           <button
             onClick={() => setCurrentTime(Math.max(0, currentTime - 5))}
-            className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
+            className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
           >
-            <SkipBack className="w-5 h-5" />
+            <SkipBack className="w-4 h-4" />
           </button>
           
           <button
             onClick={togglePlayPause}
             disabled={tracks.length === 0}
-            className="p-3 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
+            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
           </button>
           
           <button
             onClick={() => setCurrentTime(Math.min(maxDuration, currentTime + 5))}
-            className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
+            className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
           >
-            <SkipForward className="w-5 h-5" />
+            <SkipForward className="w-4 h-4" />
           </button>
 
-          <div className="flex items-center gap-2 ml-4">
-            <span className="text-xs text-zinc-500 font-mono w-24">
+          <div className="flex items-center gap-1.5 ml-3">
+            <span className="text-xs text-zinc-500 font-mono w-20">
               {formatTime(currentTime)} / {formatTime(maxDuration)}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-1.5 ml-3">
             <button
               onClick={handleZoomOut}
-              className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
+              className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
               disabled={zoom <= 20}
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="text-xs text-zinc-500 w-24 text-center">{zoom.toFixed(0)} px/s</span>
+            <span className="text-xs text-zinc-500 w-16 text-center">{zoom.toFixed(0)} px/s</span>
             <button
               onClick={handleZoomIn}
-              className="p-2 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
+              className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white"
               disabled={zoom >= 2000}
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
