@@ -1626,16 +1626,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                 className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none z-10"
                 style={{ left: `${controlsWidth + currentTime * zoom}px` }}
               />
-              {/* Selection overlay through all tracks */}
-              {globalSelection && (
-                <div
-                  className="absolute top-0 bottom-0 bg-indigo-500/20 border-l-2 border-r-2 border-indigo-500 pointer-events-none z-10"
-                  style={{
-                    left: `${controlsWidth + globalSelection.start * zoom}px`,
-                    width: `${(globalSelection.end - globalSelection.start) * zoom}px`,
-                  }}
-                />
-              )}
               </div>
             </div>
           </div>
