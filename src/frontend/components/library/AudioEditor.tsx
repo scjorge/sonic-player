@@ -1242,14 +1242,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-indigo-500 text-indigo-300 hover:bg-indigo-500/20"
           >
             <Upload className="w-4 h-4" />
-            Adicionar Faixas
-          </button>
-          <button
-            onClick={addBlankTrack}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-zinc-600 text-zinc-400 hover:text-white hover:bg-zinc-800"
-          >
-            <Plus className="w-4 h-4" />
-            Adicionar Faixa em Branco
+            Upload
           </button>
           <button
             onClick={() => {
@@ -1273,7 +1266,14 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           </button>
           
           <div className="h-6 w-px bg-zinc-700 mx-2" />
-          
+
+          <button
+            onClick={addBlankTrack}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-zinc-600 text-zinc-400 hover:text-white hover:bg-zinc-800"
+          >
+            <Plus className="w-4 h-4" />
+            Faixa em Branco
+          </button>
           <button
             onClick={handleCopySelection}
             disabled={!globalSelection}
@@ -1282,7 +1282,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
             <Copy className="w-4 h-4" />
             Copiar
           </button>
-          
           <button
             onClick={() => {
               if (selectedTrackId) {
