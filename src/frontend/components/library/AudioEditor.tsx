@@ -2003,7 +2003,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
             <span
               className="text-xs font-medium text-zinc-300 truncate flex-1 cursor-text hover:text-white"
               onDoubleClick={handleNameDoubleClick}
-              title="Clique duas vezes para editar"
+              title={track.name}
             >
               {track.name}
             </span>
