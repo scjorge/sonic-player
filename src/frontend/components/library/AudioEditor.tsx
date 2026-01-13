@@ -1207,6 +1207,12 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       return;
     }
 
+    // Só permite colar em faixa em branco que ainda não recebeu áudio
+    if (targetTrack.originType !== 'blank' || targetTrack.audioBuffer !== null) {
+      showToast('Só é possível colar em uma faixa em branco que ainda não recebeu áudio', 'error');
+      return;
+    }
+
     // Use currentTime (playhead position) as paste position relative to track start
     const pastePosition = currentTime;
     
@@ -1218,8 +1224,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
     
     const relativePosition = pastePosition - targetTrack.startOffset;
 
-    // If target track is blank, simply transform it into an audio track
-    if (targetTrack.audioBuffer === null) {
+  // Se a faixa é em branco (garantido acima), simplesmente a transformamos em faixa com áudio uma única vez
+  if (targetTrack.audioBuffer === null) {
       // Check if there's enough space in the blank track
       const remainingSpace = targetTrack.duration - relativePosition;
       
@@ -1267,70 +1273,8 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       } catch (e) {
         console.error('Erro ao salvar blob de faixa colada no IndexedDB', e);
       }
-      showToast(`Trecho colado na faixa selecionada em ${formatTime(pastePosition)}`, 'success');
+      showToast(`Trecho colado na faixa em branco em ${formatTime(pastePosition)}`, 'success');
       return;
-    }
-
-    // If target track has audio, insert/mix the clipboard audio into the existing track
-    try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-
-      const existingBuffer = targetTrack.audioBuffer;
-      const clipboardBuffer = clipboard.audioData;
-      
-      // Calculate the new buffer dimensions
-      const sampleRate = existingBuffer.sampleRate;
-      const channels = Math.max(existingBuffer.numberOfChannels, clipboardBuffer.numberOfChannels);
-      const insertStartSample = Math.floor(relativePosition * sampleRate);
-      const clipboardLengthSamples = clipboardBuffer.length;
-      const newLengthSamples = Math.max(existingBuffer.length, insertStartSample + clipboardLengthSamples);
-      
-      // Create the new mixed buffer
-      const newBuffer = audioContextRef.current.createBuffer(channels, newLengthSamples, sampleRate);
-      
-      // Copy existing audio
-      for (let ch = 0; ch < channels; ch++) {
-        const newChannelData = newBuffer.getChannelData(ch);
-        
-        // Copy existing track data (if channel exists)
-        if (ch < existingBuffer.numberOfChannels) {
-          const existingData = existingBuffer.getChannelData(ch);
-          newChannelData.set(existingData);
-        }
-        
-        // Mix clipboard data at the paste position
-        if (ch < clipboardBuffer.numberOfChannels) {
-          const clipboardData = clipboardBuffer.getChannelData(ch);
-          for (let i = 0; i < clipboardLengthSamples; i++) {
-            const targetIndex = insertStartSample + i;
-            if (targetIndex < newLengthSamples) {
-              // Mix the audio (average to prevent clipping)
-              const existingValue = newChannelData[targetIndex] || 0;
-              const clipboardValue = clipboardData[i];
-              newChannelData[targetIndex] = (existingValue + clipboardValue) / 2;
-            }
-          }
-        }
-      }
-      
-      // Update the track with the new mixed buffer
-      const newDuration = newLengthSamples / sampleRate;
-      const updatedTrack: AudioTrack = {
-        ...targetTrack,
-        audioBuffer: newBuffer,
-        duration: Math.max(targetTrack.duration, newDuration),
-        originalDuration: newDuration,
-        // Ao mixar, mantemos o trim original da faixa base (não substitui)
-      };
-      
-  pushHistory();
-  setTracks(prev => prev.map(t => t.id === selectedTrackId ? updatedTrack : t));
-      showToast(`Áudio colado e mixado na faixa em ${formatTime(pastePosition)}`, 'success');
-      
-    } catch (error: any) {
-      showToast(`Erro ao colar áudio: ${error?.message || String(error)}`, 'error');
     }
   };
 
