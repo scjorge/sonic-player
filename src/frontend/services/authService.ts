@@ -54,6 +54,40 @@ class AuthService {
     localStorage.removeItem('authToken');
   }
 
+  getCurrentUserSync(): User | null {
+    if (!this.token) {
+      return null;
+    }
+
+    try {
+      // Decodifica o JWT token (payload é a segunda parte do token)
+      const parts = this.token.split('.');
+      if (parts.length !== 3) {
+        return null;
+      }
+
+      const payload = JSON.parse(atob(parts[1]));
+      
+      // Verifica se o token expirou
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        this.logout();
+        return null;
+      }
+
+      return {
+        id: payload.id,
+        username: payload.username,
+        email: payload.email,
+        role: payload.role,
+        isActive: payload.isActive,
+        createdAt: payload.createdAt,
+      } as User;
+    } catch (error) {
+      console.error('Erro ao decodificar token:', error);
+      return null;
+    }
+  }
+
   async getCurrentUser(): Promise<User | null> {
     if (!this.token) {
       return null;
