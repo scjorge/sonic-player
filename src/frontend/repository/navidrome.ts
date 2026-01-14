@@ -1,5 +1,6 @@
 
 import { BACKEND_BASE_URL } from '../../core/config';
+import { authService } from '../services/authService';
 
 const NAVIDROME_KEY = 'sonictag_navidrome';
 
@@ -21,7 +22,14 @@ export const getNavidromeCredentials = () => {
   }
 
   try {
-    fetch(`${BACKEND_BASE_URL}/navidrome`)
+    const token = authService.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    fetch(`${BACKEND_BASE_URL}/navidrome`, { headers })
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
         const creds = {
@@ -49,9 +57,16 @@ export const saveNavidromeCredentials = (creds: { baseUrl: string; user: string;
   try {
     localStorage.setItem(NAVIDROME_KEY, JSON.stringify({ baseUrl: creds.baseUrl, user: creds.user, password: creds.password }));
 
+    const token = authService.getToken();
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     fetch(`${BACKEND_BASE_URL}/navidrome`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(creds),
     }).catch(() => {});
   } catch (e) {

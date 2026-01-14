@@ -1,25 +1,38 @@
-import { Request, Response } from 'express';
+import { Response, Request } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { navidromeSettingsService, navidromeTrackService } from '../services/navidrome';
 
-export const getNavidromeSettings = async (_req: Request, res: Response) => {
-  const setting = await navidromeSettingsService.get();
+export const getNavidromeSettings = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  const setting = await navidromeSettingsService.get(req.user.id);
   if (!setting) {
     return res.json({ baseUrl: '', user: '', password: '' });
   }
   return res.json({ baseUrl: setting.baseUrl, user: setting.user, password: setting.password });
 };
 
-export const saveNavidromeSettings = async (req: Request, res: Response) => {
+export const saveNavidromeSettings = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
   const { baseUrl, user, password } = req.body || {};
   if (!baseUrl || !user || !password) {
     return res.status(400).json({ error: 'baseUrl, user e password são obrigatórios' });
   }
-  const saved = await navidromeSettingsService.save(baseUrl, user, password);
+  const saved = await navidromeSettingsService.save(req.user.id, baseUrl, user, password);
   return res.json({ baseUrl: saved.baseUrl, user: saved.user, password: saved.password });
 };
 
-export const clearNavidromeSettings = async (_req: Request, res: Response) => {
-  await navidromeSettingsService.clear();
+export const clearNavidromeSettings = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  await navidromeSettingsService.clear(req.user.id);
   return res.status(204).send();
 };
 

@@ -4,17 +4,18 @@ import { search4 } from './navidromeDatabase';
 
 
 export const navidromeSettingsService = {
-  async get() {
+  async get(userId: string) {
     const repo = AppDataSource.getRepository(NavidromeSetting);
-    const existing = await repo.find();
-    return existing[0] || null;
+    const existing = await repo.findOne({ where: { userId } });
+    return existing || null;
   },
 
-  async save(baseUrl: string, user: string, password: string) {
+  async save(userId: string, baseUrl: string, user: string, password: string) {
     const repo = AppDataSource.getRepository(NavidromeSetting);
-    let setting = (await repo.find())[0];
+    let setting = await repo.findOne({ where: { userId } });
+    
     if (!setting) {
-      setting = repo.create({ baseUrl, user, password });
+      setting = repo.create({ userId, baseUrl, user, password });
     } else {
       setting.baseUrl = baseUrl;
       setting.user = user;
@@ -23,9 +24,9 @@ export const navidromeSettingsService = {
     return repo.save(setting);
   },
 
-  async clear() {
+  async clear(userId: string) {
     const repo = AppDataSource.getRepository(NavidromeSetting);
-    await repo.clear();
+    await repo.delete({ userId });
   },
 };
 

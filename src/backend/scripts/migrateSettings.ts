@@ -104,10 +104,56 @@ async function migrateSettings() {
       console.error('Erro ao migrar spotify_settings:', error);
     }
 
+    // Migrar navidrome_settings
+    try {
+      console.log('Migrando navidrome_settings...');
+      
+      // Verifica se a coluna userId já existe
+      const navidromeColumns = await queryRunner.query(
+        `PRAGMA table_info(navidrome_settings)`
+      );
+      const hasNavidromeUserId = navidromeColumns.some((col: any) => col.name === 'userId');
+
+      if (!hasNavidromeUserId) {
+        // Criar nova tabela temporária
+        await queryRunner.query(`
+          CREATE TABLE navidrome_settings_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId VARCHAR(255) NOT NULL,
+            baseUrl TEXT NOT NULL,
+            user TEXT NOT NULL,
+            password TEXT NOT NULL
+          )
+        `);
+
+        // Copiar dados existentes
+        await queryRunner.query(`
+          INSERT INTO navidrome_settings_new (id, userId, baseUrl, user, password)
+          SELECT id, 'default-user-id', baseUrl, user, password
+          FROM navidrome_settings
+        `);
+
+        // Remover tabela antiga e renomear
+        await queryRunner.query(`DROP TABLE navidrome_settings`);
+        await queryRunner.query(`ALTER TABLE navidrome_settings_new RENAME TO navidrome_settings`);
+
+        // Criar índice único
+        await queryRunner.query(`
+          CREATE UNIQUE INDEX IDX_navidrome_settings_userId ON navidrome_settings (userId)
+        `);
+
+        console.log('✅ navidrome_settings migrado com sucesso');
+      } else {
+        console.log('⏭️  navidrome_settings já possui coluna userId');
+      }
+    } catch (error) {
+      console.error('Erro ao migrar navidrome_settings:', error);
+    }
+
     await queryRunner.release();
     console.log('\n✅ Migração concluída com sucesso!');
     console.log('\n⚠️  IMPORTANTE: Se você tinha configurações anteriores, elas foram atribuídas a "default-user-id".');
-    console.log('   Você precisará reconfigurar as APIs do YouTube e Spotify para cada usuário.');
+    console.log('   Você precisará reconfigurar as APIs do YouTube, Spotify e Navidrome para cada usuário.');
     
     await AppDataSource.destroy();
     process.exit(0);
