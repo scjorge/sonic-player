@@ -3,26 +3,26 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id!: string;
+    id!: string;
 
   @Column({ type: 'varchar', unique: true })
-  username!: string;
+    username!: string;
 
   @Column({ type: 'varchar', unique: true })
-  email!: string;
+    email!: string;
 
   @Column({ type: 'varchar' })
-  password!: string;
+    password!: string;
 
   @Column({ type: 'varchar', default: 'user' })
-  role!: string; // 'user' ou 'admin'
+    role!: string; // 'user' ou 'admin'
 
   @Column({ type: 'boolean', default: true })
-  isActive!: boolean;
+    isActive!: boolean;
 
   @CreateDateColumn()
-  createdAt!: Date;
+    createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt!: Date;
+    updatedAt!: Date;
 }

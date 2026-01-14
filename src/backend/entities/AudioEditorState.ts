@@ -4,11 +4,11 @@ import { Column, Entity, PrimaryGeneratedColumn, Index } from 'typeorm';
 @Index(['userId'], { unique: true })
 export class AudioEditorStateEntity {
   @PrimaryGeneratedColumn()
-  id!: number;
+    id!: number;
 
   @Column({ type: 'varchar', length: 255 })
-  userId!: string;
+    userId!: string;
 
   @Column({ type: 'text' })
-  stateJson!: string;
+    stateJson!: string;
 }

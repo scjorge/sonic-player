@@ -296,12 +296,12 @@ const SongTable: React.FC<SongTableProps> = ({
       const baseState = currentState && Array.isArray(currentState.tracks)
         ? currentState
         : {
-            tracks: [] as any[],
-            zoom: 100,
-            currentTime: 0,
-            selectedTrackId: null as string | null,
-            globalSelection: null as { start: number; end: number; trackId: string } | null,
-          };
+          tracks: [] as any[],
+          zoom: 100,
+          currentTime: 0,
+          selectedTrackId: null as string | null,
+          globalSelection: null as { start: number; end: number; trackId: string } | null,
+        };
 
       const originType: 'preparo' | 'library' = isNaviTableDownload ? 'preparo' : 'library';
       const contentType = (song as any).contentType || (isNaviTableDownload ? 'audio/preparation' : 'audio/library');

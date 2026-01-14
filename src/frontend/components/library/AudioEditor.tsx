@@ -2090,7 +2090,7 @@ const TrackRow: React.FC<TrackRowProps> = ({
           className={`absolute h-full ${track.audioBuffer
             ? 'cursor-crosshair'
             : 'cursor-default'
-            }`}
+          }`}
           style={{
             left: `${track.startOffset * zoom}px`,
             width: `${track.duration * zoom}px`,
