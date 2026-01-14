@@ -149,7 +149,7 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = ({ onCredsChange }) 
                 </div>
                 {useSonicCreds && (
                   <div className="text-xs text-indigo-300 bg-indigo-950/50 rounded-lg p-3">
-                    ℹ️ Os campos de usuário e senha são preenchidos automaticamente. Apenas configure a URL do servidor Navidrome.
+                    ℹ️ Os campos de usuário e senha são preenchidos automaticamente.
                   </div>
                 )}
               </div>
