@@ -168,6 +168,14 @@ class AuthService {
   }
 
   async listUsers(): Promise<User[]> {
+    // Sincroniza token com localStorage se necessário
+    if (!this.token) {
+      const storedToken = localStorage.getItem('authToken');
+      if (storedToken) {
+        this.token = storedToken;
+      }
+    }
+    
     if (!this.token) {
       throw new Error('Não autenticado');
     }
@@ -179,7 +187,19 @@ class AuthService {
     });
 
     if (!response.ok) {
-      throw new Error('Erro ao listar usuários');
+      if (response.status === 401) {
+        // Token inválido ou expirado, faz logout
+        this.logout();
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      
+      // Tenta extrair a mensagem de erro do backend
+      try {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao listar usuários');
+      } catch (e) {
+        throw new Error('Erro ao listar usuários');
+      }
     }
 
     return await response.json();
@@ -272,6 +292,11 @@ class AuthService {
   }
 
   getToken(): string | null {
+    // Sincroniza com localStorage se necessário
+    if (!this.token && localStorage.getItem('authToken')) {
+      this.token = localStorage.getItem('authToken');
+    }
+    
     return this.token;
   }
 

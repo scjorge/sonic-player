@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+import { JWT_SECRET } from '../config';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -32,6 +31,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     req.user = decoded;
     next();
   } catch (error) {
+    console.error('Token verification failed:', error instanceof Error ? error.message : error);
     return res.status(401).json({ error: 'Token inválido ou expirado' });
   }
 };

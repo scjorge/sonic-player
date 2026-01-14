@@ -47,7 +47,8 @@ const UserManagement: React.FC = () => {
       setUsers(userList);
       setShowModal(true);
     } catch (error) {
-      showToast('Erro ao carregar usuários', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar usuários';
+      showToast(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
