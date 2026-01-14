@@ -137,10 +137,11 @@ npm run dev:frontend
 
 ### Sidebar (Usuário Logado)
 - Foto de perfil (ícone)
-- Nome de usuário
+- Nome de usuário (clicável para alterar senha)
 - Role (Admin/Usuário)
 - Botão de logout
 - Botão de gerenciar usuários (só admin)
+- Hover mostra feedback visual
 
 ### Modal de Gerenciamento
 - Lista de todos os usuários

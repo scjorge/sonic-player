@@ -35,7 +35,6 @@ import { YOUTUBE_COLUMN_CONFIG } from './src/frontend/components/youtube/youtube
 import { getUserState, getLastViewMode, setLastViewMode, setUserState } from './src/frontend/repository/userStates.ts';
 import { useAuth } from './src/frontend/contexts/AuthContext';
 import UserManagement from './src/frontend/components/auth/UserManagement.tsx';
-import ChangePasswordModal from './src/frontend/components/auth/ChangePasswordModal.tsx';
 
 type ViewMode = 'navi_songs' | 'navi_albums' | 'navi_artists' | 'navi_playlist' | 'navi_favorites' | 'navi_downloads' | 'navi_editor' | 'settings' | 'spotify_browse' | 'spotify_liked' | 'spotify_playlists' | 'spotify_playlist_tracks' | 'tidal_browse' | 'tidal_liked' | 'tidal_playlists' | 'tidal_playlist_tracks' | 'youtube_browse';
 type SettingsTab = 'navidrome' | 'groups' | 'spotify' | 'tidal' | 'youtube' | 'general';
@@ -246,9 +245,6 @@ const App: React.FC = () => {
   // Group Tag Editor State
   const [showGroupTagModal, setShowGroupTagModal] = useState(false);
   const [groupTagSong, setGroupTagSong] = useState<NaviSong | null>(null);
-
-  // Change Password Modal State
-  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   // --- STATE: SELECTION ---
   const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
@@ -2465,7 +2461,6 @@ const App: React.FC = () => {
           onApply={handleApplyGroupFilter}
         />
       )}
-      <ChangePasswordModal isOpen={showChangePasswordModal} onClose={() => setShowChangePasswordModal(false)} />
       <ConfirmationModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} onConfirm={confirmModal.onConfirm} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />
     </div>
   );

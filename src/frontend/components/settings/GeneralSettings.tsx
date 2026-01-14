@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import type { GeneralSettings } from '../../repository/generalSettings';
 import { getGeneralSettings, saveGeneralSettings } from '../../repository/generalSettings';
-import { AlertCircle, CheckCircle2, Save, Info, Settings2, Lock, User } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Save, Info, Settings2, Lock, User, Mail, Edit2 } from 'lucide-react';
 import { NAVIDROME_SAVE_FORMAT_DEFAULT } from '../../../core/config';
 import { useAuth } from '../../contexts/AuthContext';
-import ChangePasswordModal from '../auth/ChangePasswordModal';
+import { authService } from '../../services/authService';
+import showToast from '../utils/toast';
 
 const placeholderMeta = {
   genre: 'Rock',
@@ -29,14 +30,21 @@ function buildPreview(format: string): string {
 }
 
 const GeneralSettings: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [form, setForm] = useState<GeneralSettings>({ navidromeSaveFormat: NAVIDROME_SAVE_FORMAT_DEFAULT });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'templates' | 'account'>('templates');
-  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  
+  // Account form states
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [savingAccount, setSavingAccount] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -51,6 +59,13 @@ const GeneralSettings: React.FC = () => {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setUsername(user.username);
+      setEmail(user.email);
+    }
+  }, [user]);
 
   const handleChangeFormat = (value: string) => {
     setForm(prev => ({ ...prev, navidromeSaveFormat: value }));
@@ -69,6 +84,39 @@ const GeneralSettings: React.FC = () => {
       setError(e?.message || 'Falha ao salvar configurações');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showToast('Preencha todos os campos de senha', 'error');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showToast('As senhas não coincidem', 'error');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      showToast('A nova senha deve ter no mínimo 6 caracteres', 'error');
+      return;
+    }
+
+    setSavingAccount(true);
+    try {
+      await authService.updatePassword(currentPassword, newPassword);
+      showToast('Senha atualizada com sucesso!', 'success');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : 'Erro ao atualizar senha',
+        'error'
+      );
+    } finally {
+      setSavingAccount(false);
     }
   };
 
@@ -172,44 +220,128 @@ const GeneralSettings: React.FC = () => {
       )}
 
       {activeTab === 'account' && (
-        <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-8 space-y-6">
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 pb-4 border-b border-zinc-800">
-              <div className="bg-indigo-100 p-3 rounded-full">
-                <User className="w-6 h-6 text-indigo-600" />
-              </div>
+        <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-8 space-y-8">
+          {/* User Info Header */}
+          <div className="flex items-center gap-4 pb-6 border-b border-zinc-800">
+            <div className="bg-indigo-600 p-4 rounded-full">
+              <User className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white">{user?.username}</h3>
+              <p className="text-sm text-zinc-400">{user?.email}</p>
+              <span className="inline-block mt-2 px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-medium rounded-full">
+                {user?.role === 'admin' ? 'Administrador' : 'Usuário'}
+              </span>
+            </div>
+          </div>
+
+          {/* Profile Information */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+              <Edit2 className="w-4 h-4" />
+              Informações do Perfil
+            </h4>
+            
+            <div className="space-y-4">
               <div>
-                <h3 className="text-xl font-bold text-white">{user?.username}</h3>
-                <p className="text-sm text-zinc-400">{user?.email}</p>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Nome de Usuário
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                  placeholder="Seu nome de usuário"
+                  disabled
+                />
                 <p className="text-xs text-zinc-500 mt-1">
-                  {user?.role === 'admin' ? 'Administrador' : 'Usuário'}
+                  Funcionalidade de alteração em desenvolvimento
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                  placeholder="seu@email.com"
+                  disabled
+                />
+                <p className="text-xs text-zinc-500 mt-1">
+                  Funcionalidade de alteração em desenvolvimento
                 </p>
               </div>
             </div>
+          </div>
 
+          {/* Password Change */}
+          <div className="space-y-4 pt-6 border-t border-zinc-800">
+            <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              Alterar Senha
+            </h4>
+            
             <div className="space-y-4">
-              <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
-                Segurança
-              </h4>
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Senha Atual
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                  placeholder="Digite sua senha atual"
+                  disabled={savingAccount}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Nova Senha
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                  placeholder="Digite a nova senha"
+                  disabled={savingAccount}
+                />
+                <p className="text-xs text-zinc-500 mt-1">Mínimo de 6 caracteres</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Confirmar Nova Senha
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                  placeholder="Confirme a nova senha"
+                  disabled={savingAccount}
+                />
+              </div>
+
               <button
-                onClick={() => setShowChangePasswordModal(true)}
-                className="flex items-center gap-3 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors w-full"
+                onClick={handleChangePassword}
+                disabled={savingAccount}
+                className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-indigo-500/10 active:scale-95"
               >
-                <Lock className="w-5 h-5 text-indigo-400" />
-                <div className="flex-1 text-left">
-                  <p className="font-medium">Alterar Senha</p>
-                  <p className="text-xs text-zinc-400">Atualizar sua senha de acesso</p>
-                </div>
+                <Lock className="w-4 h-4" />
+                {savingAccount ? 'Alterando Senha...' : 'Alterar Senha'}
               </button>
             </div>
           </div>
         </div>
       )}
-
-      <ChangePasswordModal 
-        isOpen={showChangePasswordModal} 
-        onClose={() => setShowChangePasswordModal(false)} 
-      />
     </div>
   );
 };

@@ -101,12 +101,18 @@
 
 ### 4. Alteração de Senha
 
-#### Acessar Configurações
+#### Acessar via Sidebar
+- [ ] Fazer login
+- [ ] Clicar no nome do usuário ou ícone na sidebar
+- [ ] ✅ Modal de alterar senha deve abrir
+
+#### Acessar via Configurações
 - [ ] Fazer login
 - [ ] Clicar em "Configurações" na sidebar
 - [ ] Clicar na aba "Geral"
 - [ ] Clicar na sub-aba "Conta"
-- [ ] ✅ Deve mostrar informações do usuário
+- [ ] Clicar em "Alterar Senha"
+- [ ] ✅ Modal de alterar senha deve abrir
 
 #### Alterar Senha com Sucesso
 - [ ] Clicar em "Alterar Senha"

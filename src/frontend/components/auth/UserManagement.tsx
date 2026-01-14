@@ -50,10 +50,10 @@ const UserManagement: React.FC = () => {
       <button
         onClick={loadUsers}
         disabled={isLoading}
-        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+        className="p-1.5 text-zinc-400 hover:text-purple-400 hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-50"
+        title="Gerenciar Usuários"
       >
-        <Users size={20} />
-        Gerenciar Usuários
+        <Users size={16} />
       </button>
 
       {showModal && (
