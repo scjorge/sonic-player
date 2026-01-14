@@ -11,7 +11,7 @@ interface SpotifyBrowseProps {
 
 const SpotifyBrowse: React.FC<SpotifyBrowseProps> = ({ onPreview }) => {
   const [query, setQuery] = useState('');
-  const [tracks, setTracks] = useState<SpotifyTrack[]>([]);
+  const [tracks, setTracks] = useState<SpotifyTrack[]|any>([]);
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState<SpotifyCredentials | null>(null);
 

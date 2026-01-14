@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
     "preview": "vite preview",
+    "build:frontend": "vite build",
+    "build:backend": "tsc -p tsconfig.backend.json",
+    "build": "vite build && npm run build:backend",
     "server": "npx tsx src/backend/app.ts",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx --fix"
   },

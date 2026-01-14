@@ -68,7 +68,7 @@ export interface NaviArtist {
 export interface NaviPlaylist {
   id: string;
   name: string;
-  songCount: number;
+  songCount?: number;
   duration?: number;
   created?: string;
   coverArt?: string;

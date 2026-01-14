@@ -6,7 +6,7 @@ FROM node:22 AS build
 WORKDIR /app
 COPY package*.json ./
 
-RUN npm install --omit=dev
+RUN npm install
 
 COPY . .
 
@@ -16,24 +16,30 @@ RUN npm run build
 ###########
 ## PROD ##
 ###########
-FROM node:22
+FROM node:20-alpine
 
-RUN apt update && apt install -y flac exiftool ffmpeg python3 pipx
+RUN apk add --no-cache \
+  ffmpeg \
+  flac \
+  exiftool \
+  python3 \
+  py3-pip \
+  tzdata
 
-ENV TZ="America/Sao_Paulo"
-ENV LANG=C.UTF-8
-ENV LC_ALL=C.UTF-8
-RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone
+ENV TZ=America/Sao_Paulo
+RUN cp /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone
 
-RUN pipx install spotdl
+RUN pipx install --no-cache-dir spotdl
 RUN pipx ensurepath
 
 WORKDIR /app
 
-COPY --from=build /app/dist /app/dist
-COPY --from=build /app/node_modules /app/node_modules
-COPY --from=build /app/package.json /app/package.json
-COPY --from=build /app/package-lock.json /app/package-lock.json
-COPY --from=build /app/asserts /app/asserts
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/asserts ./asserts
 
+ENV NODE_ENV=production
 EXPOSE 3000
+
+CMD ["npx", "tsx", "src/backend/app.ts"]
