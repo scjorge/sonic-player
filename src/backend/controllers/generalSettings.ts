@@ -1,11 +1,16 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { generalSettingsService } from '../services/generalSettings';
 import { NAVIDROME_SAVE_FORMAT_DEFAULT } from '../../core/config';
 
 
-export async function getGeneralSettings(_req: Request, res: Response) {
+export async function getGeneralSettings(req: AuthRequest, res: Response) {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
   try {
-    const result = await generalSettingsService.getGeneralSettings();
+    const result = await generalSettingsService.getGeneralSettings(req.user.id);
     if (result.error) {
       return res.status(500).json({ error: result.error });
     }
@@ -15,7 +20,11 @@ export async function getGeneralSettings(_req: Request, res: Response) {
   }
 }
 
-export async function saveGeneralSettings(req: Request, res: Response) {
+export async function saveGeneralSettings(req: AuthRequest, res: Response) {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
   const body = req.body || {};
   if (!body.settings) {
     return res.status(400).json({ error: 'settings é obrigatório' });
@@ -26,7 +35,7 @@ export async function saveGeneralSettings(req: Request, res: Response) {
     : NAVIDROME_SAVE_FORMAT_DEFAULT;
 
   try {
-    const result = await generalSettingsService.saveGeneralSettings(navidromeSaveFormat);
+    const result = await generalSettingsService.saveGeneralSettings(req.user.id, navidromeSaveFormat);
     if (result.error) {
       return res.status(500).json({ error: result.error });
     }

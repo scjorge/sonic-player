@@ -240,10 +240,54 @@ async function migrateSettings() {
       console.error('Erro ao migrar genres:', error);
     }
 
+    // Migrar general_settings
+    try {
+      console.log('Migrando general_settings...');
+      
+      // Verifica se a coluna userId já existe
+      const generalSettingsColumns = await queryRunner.query(
+        `PRAGMA table_info(general_settings)`
+      );
+      const hasGeneralSettingsUserId = generalSettingsColumns.some((col: any) => col.name === 'userId');
+
+      if (!hasGeneralSettingsUserId) {
+        // Criar nova tabela temporária
+        await queryRunner.query(`
+          CREATE TABLE general_settings_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId VARCHAR(255) NOT NULL,
+            navidromeSaveFormat TEXT NOT NULL
+          )
+        `);
+
+        // Copiar dados existentes
+        await queryRunner.query(`
+          INSERT INTO general_settings_new (id, userId, navidromeSaveFormat)
+          SELECT id, 'default-user-id', navidromeSaveFormat
+          FROM general_settings
+        `);
+
+        // Remover tabela antiga e renomear
+        await queryRunner.query(`DROP TABLE general_settings`);
+        await queryRunner.query(`ALTER TABLE general_settings_new RENAME TO general_settings`);
+
+        // Criar índice único
+        await queryRunner.query(`
+          CREATE UNIQUE INDEX IDX_general_settings_userId ON general_settings (userId)
+        `);
+
+        console.log('✅ general_settings migrado com sucesso');
+      } else {
+        console.log('⏭️  general_settings já possui coluna userId');
+      }
+    } catch (error) {
+      console.error('Erro ao migrar general_settings:', error);
+    }
+
     await queryRunner.release();
     console.log('\n✅ Migração concluída com sucesso!');
     console.log('\n⚠️  IMPORTANTE: Se você tinha configurações anteriores, elas foram atribuídas a "default-user-id".');
-    console.log('   Você precisará reconfigurar as APIs do YouTube, Spotify, Navidrome, Tags e Gêneros para cada usuário.');
+    console.log('   Você precisará reconfigurar as APIs do YouTube, Spotify, Navidrome, Tags, Gêneros e Template Navidrome para cada usuário.');
     
     await AppDataSource.destroy();
     process.exit(0);

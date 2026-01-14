@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { downloadService } from '../services/downloads';
 
 
@@ -130,12 +131,16 @@ export async function writeCoverFromUrl(req: Request, res: Response) {
   }
 }
 
-export async function finalizeDownload(req: Request, res: Response) {
+export async function finalizeDownload(req: AuthRequest, res: Response) {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
   const { path: filePath } = req.body;
   if (!filePath) return res.status(400).json({ error: 'path is required' });
 
   try {
-    const result = await downloadService.finalizeDownload(filePath);
+    const result = await downloadService.finalizeDownload(req.user.id, filePath);
     return res.json(result);
   } catch (e: any) {
     console.error('Failed to finalize TIDAL download', e);

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { downloadTrackFromTidal, downloadTrackFromSpotDL, getdownloads, getCompletedDownloads, streamDownload, writeMetadataParts, finalizeDownload, deleteDownload, clearDownloads, getCoverDownloads, writeCoverFromUrl, uploadPreparation, convertDownload, deletePreparation, generateSpectrogram } from '../controllers/downloads';
+import { authMiddleware } from '../middleware/auth';
 import { PREPARATION_PATH } from '../config';
 
 const downloadsRouter = Router();
@@ -24,7 +25,7 @@ downloadsRouter.get('/completed-cover', getCoverDownloads);
 downloadsRouter.get('/stream', streamDownload);
 downloadsRouter.post('/tidal', downloadTrackFromTidal);
 downloadsRouter.post('/spotdl', downloadTrackFromSpotDL);
-downloadsRouter.post('/finalize', finalizeDownload);
+downloadsRouter.post('/finalize', authMiddleware, finalizeDownload);
 downloadsRouter.post('/metadata', writeMetadataParts);
 downloadsRouter.post('/metadata-cover', writeCoverFromUrl);
 downloadsRouter.post('/upload-preparation', upload.array('files'), uploadPreparation);
