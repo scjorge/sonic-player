@@ -134,3 +134,65 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     }
   }
 };
+
+export const adminUpdateUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { username, email } = req.body;
+
+    if (!username && !email) {
+      return res.status(400).json({ error: 'Forneça nome de usuário ou email para atualizar' });
+    }
+
+    const result = await authService.adminUpdateUser(userId, username, email);
+
+    res.json(result);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Erro ao atualizar usuário' });
+    }
+  }
+};
+
+export const adminResetPassword = async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({ error: 'Nova senha é obrigatória' });
+    }
+
+    const result = await authService.adminResetPassword(userId, newPassword);
+
+    res.json(result);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Erro ao resetar senha' });
+    }
+  }
+};
+
+export const createUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const { username, email, password, role } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+    }
+
+    const result = await authService.createUser(username, email, password, role || 'user');
+
+    res.status(201).json(result);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Erro ao criar usuário' });
+    }
+  }
+};

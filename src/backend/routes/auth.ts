@@ -15,6 +15,9 @@ router.put('/profile', authMiddleware, authController.updateProfile);
 
 // Rotas de administrador
 router.get('/users', authMiddleware, adminMiddleware, authController.listUsers);
+router.post('/users', authMiddleware, adminMiddleware, authController.createUser);
 router.patch('/users/:userId/status', authMiddleware, adminMiddleware, authController.toggleUserStatus);
+router.put('/users/:userId', authMiddleware, adminMiddleware, authController.adminUpdateUser);
+router.put('/users/:userId/reset-password', authMiddleware, adminMiddleware, authController.adminResetPassword);
 
 export default router;

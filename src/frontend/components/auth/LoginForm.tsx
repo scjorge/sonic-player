@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-import { LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Eye, EyeOff } from 'lucide-react';
 
 interface LoginFormProps {
   onLogin: (username: string, password: string) => Promise<void>;
-  onRegister: (username: string, email: string, password: string) => Promise<void>;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister }) => {
-  const [isLogin, setIsLogin] = useState(true);
+const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,32 +17,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister }) => {
     setError('');
 
     if (!username || !password) {
-      setError('Preencha todos os campos obrigatórios');
+      setError('Preencha todos os campos');
       return;
-    }
-
-    if (!isLogin) {
-      if (!email) {
-        setError('Email é obrigatório');
-        return;
-      }
-      if (password !== confirmPassword) {
-        setError('As senhas não coincidem');
-        return;
-      }
-      if (password.length < 6) {
-        setError('A senha deve ter no mínimo 6 caracteres');
-        return;
-      }
     }
 
     setIsLoading(true);
     try {
-      if (isLogin) {
-        await onLogin(username, password);
-      } else {
-        await onRegister(username, email, password);
-      }
+      await onLogin(username, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao processar requisição');
     } finally {
@@ -65,10 +42,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister }) => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {isLogin ? 'Bem-vindo!' : 'Criar Conta'}
+            Bem-vindo!
           </h1>
           <p className="text-gray-600">
-            {isLogin ? 'Entre na sua conta para continuar' : 'Registre-se para começar'}
+            Entre na sua conta para continuar
           </p>
         </div>
 
@@ -88,27 +65,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister }) => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-black"
               placeholder="Digite seu usuário"
               disabled={isLoading}
             />
           </div>
-
-          {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
-                placeholder="seu@email.com"
-                disabled={isLoading}
-              />
-            </div>
-          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -119,7 +80,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister }) => {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition pr-12"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-black pr-12"
                 placeholder="Digite sua senha"
                 disabled={isLoading}
               />
@@ -133,22 +94,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister }) => {
             </div>
           </div>
 
-          {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirmar Senha
-              </label>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
-                placeholder="Confirme sua senha"
-                disabled={isLoading}
-              />
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={isLoading}
@@ -156,34 +101,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister }) => {
           >
             {isLoading ? (
               <>Processando...</>
-            ) : isLogin ? (
+            ) : (
               <>
                 <LogIn size={20} />
                 Entrar
               </>
-            ) : (
-              <>
-                <UserPlus size={20} />
-                Registrar
-              </>
             )}
           </button>
         </form>
-
-        {/* Toggle */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
-              setPassword('');
-              setConfirmPassword('');
-            }}
-            className="text-purple-600 hover:text-purple-700 font-medium transition"
-          >
-            {isLogin ? 'Não tem uma conta? Registre-se' : 'Já tem uma conta? Entre'}
-          </button>
-        </div>
       </div>
     </div>
   );

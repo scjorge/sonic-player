@@ -167,6 +167,70 @@ class AuthService {
     return await response.json();
   }
 
+  async createUser(username: string, email: string, password: string, role: 'user' | 'admin' = 'user'): Promise<User> {
+    if (!this.token) {
+      throw new Error('Não autenticado');
+    }
+
+    const response = await fetch(`${API_URL}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: JSON.stringify({ username, email, password, role }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao criar usuário');
+    }
+
+    return await response.json();
+  }
+
+  async adminUpdateUser(userId: string, username?: string, email?: string): Promise<User> {
+    if (!this.token) {
+      throw new Error('Não autenticado');
+    }
+
+    const response = await fetch(`${API_URL}/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: JSON.stringify({ username, email }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao atualizar usuário');
+    }
+
+    return await response.json();
+  }
+
+  async adminResetPassword(userId: string, newPassword: string): Promise<void> {
+    if (!this.token) {
+      throw new Error('Não autenticado');
+    }
+
+    const response = await fetch(`${API_URL}/users/${userId}/reset-password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: JSON.stringify({ newPassword }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao resetar senha');
+    }
+  }
+
   getToken(): string | null {
     return this.token;
   }

@@ -242,6 +242,117 @@ export class AuthService {
     };
   }
 
+  async adminUpdateUser(userId: string, username?: string, email?: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    // Verifica se o nome de usuário já está em uso por outro usuário
+    if (username && username !== user.username) {
+      const existingUsername = await this.userRepository.findOne({
+        where: { username }
+      });
+
+      if (existingUsername && existingUsername.id !== userId) {
+        throw new Error('Nome de usuário já está em uso');
+      }
+
+      user.username = username;
+    }
+
+    // Verifica se o email já está em uso por outro usuário
+    if (email && email !== user.email) {
+      const existingEmail = await this.userRepository.findOne({
+        where: { email }
+      });
+
+      if (existingEmail && existingEmail.id !== userId) {
+        throw new Error('Email já está em uso');
+      }
+
+      user.email = email;
+    }
+
+    await this.userRepository.save(user);
+
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive
+    };
+  }
+
+  async adminResetPassword(userId: string, newPassword: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    // Valida nova senha
+    if (newPassword.length < 6) {
+      throw new Error('A nova senha deve ter no mínimo 6 caracteres');
+    }
+
+    // Hash da nova senha
+    user.password = await bcrypt.hash(newPassword, 10);
+    await this.userRepository.save(user);
+
+    return { message: 'Senha resetada com sucesso' };
+  }
+
+  async createUser(username: string, email: string, password: string, role: 'user' | 'admin' = 'user') {
+    // Verifica se o usuário já existe
+    const existingUser = await this.userRepository.findOne({
+      where: [
+        { username },
+        { email }
+      ]
+    });
+
+    if (existingUser) {
+      if (existingUser.username === username) {
+        throw new Error('Nome de usuário já está em uso');
+      }
+      throw new Error('Email já está em uso');
+    }
+
+    // Valida senha
+    if (password.length < 6) {
+      throw new Error('A senha deve ter no mínimo 6 caracteres');
+    }
+
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Cria o usuário
+    const user = this.userRepository.create({
+      username,
+      email,
+      password: hashedPassword,
+      role,
+      isActive: true
+    });
+
+    await this.userRepository.save(user);
+
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive
+    };
+  }
+
   private generateToken(user: User): string {
     const payload = {
       id: user.id,

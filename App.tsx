@@ -4,7 +4,7 @@ import LoginForm from './src/frontend/components/auth/LoginForm';
 import AppMain from './AppMain';
 
 const App: React.FC = () => {
-  const { user, isLoading, login, register } = useAuth();
+  const { user, isLoading, login } = useAuth();
 
   if (isLoading) {
     return (
@@ -15,7 +15,7 @@ const App: React.FC = () => {
   }
 
   if (!user) {
-    return <LoginForm onLogin={login} onRegister={register} />;
+    return <LoginForm onLogin={login} />;
   }
 
   return <AppMain />;
