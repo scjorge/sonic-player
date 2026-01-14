@@ -9,16 +9,19 @@
     "build:backend": "tsc -p tsconfig.backend.json",
     "build": "vite build && npm run build:backend",
     "start": "node dist/backend/backend/app.js",
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --fix"
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "create-admin": "npx tsx src/backend/scripts/createAdmin.ts"
   },
   "dependencies": {
     "@google/genai": "^1.33.0",
     "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.5.0",
     "browser-id3-writer": "^6.3.1",
     "clsx": "2.1.1",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "0.294.0",
     "multer": "^2.0.2",
     "music-metadata": "^11.10.3",
@@ -36,9 +39,11 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

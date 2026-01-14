@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import authRouter from './auth';
 import downloadsRouter from './downloads';
 import navidromeRouter from './navidrome';
 import spotifySettingsRouter from './spotifySettings';
@@ -11,6 +12,7 @@ import audioEditorStateRouter from './audioEditorState';
 
 const router = Router();
 
+router.use('/auth', authRouter);
 router.use('/downloads', downloadsRouter);
 router.use('/navidrome', navidromeRouter);
 router.use('/spotify-settings', spotifySettingsRouter);

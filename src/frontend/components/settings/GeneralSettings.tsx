@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import type { GeneralSettings } from '../../repository/generalSettings';
 import { getGeneralSettings, saveGeneralSettings } from '../../repository/generalSettings';
-import { AlertCircle, CheckCircle2, Save, Info, Settings2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Save, Info, Settings2, Lock, User } from 'lucide-react';
 import { NAVIDROME_SAVE_FORMAT_DEFAULT } from '../../../core/config';
+import { useAuth } from '../../contexts/AuthContext';
+import ChangePasswordModal from '../auth/ChangePasswordModal';
 
 const placeholderMeta = {
   genre: 'Rock',
@@ -27,12 +29,14 @@ function buildPreview(format: string): string {
 }
 
 const GeneralSettings: React.FC = () => {
+  const { user } = useAuth();
   const [form, setForm] = useState<GeneralSettings>({ navidromeSaveFormat: NAVIDROME_SAVE_FORMAT_DEFAULT });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState<'templates'>('templates');
+  const [activeTab, setActiveTab] = useState<'templates' | 'account'>('templates');
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -98,6 +102,15 @@ const GeneralSettings: React.FC = () => {
           >
             Template Navidrome
           </button>
+          <button
+            onClick={() => setActiveTab('account')}
+            className={`px-4 py-1.5 rounded-lg font-medium transition-colors ${activeTab === 'account'
+              ? 'bg-indigo-600 text-white shadow shadow-indigo-500/30'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+              }`}
+          >
+            Conta
+          </button>
         </div>
       </div>
 
@@ -157,6 +170,46 @@ const GeneralSettings: React.FC = () => {
           </div>
         </div>
       )}
+
+      {activeTab === 'account' && (
+        <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-8 space-y-6">
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 pb-4 border-b border-zinc-800">
+              <div className="bg-indigo-100 p-3 rounded-full">
+                <User className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">{user?.username}</h3>
+                <p className="text-sm text-zinc-400">{user?.email}</p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  {user?.role === 'admin' ? 'Administrador' : 'Usuário'}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                Segurança
+              </h4>
+              <button
+                onClick={() => setShowChangePasswordModal(true)}
+                className="flex items-center gap-3 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors w-full"
+              >
+                <Lock className="w-5 h-5 text-indigo-400" />
+                <div className="flex-1 text-left">
+                  <p className="font-medium">Alterar Senha</p>
+                  <p className="text-xs text-zinc-400">Atualizar sua senha de acesso</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ChangePasswordModal 
+        isOpen={showChangePasswordModal} 
+        onClose={() => setShowChangePasswordModal(false)} 
+      />
     </div>
   );
 };
