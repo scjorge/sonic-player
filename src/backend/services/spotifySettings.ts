@@ -2,13 +2,13 @@ import { AppDataSource } from '../utils/db';
 import { SpotifySetting } from '../entities/SpotifySetting';
 
 export const spotifySettingsService = {
-  async get() {
+  async get(userId: string) {
     const repo = AppDataSource.getRepository(SpotifySetting);
-    const existing = await repo.find();
-    return existing[0] || null;
+    const existing = await repo.findOne({ where: { userId } });
+    return existing || null;
   },
 
-  async save(payload: {
+  async save(userId: string, payload: {
         clientId?: string;
         clientSecret?: string;
         redirectUri?: string;
@@ -17,9 +17,10 @@ export const spotifySettingsService = {
         expiresAt?: number | null;
     }) {
     const repo = AppDataSource.getRepository(SpotifySetting);
-    let setting = (await repo.find())[0];
+    let setting = await repo.findOne({ where: { userId } });
+    
     if (!setting) {
-      setting = repo.create();
+      setting = repo.create({ userId });
     }
 
     setting.clientId = payload.clientId ?? setting.clientId ?? null;
@@ -32,8 +33,8 @@ export const spotifySettingsService = {
     return repo.save(setting);
   },
 
-  async clear() {
+  async clear(userId: string) {
     const repo = AppDataSource.getRepository(SpotifySetting);
-    await repo.clear();
+    await repo.delete({ userId });
   },
 };

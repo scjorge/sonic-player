@@ -1,8 +1,13 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { spotifySettingsService } from '../services/spotifySettings';
 
-export const getSpotifySettings = async (_req: Request, res: Response) => {
-  const setting = await spotifySettingsService.get();
+export const getSpotifySettings = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  const setting = await spotifySettingsService.get(req.user.id);
   if (!setting) {
     return res.json({
       clientId: '',
@@ -23,9 +28,13 @@ export const getSpotifySettings = async (_req: Request, res: Response) => {
   });
 };
 
-export const saveSpotifySettings = async (req: Request, res: Response) => {
+export const saveSpotifySettings = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
   const { clientId, clientSecret, redirectUri, accessToken, refreshToken, expiresAt } = req.body || {};
-  const saved = await spotifySettingsService.save({
+  const saved = await spotifySettingsService.save(req.user.id, {
     clientId,
     clientSecret,
     redirectUri,
@@ -44,7 +53,11 @@ export const saveSpotifySettings = async (req: Request, res: Response) => {
   });
 };
 
-export const clearSpotifySettings = async (_req: Request, res: Response) => {
-  await spotifySettingsService.clear();
+export const clearSpotifySettings = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  await spotifySettingsService.clear(req.user.id);
   return res.status(204).send();
 };

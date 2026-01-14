@@ -1,4 +1,5 @@
 import { BACKEND_BASE_URL } from '../../core/config';
+import { authService } from '../services/authService';
 
 export interface YoutubeConfig {
   apiKey: string;
@@ -6,7 +7,14 @@ export interface YoutubeConfig {
 
 export const getYoutubeConfig = async (): Promise<YoutubeConfig> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/youtube-settings`);
+    const token = authService.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${BACKEND_BASE_URL}/youtube-settings`, { headers });
     if (!res.ok) {
       console.error('Erro ao carregar configuração do YouTube', res.statusText);
       return { apiKey: '' };
@@ -21,9 +29,16 @@ export const getYoutubeConfig = async (): Promise<YoutubeConfig> => {
 
 export const saveYoutubeConfig = async (config: YoutubeConfig): Promise<void> => {
   try {
+    const token = authService.getToken();
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${BACKEND_BASE_URL}/youtube-settings`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ apiKey: config.apiKey }),
     });
     if (!res.ok) {
@@ -37,8 +52,16 @@ export const saveYoutubeConfig = async (config: YoutubeConfig): Promise<void> =>
 
 export const deleteYoutubeConfig = async (): Promise<void> => {
   try {
+    const token = authService.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${BACKEND_BASE_URL}/youtube-settings`, {
       method: 'DELETE',
+      headers,
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

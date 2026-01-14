@@ -1,8 +1,13 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import { youtubeSettingsService } from '../services/youtubeSettings';
 
-export const getYoutubeSettings = async (_req: Request, res: Response) => {
-  const setting = await youtubeSettingsService.get();
+export const getYoutubeSettings = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  const setting = await youtubeSettingsService.get(req.user.id);
   if (!setting) {
     return res.json({
       apiKey: '',
@@ -13,9 +18,13 @@ export const getYoutubeSettings = async (_req: Request, res: Response) => {
   });
 };
 
-export const saveYoutubeSettings = async (req: Request, res: Response) => {
+export const saveYoutubeSettings = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
   const { apiKey } = req.body || {};
-  const saved = await youtubeSettingsService.save({
+  const saved = await youtubeSettingsService.save(req.user.id, {
     apiKey,
   });
 
@@ -24,7 +33,11 @@ export const saveYoutubeSettings = async (req: Request, res: Response) => {
   });
 };
 
-export const clearYoutubeSettings = async (_req: Request, res: Response) => {
-  await youtubeSettingsService.clear();
+export const clearYoutubeSettings = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  await youtubeSettingsService.clear(req.user.id);
   return res.status(204).send();
 };

@@ -2,17 +2,18 @@ import { AppDataSource } from '../utils/db';
 import { YoutubeSetting } from '../entities/YoutubeSetting';
 
 export const youtubeSettingsService = {
-  async get() {
+  async get(userId: string) {
     const repo = AppDataSource.getRepository(YoutubeSetting);
-    const existing = await repo.find();
-    return existing[0] || null;
+    const existing = await repo.findOne({ where: { userId } });
+    return existing || null;
   },
 
-  async save(payload: { apiKey?: string }) {
+  async save(userId: string, payload: { apiKey?: string }) {
     const repo = AppDataSource.getRepository(YoutubeSetting);
-    let setting = (await repo.find())[0];
+    let setting = await repo.findOne({ where: { userId } });
+    
     if (!setting) {
-      setting = repo.create();
+      setting = repo.create({ userId });
     }
 
     setting.apiKey = payload.apiKey ?? setting.apiKey ?? null;
@@ -20,8 +21,8 @@ export const youtubeSettingsService = {
     return repo.save(setting);
   },
 
-  async clear() {
+  async clear(userId: string) {
     const repo = AppDataSource.getRepository(YoutubeSetting);
-    await repo.clear();
+    await repo.delete({ userId });
   },
 };

@@ -1,6 +1,7 @@
 
 import { SpotifyCredentials } from '../../types';
 import { BACKEND_BASE_URL } from '../../core/config';
+import { authService } from '../services/authService';
 
 const SPOTIFY_KEY = 'sonictag_spotify';
 const SPOTIFY_AUTH_KEY = 'sonictag_spotify_auth';
@@ -30,7 +31,14 @@ export const getSpotifyCredentials = async (): Promise<SpotifyCredentials> => {
   }
 
   try {
-    await fetch(`${BACKEND_BASE_URL}/spotify-settings`)
+    const token = authService.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    await fetch(`${BACKEND_BASE_URL}/spotify-settings`, { headers })
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
         spotifyCreds.clientId = data.clientId || '';
@@ -71,9 +79,16 @@ export const saveSpotifyCredentials = async (creds: SpotifyCredentials) => {
     }
 
     // Persistir no backend (fire-and-forget)
+    const token = authService.getToken();
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     await fetch(`${BACKEND_BASE_URL}/spotify-settings`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ clientId, clientSecret, redirectUri, accessToken, refreshToken, expiresAt }),
     }).catch(() => {});
   } catch (e) {
@@ -86,8 +101,16 @@ export const deleteSpotifyCredentials = async () => {
     localStorage.removeItem(SPOTIFY_KEY);
     localStorage.removeItem(SPOTIFY_AUTH_KEY);
 
+    const token = authService.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     await fetch(`${BACKEND_BASE_URL}/spotify-settings`, {
       method: 'DELETE',
+      headers,
     }).catch(() => {});
   } catch (e) {
     console.error('Erro ao apagar Spotify', e);
