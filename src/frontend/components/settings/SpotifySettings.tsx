@@ -159,7 +159,7 @@ const SpotifySettings: React.FC<SpotifySettingsProps> = ({
             </label>
             <input 
               type="text" 
-              value={creds.clientId}
+              value={creds.clientId || `${window.location.origin}/callback`}
               onChange={(e) => setCreds({ ...creds, clientId: e.target.value })}
               placeholder="Seu Client ID do Spotify"
               className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.clientId ? 'border-red-500' : 'border-zinc-700 focus:border-green-500'}`}

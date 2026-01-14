@@ -2,6 +2,7 @@
 export const BACKEND_BASE_URL = "/api";
 
 // NAVIDROME'
+export const NAVIDROME_BASE_URL = 'https://navidrome.thezion.top';
 export const NAVIDROME_SAVE_FORMAT_DEFAULT = "{genre}/Artists/{artist}/{album} ({year})/{track} - {title}.{ext}";
 
 // SPOTIFY

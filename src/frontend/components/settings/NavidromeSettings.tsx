@@ -3,6 +3,7 @@ import { NavidromeCredentials } from '../../../types';
 import { getNavidromeCredentials, saveNavidromeCredentials } from '../../repository/navidrome';
 import { Save, Link, Key, User, CheckCircle2, AlertCircle, Server, Trash2 } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
+import { NAVIDROME_BASE_URL } from  '../../../core/config';
 
 interface NavidromeSettingsProps {
   onCredsChange?: () => void;
@@ -88,7 +89,7 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = ({ onCredsChange }) 
             <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
               <Key className="w-4 h-4" /> Base URL
             </label>
-            <input type="text" value={creds.baseUrl} onChange={(e) => setCreds({ ...creds, baseUrl: e.target.value })} placeholder="https://nav.example.com" className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.baseUrl ? 'border-red-500' : 'border-zinc-700 focus:border-indigo-500'}`} />
+            <input type="text" value={creds.baseUrl || NAVIDROME_BASE_URL} onChange={(e) => setCreds({ ...creds, baseUrl: e.target.value })} placeholder="https://nav.example.com" className={`w-full bg-zinc-950 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors placeholder-zinc-800 font-mono ${errors.baseUrl ? 'border-red-500' : 'border-zinc-700 focus:border-indigo-500'}`} />
             {errors.baseUrl && <p className="text-red-500 text-xs"><AlertCircle className="w-3.5 h-3.5 inline-block mr-1" />{errors.baseUrl}</p>}
           </div>
 
