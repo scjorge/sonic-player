@@ -2,9 +2,7 @@ import { AppDataSource } from '../utils/db';
 import { User } from '../entities/User';
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRES_IN = '7d';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../config';
 
 export interface RegisterInput {
   username: string;
