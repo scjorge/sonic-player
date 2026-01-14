@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { NAVIDROME_DATABASE_SQLITE_PATH, NAVIDROME_BASE_PATH } from '../../core/config';
+import { NAVIDROME_DATABASE_SQLITE_PATH, NAVIDROME_MEDIA_PATH } from '../config';
 import path from 'path';
 
 
@@ -32,7 +32,7 @@ export async function getPathById(id: string): Promise<string | null> {
     throw new Error('Media file path not found in Navidrome database');
   }
 
-  const fullPath = path.join(NAVIDROME_BASE_PATH, trackPath);
+  const fullPath = path.join(NAVIDROME_MEDIA_PATH, trackPath);
   return fullPath;
 }
 

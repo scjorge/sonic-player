@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { downloadTrackFromTidal, downloadTrackFromSpotDL, getdownloads, getCompletedDownloads, streamDownload, writeMetadataParts, finalizeDownload, deleteDownload, clearDownloads, getCoverDownloads, writeCoverFromUrl, uploadPreparation, convertDownload, deletePreparation, generateSpectrogram } from '../controllers/downloads';
-import { NAVIDROME_PREPARATION_PATH } from '../../core/config';
+import { PREPARATION_PATH } from '../config';
 
 const downloadsRouter = Router();
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, NAVIDROME_PREPARATION_PATH);
+    cb(null, PREPARATION_PATH);
   },
   filename: (_req, file, cb) => {
     cb(null, file.originalname);

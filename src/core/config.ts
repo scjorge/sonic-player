@@ -1,11 +1,7 @@
 // APP
 export const BACKEND_BASE_URL = "/api";
-export const DATABASE_PATH = "/app/database.sqlite";
 
-// NAVIDROME
-export const NAVIDROME_BASE_PATH = "/app/downloads_navidrome";
-export const NAVIDROME_PREPARATION_PATH = "/app/downloads";
-export const NAVIDROME_DATABASE_SQLITE_PATH = "/app/navidrome_database/navidrome.db";
+// NAVIDROME'
 export const NAVIDROME_SAVE_FORMAT_DEFAULT = "{genre}/Artists/{artist}/{album} ({year})/{track} - {title}.{ext}";
 
 // SPOTIFY

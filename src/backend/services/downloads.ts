@@ -4,7 +4,8 @@ import fetch from 'node-fetch';
 import { execFile, spawn } from 'child_process';
 import { sanitizeQuery } from '../../commons/tools';
 import { tidalService } from '../../frontend/services/tidalService';
-import { NAVIDROME_BASE_PATH, TIDAL_QUALITY, NAVIDROME_PREPARATION_PATH } from '../../core/config';
+import { NAVIDROME_MEDIA_PATH, PREPARATION_PATH } from '../config';
+import { TIDAL_QUALITY } from '../../core/config';
 import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
 import { getPathById } from './navidromeDatabase';
@@ -18,7 +19,7 @@ class DownloadService {
 
   constructor() {
     this.downloads = new Map();
-    this.download_dir = NAVIDROME_PREPARATION_PATH;
+    this.download_dir = PREPARATION_PATH;
     if (!fs.existsSync(this.download_dir)) fs.mkdirSync(this.download_dir, { recursive: true });
   }
 
@@ -263,7 +264,7 @@ class DownloadService {
     relative = relative.replace(/{year}/g, safe(year.toString()));
     relative = relative.replace(/{ext}/g, ext || 'mp3');
 
-    return path.join(NAVIDROME_BASE_PATH, relative);
+    return path.join(NAVIDROME_MEDIA_PATH, relative);
   }
 
   async finalizeDownload(filePath: string) {
@@ -298,7 +299,7 @@ class DownloadService {
         status: 'moved',
         from: resolved,
         to: target,
-        relativePath: path.relative(NAVIDROME_BASE_PATH, target),
+        relativePath: path.relative(NAVIDROME_MEDIA_PATH, target),
       };
     } catch (error) {
       console.error('Failed to finalize download', error);

@@ -6,7 +6,7 @@ import { GenreEntity } from '../entities/GenreEntity';
 import { YoutubeSetting } from '../entities/YoutubeSetting';
 import { GeneralSettingsEntity } from '../entities/GeneralSettings';
 import { AudioEditorStateEntity } from '../entities/AudioEditorState';
-import { DATABASE_PATH } from '../../core/config';
+import { DATABASE_PATH } from '../config';
 
 export const AppDataSource = new DataSource({
   type: 'sqlite',

@@ -2,6 +2,7 @@ downloads/
 downloads_navidrome/
 navidrome_database/
 database.sqlite
+sonicplayer.db
 
 # ======================
 # Node.js

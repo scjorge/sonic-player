@@ -16,21 +16,21 @@ RUN npm run build
 ###########
 ## PROD ##
 ###########
-FROM node:20-alpine
+FROM node:20-slim
 
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
   ffmpeg \
   flac \
   exiftool \
   python3 \
-  py3-pip \
+  pipx \
   tzdata
 
+ENV PATH="/root/.local/bin:$PATH"
 ENV TZ=America/Sao_Paulo
 RUN cp /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone
 
-RUN pipx install --no-cache-dir spotdl
-RUN pipx ensurepath
+RUN pipx install spotdl
 
 WORKDIR /app
 

@@ -20,6 +20,3 @@ View your app in AI Studio: https://ai.studio/apps/drive/188I0DTzZFhomrQGJC27hEX
    `npm run dev`
 
 
-## ENV
-VITE_TIDAL_CLIENT_ID=
-VITE_TIDAL_CLIENT_SECRET=
