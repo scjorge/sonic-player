@@ -12,6 +12,10 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, '.'),
       }
     },
+    build: {
+      outDir: 'dist/frontend',
+      emptyOutDir: true
+    },
     server: mode === 'development' ? {
       port: 3000,
       host: '0.0.0.0',
