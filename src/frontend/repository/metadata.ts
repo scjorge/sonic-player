@@ -1,11 +1,19 @@
 
 import { TagGroup } from '../../types';
 import { BACKEND_BASE_URL } from '../../core/config';
+import { authService } from '../services/authService';
 
 // Group Tags storage functions - only via backend requests
 export const getStoredGroups = async (): Promise<TagGroup[]> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/tag-groups`);
+    const token = authService.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${BACKEND_BASE_URL}/tag-groups`, { headers });
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
       console.error('Erro ao buscar grupos do backend', res.status, errText);
@@ -21,9 +29,16 @@ export const getStoredGroups = async (): Promise<TagGroup[]> => {
 
 export const addStoredGroup = async (group: TagGroup): Promise<void> => {
   try {
+    const token = authService.getToken();
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${BACKEND_BASE_URL}/tag-groups`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(group),
     });
     if (!res.ok) {
@@ -37,9 +52,16 @@ export const addStoredGroup = async (group: TagGroup): Promise<void> => {
 
 export const updateStoredGroup = async (updatedGroup: TagGroup): Promise<void> => {
   try {
+    const token = authService.getToken();
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${BACKEND_BASE_URL}/tag-groups/${encodeURIComponent(updatedGroup.id)}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         name: updatedGroup.name,
         prefix: updatedGroup.prefix,
@@ -57,8 +79,16 @@ export const updateStoredGroup = async (updatedGroup: TagGroup): Promise<void> =
 
 export const deleteStoredGroup = async (id: string): Promise<void> => {
   try {
+    const token = authService.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${BACKEND_BASE_URL}/tag-groups/${encodeURIComponent(id)}`, {
       method: 'DELETE',
+      headers,
     });
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
@@ -73,7 +103,14 @@ export const deleteStoredGroup = async (id: string): Promise<void> => {
 // Genre list storage functions - only via backend requests
 export const getStoredGenres = async (): Promise<string[]> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/genres`);
+    const token = authService.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${BACKEND_BASE_URL}/genres`, { headers });
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
       console.error('Erro ao buscar gêneros do backend', res.status, errText);
@@ -92,9 +129,16 @@ export const addStoredGenre = async (genre: string): Promise<void> => {
   if (!value) return;
 
   try {
+    const token = authService.getToken();
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${BACKEND_BASE_URL}/genres`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ name: value }),
     });
     if (!res.ok) {
@@ -108,8 +152,16 @@ export const addStoredGenre = async (genre: string): Promise<void> => {
 
 export const deleteStoredGenre = async (genre: string): Promise<void> => {
   try {
+    const token = authService.getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${BACKEND_BASE_URL}/genres/${encodeURIComponent(genre)}`, {
       method: 'DELETE',
+      headers,
     });
     if (!res.ok) {
       const errText = await res.text().catch(() => '');

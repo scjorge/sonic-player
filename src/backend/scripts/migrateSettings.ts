@@ -150,10 +150,100 @@ async function migrateSettings() {
       console.error('Erro ao migrar navidrome_settings:', error);
     }
 
+    // Migrar tag_groups
+    try {
+      console.log('Migrando tag_groups...');
+      
+      // Verifica se a coluna userId já existe
+      const tagGroupsColumns = await queryRunner.query(
+        `PRAGMA table_info(tag_groups)`
+      );
+      const hasTagGroupsUserId = tagGroupsColumns.some((col: any) => col.name === 'userId');
+
+      if (!hasTagGroupsUserId) {
+        // Criar nova tabela temporária
+        await queryRunner.query(`
+          CREATE TABLE tag_groups_new (
+            id TEXT PRIMARY KEY,
+            userId VARCHAR(255) NOT NULL,
+            name TEXT NOT NULL,
+            prefix TEXT NOT NULL,
+            items TEXT NOT NULL
+          )
+        `);
+
+        // Copiar dados existentes
+        await queryRunner.query(`
+          INSERT INTO tag_groups_new (id, userId, name, prefix, items)
+          SELECT id, 'default-user-id', name, prefix, items
+          FROM tag_groups
+        `);
+
+        // Remover tabela antiga e renomear
+        await queryRunner.query(`DROP TABLE tag_groups`);
+        await queryRunner.query(`ALTER TABLE tag_groups_new RENAME TO tag_groups`);
+
+        // Criar índice único composto
+        await queryRunner.query(`
+          CREATE UNIQUE INDEX IDX_tag_groups_userId_id ON tag_groups (userId, id)
+        `);
+
+        console.log('✅ tag_groups migrado com sucesso');
+      } else {
+        console.log('⏭️  tag_groups já possui coluna userId');
+      }
+    } catch (error) {
+      console.error('Erro ao migrar tag_groups:', error);
+    }
+
+    // Migrar genres
+    try {
+      console.log('Migrando genres...');
+      
+      // Verifica se a coluna userId já existe
+      const genresColumns = await queryRunner.query(
+        `PRAGMA table_info(genres)`
+      );
+      const hasGenresUserId = genresColumns.some((col: any) => col.name === 'userId');
+
+      if (!hasGenresUserId) {
+        // Criar nova tabela temporária
+        await queryRunner.query(`
+          CREATE TABLE genres_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId VARCHAR(255) NOT NULL,
+            name TEXT NOT NULL
+          )
+        `);
+
+        // Copiar dados existentes
+        await queryRunner.query(`
+          INSERT INTO genres_new (id, userId, name)
+          SELECT id, 'default-user-id', name
+          FROM genres
+        `);
+
+        // Remover tabela antiga e renomear
+        await queryRunner.query(`DROP TABLE genres`);
+        await queryRunner.query(`ALTER TABLE genres_new RENAME TO genres`);
+
+        // Criar índice único composto
+        await queryRunner.query(`
+          CREATE UNIQUE INDEX IDX_genres_userId_name ON genres (userId, name)
+        `);
+
+        console.log('✅ genres migrado com sucesso');
+      } else {
+        console.log('⏭️  genres já possui coluna userId');
+      }
+    } catch (error) {
+      console.error('Erro ao migrar genres:', error);
+    }
+
     await queryRunner.release();
     console.log('\n✅ Migração concluída com sucesso!');
     console.log('\n⚠️  IMPORTANTE: Se você tinha configurações anteriores, elas foram atribuídas a "default-user-id".');
-    console.log('   Você precisará reconfigurar as APIs do YouTube, Spotify e Navidrome para cada usuário.');
+    console.log('   Você precisará reconfigurar as APIs do YouTube, Spotify, Navidrome, Tags e Gêneros para cada usuário.');
     
     await AppDataSource.destroy();
     process.exit(0);
