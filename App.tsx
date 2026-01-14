@@ -18,7 +18,6 @@ const App: React.FC = () => {
     return <LoginForm onLogin={login} />;
   }
 
-  localStorage.clear();
   return <AppMain />;
 };
 
