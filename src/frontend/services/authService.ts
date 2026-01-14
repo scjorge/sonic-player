@@ -5,6 +5,7 @@ const API_URL = `${BACKEND_BASE_URL}/auth`;
 
 class AuthService {
   private token: string | null = null;
+  private sessionPassword: string | null = null; // Senha em memória apenas para a sessão
 
   constructor() {
     // Carrega o token do localStorage ao inicializar
@@ -46,11 +47,16 @@ class AuthService {
 
     const result: AuthResponse = await response.json();
     this.setToken(result.token);
+    
+    // Armazena a senha em memória para uso com Navidrome
+    this.sessionPassword = credentials.password;
+    
     return result;
   }
 
   logout() {
     this.token = null;
+    this.sessionPassword = null; // Limpa a senha da memória
     localStorage.removeItem('authToken');
   }
 
@@ -276,6 +282,14 @@ class AuthService {
 
   isAuthenticated(): boolean {
     return !!this.token;
+  }
+
+  getSessionPassword(): string | null {
+    return this.sessionPassword;
+  }
+
+  hasSessionPassword(): boolean {
+    return !!this.sessionPassword;
   }
 }
 
