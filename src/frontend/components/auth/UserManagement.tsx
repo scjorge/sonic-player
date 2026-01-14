@@ -536,7 +536,7 @@ const UserManagement: React.FC = () => {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-black"
                   placeholder="Digite a nova senha"
                 />
                 <p className="text-xs text-gray-500 mt-1">Mínimo de 6 caracteres</p>
