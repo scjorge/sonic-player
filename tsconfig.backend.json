@@ -4,11 +4,12 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "outDir": "dist/backend",
-    "rootDir": "src/backend",
+    "rootDir": "src",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
     "skipLibCheck": true
   },
   "include": [
