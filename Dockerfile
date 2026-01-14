@@ -40,6 +40,6 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/asserts ./asserts
 
 ENV NODE_ENV=production
-EXPOSE 3000
+EXPOSE 3001
 
 CMD ["npx", "tsx", "src/backend/app.ts"]

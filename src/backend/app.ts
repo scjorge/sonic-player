@@ -3,11 +3,11 @@ import express from 'express'
 import cors from 'cors'
 import path from 'path'
 
-import routes from './routes'
+import routes from './routes/index'
 import { AppDataSource } from './utils/db'
 
 const PORT = process.env.PORT || 3001
-const frontendPath = process.env.FRONTEND_BUILD_PATH || '/app/dist'
+const frontendPath = process.env.FRONTEND_BUILD_PATH || '/app/dist/frontend'
 
 
 const app = express()

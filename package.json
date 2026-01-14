@@ -4,12 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "preview": "vite preview",
+    "dev:frontend": "vite",
+    "dev:backend": "npx tsx src/backend/app.ts",
     "build:frontend": "vite build",
     "build:backend": "tsc -p tsconfig.backend.json",
     "build": "vite build && npm run build:backend",
-    "server": "npx tsx src/backend/app.ts",
+    "start": "node dist/backend/backend/app.js",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx --fix"
   },
   "dependencies": {
