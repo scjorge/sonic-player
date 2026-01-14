@@ -1,4 +1,4 @@
-import { NaviSong } from '../../../types';
+import { NaviSong } from '../../types';
 import { getYoutubeConfig } from '../repository/youtube';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';

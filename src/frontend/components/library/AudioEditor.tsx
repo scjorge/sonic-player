@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NaviSong } from '../../../../types';
+import { NaviSong } from '../../../types';
 import { BACKEND_BASE_URL } from '../../../core/config';
 import showToast from '../utils/toast';
 import { Play, Pause, Download, Save, Upload, Scissors, Copy, Trash2, FolderOpen, Volume2, VolumeX, ZoomIn, ZoomOut, SkipBack, SkipForward, Plus, Layers, Music, Edit3, Link, Search } from 'lucide-react';

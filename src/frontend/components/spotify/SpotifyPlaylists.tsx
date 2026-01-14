@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { spotifyService } from '../../services/spotifyService';
-import { NaviPlaylist } from '../../../../types';
+import { NaviPlaylist } from '../../../types';
 import { List, Loader2, AlertCircle, ChevronRight, ChevronDown } from 'lucide-react';
 
 interface SpotifyPlaylistsProps {

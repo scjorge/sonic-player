@@ -1,5 +1,5 @@
 
-import { SpotifyCredentials } from '../../../types';
+import { SpotifyCredentials } from '../../types';
 import { BACKEND_BASE_URL } from '../../core/config';
 
 const SPOTIFY_KEY = 'sonictag_spotify';

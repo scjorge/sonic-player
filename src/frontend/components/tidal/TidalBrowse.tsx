@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NaviSong } from '../../../../types';
+import { NaviSong } from '../../../types';
 import { tidalService } from '../../services/tidalService';
 import { navidromeService } from '../../services/navidromeService';
 import SongTable from '../library/SongTable';

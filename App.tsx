@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, SpotifyCredentials } from './types';
+import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist, PlayerTrack, TagGroup, SpotifyCredentials } from './src/types.ts';
 import { navidromeService } from './src/frontend/services/navidromeService.ts';
 import { spotifyService } from './src/frontend/services/spotifyService.ts';
 import { tidalService } from './src/frontend/services/tidalService.ts';

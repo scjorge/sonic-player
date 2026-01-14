@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { spotifyService } from '../../services/spotifyService';
-import { NaviSong } from '../../../../types';
+import { NaviSong } from '../../../types';
 import SongTable from '../library/SongTable';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { SPOTIFY_COLUMN_CONFIG } from './spotifyConstants'; // Import the Spotify specific column config

@@ -1,5 +1,5 @@
 
-import { TagGroup } from '../../../types';
+import { TagGroup } from '../../types';
 import { BACKEND_BASE_URL } from '../../core/config';
 
 // Group Tags storage functions - only via backend requests

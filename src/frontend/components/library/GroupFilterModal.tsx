@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TagGroup } from '../../../../types';
+import { TagGroup } from '../../../types';
 import { X, Save, Filter, CheckSquare, Square } from 'lucide-react';
 
 interface GroupFilterModalProps {

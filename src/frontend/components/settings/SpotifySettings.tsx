@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { SpotifyCredentials } from '../../../../types';
+import { SpotifyCredentials } from '../../../types';
 import { saveSpotifyCredentials, getSpotifyCredentials, deleteSpotifyCredentials } from '../../repository/spotify';
 import { spotifyService } from '../../services/spotifyService';
 import { Key, ShieldCheck, Save, CheckCircle2, Info, Share, Trash2, AlertCircle, LogIn, LogOut, Copy } from 'lucide-react';
