@@ -1,5 +1,5 @@
 // APP
-export const BACKEND_BASE_URL = "http://127.0.0.1:6788";
+export const BACKEND_BASE_URL = "/api";
 export const DATABASE_PATH = "/app/database.sqlite";
 
 // NAVIDROME

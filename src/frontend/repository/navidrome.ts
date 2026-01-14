@@ -21,7 +21,7 @@ export const getNavidromeCredentials = () => {
   }
 
   try {
-    fetch(`${BACKEND_BASE_URL}/api/navidrome`)
+    fetch(`${BACKEND_BASE_URL}/navidrome`)
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
         const creds = {
@@ -49,7 +49,7 @@ export const saveNavidromeCredentials = (creds: { baseUrl: string; user: string;
   try {
     localStorage.setItem(NAVIDROME_KEY, JSON.stringify({ baseUrl: creds.baseUrl, user: creds.user, password: creds.password }));
 
-    fetch(`${BACKEND_BASE_URL}/api/navidrome`, {
+    fetch(`${BACKEND_BASE_URL}/navidrome`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(creds),

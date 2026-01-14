@@ -215,7 +215,7 @@ const SongTable: React.FC<SongTableProps> = ({
 
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', `${BACKEND_BASE_URL}/api/downloads/upload-preparation`);
+        xhr.open('POST', `${BACKEND_BASE_URL}/downloads/upload-preparation`);
 
         xhr.upload.onprogress = (event: ProgressEvent) => {
           if (!event.lengthComputable) return;
@@ -752,7 +752,7 @@ const SongTable: React.FC<SongTableProps> = ({
               e.stopPropagation();
               if (disabled || !song.path) return;
               try {
-                const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/finalize`, {
+                const resp = await fetch(`${BACKEND_BASE_URL}/downloads/finalize`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ path: song.path }),
@@ -907,7 +907,7 @@ const SongTable: React.FC<SongTableProps> = ({
     const source: 'download' | 'navidrome' = isNaviTableDownload ? 'download' : isNavidromeLibraryTable ? 'navidrome' : 'download';
 
     try {
-      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
+      const resp = await fetch(`${BACKEND_BASE_URL}/downloads/metadata`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1071,7 +1071,7 @@ const SongTable: React.FC<SongTableProps> = ({
 
                       try {
                         // Aplica tags principais
-                        const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
+                        const resp = await fetch(`${BACKEND_BASE_URL}/downloads/metadata`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
@@ -1090,7 +1090,7 @@ const SongTable: React.FC<SongTableProps> = ({
 
                         // Aplica capa, se disponível
                         if (current.coverArt) {
-                          const respCover = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata-cover`, {
+                          const respCover = await fetch(`${BACKEND_BASE_URL}/downloads/metadata-cover`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -1199,7 +1199,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     setConvertState(prev => ({ ...prev, loading: true }));
                     try {
                       showToast('Convertendo para MP3 320 kbps...', 'warning');
-                      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/convert`, {
+                      const resp = await fetch(`${BACKEND_BASE_URL}/downloads/convert`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ path: convertState.song.path, format: 'mp3' }),
@@ -1229,7 +1229,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     setConvertState(prev => ({ ...prev, loading: true }));
                     try {
                       showToast('Convertendo para FLAC...', 'warning');
-                      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/convert`, {
+                      const resp = await fetch(`${BACKEND_BASE_URL}/downloads/convert`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ path: convertState.song.path, format: 'flac' }),
@@ -1300,7 +1300,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     if (!song?.path) return;
                     setDeleteState(prev => ({ ...prev, loading: true }));
                     try {
-                      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/delete-preparation`, {
+                      const resp = await fetch(`${BACKEND_BASE_URL}/downloads/delete-preparation`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ path: song.path }),
@@ -1373,7 +1373,7 @@ const SongTable: React.FC<SongTableProps> = ({
                   setContextMenu({ ...contextMenu, visible: false });
                   try {
                     showToast(`Iniciando download MP3: ${song.title}`, 'warning');
-                    const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/spotdl`, {
+                    const resp = await fetch(`${BACKEND_BASE_URL}/downloads/spotdl`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ song }),
@@ -1405,7 +1405,7 @@ const SongTable: React.FC<SongTableProps> = ({
                 setContextMenu({ ...contextMenu, visible: false });
                 try {
                   showToast(`Iniciando download MP3 (YouTube): ${song.title}`, 'warning');
-                  const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/spotdl`, {
+                  const resp = await fetch(`${BACKEND_BASE_URL}/downloads/spotdl`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ song }),
@@ -1474,7 +1474,7 @@ const SongTable: React.FC<SongTableProps> = ({
                   navidrome_id = song.id;
                 }
                 try {
-                  const resp = await fetch(`${BACKEND_BASE_URL}/api/shazam/recognise`, {
+                  const resp = await fetch(`${BACKEND_BASE_URL}/shazam/recognise`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ path: song.path, navidrome_id: navidrome_id }),
@@ -1541,7 +1541,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     isPanning: false,
                   });
                   try {
-                    const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/spectrogram`, {
+                    const resp = await fetch(`${BACKEND_BASE_URL}/downloads/spectrogram`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ path: song.path }),
@@ -1634,7 +1634,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     trackId: contextMenu.song!.id,
                     song: contextMenu.song,
                   };
-                  const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/tidal`, {
+                  const resp = await fetch(`${BACKEND_BASE_URL}/downloads/tidal`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
@@ -1666,7 +1666,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     song: contextMenu.song,
                     format: 'mp3'
                   };
-                  const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/tidal`, {
+                  const resp = await fetch(`${BACKEND_BASE_URL}/downloads/tidal`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)

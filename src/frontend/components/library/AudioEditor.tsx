@@ -426,7 +426,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         const response = searchQuery ? await navidromeService.searchSongs(searchQuery, 100, 0) : { songs: [], total: 0 };
         setImportSongs(response.songs || []);
       } else {
-        const res = await fetch(`${BACKEND_BASE_URL}/api/downloads/completed`);
+        const res = await fetch(`${BACKEND_BASE_URL}/downloads/completed`);
         if (!res.ok) {
           throw new Error('Erro ao buscar arquivos de preparo');
         }
@@ -482,7 +482,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       let audioUrl: string;
 
       if (song.contentType === 'audio/preparation') {
-        audioUrl = `${BACKEND_BASE_URL}/api/downloads/stream?id=${encodeURIComponent(song.id)}`;
+        audioUrl = `${BACKEND_BASE_URL}/downloads/stream?id=${encodeURIComponent(song.id)}`;
       } else {
         audioUrl = navidromeService.getStreamUrl(song.id);
       }
@@ -543,7 +543,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
                 if (st.originType === 'library' && st.songId) {
                   fetchUrl = navidromeService.getStreamUrl(st.songId);
                 } else if (st.originType === 'preparo' && st.songId) {
-                  fetchUrl = `${BACKEND_BASE_URL}/api/downloads/stream?id=${encodeURIComponent(st.songId)}`;
+                  fetchUrl = `${BACKEND_BASE_URL}/downloads/stream?id=${encodeURIComponent(st.songId)}`;
                 }
 
                 if (fetchUrl) {
@@ -1365,7 +1365,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
       const formData = new FormData();
       formData.append('files', file);
 
-      const res = await fetch(`${BACKEND_BASE_URL}/api/downloads/upload-preparation`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/downloads/upload-preparation`, {
         method: 'POST',
         body: formData,
       });

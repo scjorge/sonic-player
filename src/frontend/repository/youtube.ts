@@ -6,7 +6,7 @@ export interface YoutubeConfig {
 
 export const getYoutubeConfig = async (): Promise<YoutubeConfig> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/youtube-settings`);
+    const res = await fetch(`${BACKEND_BASE_URL}/youtube-settings`);
     if (!res.ok) {
       console.error('Erro ao carregar configuração do YouTube', res.statusText);
       return { apiKey: '' };
@@ -21,7 +21,7 @@ export const getYoutubeConfig = async (): Promise<YoutubeConfig> => {
 
 export const saveYoutubeConfig = async (config: YoutubeConfig): Promise<void> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/youtube-settings`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/youtube-settings`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ apiKey: config.apiKey }),
@@ -37,7 +37,7 @@ export const saveYoutubeConfig = async (config: YoutubeConfig): Promise<void> =>
 
 export const deleteYoutubeConfig = async (): Promise<void> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/youtube-settings`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/youtube-settings`, {
       method: 'DELETE',
     });
     if (!res.ok) {

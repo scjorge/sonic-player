@@ -5,7 +5,7 @@ import { BACKEND_BASE_URL } from '../../core/config';
 // Group Tags storage functions - only via backend requests
 export const getStoredGroups = async (): Promise<TagGroup[]> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/tag-groups`);
+    const res = await fetch(`${BACKEND_BASE_URL}/tag-groups`);
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
       console.error('Erro ao buscar grupos do backend', res.status, errText);
@@ -21,7 +21,7 @@ export const getStoredGroups = async (): Promise<TagGroup[]> => {
 
 export const addStoredGroup = async (group: TagGroup): Promise<void> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/tag-groups`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/tag-groups`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(group),
@@ -37,7 +37,7 @@ export const addStoredGroup = async (group: TagGroup): Promise<void> => {
 
 export const updateStoredGroup = async (updatedGroup: TagGroup): Promise<void> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/tag-groups/${encodeURIComponent(updatedGroup.id)}`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/tag-groups/${encodeURIComponent(updatedGroup.id)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -57,7 +57,7 @@ export const updateStoredGroup = async (updatedGroup: TagGroup): Promise<void> =
 
 export const deleteStoredGroup = async (id: string): Promise<void> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/tag-groups/${encodeURIComponent(id)}`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/tag-groups/${encodeURIComponent(id)}`, {
       method: 'DELETE',
     });
     if (!res.ok) {
@@ -73,7 +73,7 @@ export const deleteStoredGroup = async (id: string): Promise<void> => {
 // Genre list storage functions - only via backend requests
 export const getStoredGenres = async (): Promise<string[]> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/genres`);
+    const res = await fetch(`${BACKEND_BASE_URL}/genres`);
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
       console.error('Erro ao buscar gêneros do backend', res.status, errText);
@@ -92,7 +92,7 @@ export const addStoredGenre = async (genre: string): Promise<void> => {
   if (!value) return;
 
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/genres`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/genres`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: value }),
@@ -108,7 +108,7 @@ export const addStoredGenre = async (genre: string): Promise<void> => {
 
 export const deleteStoredGenre = async (genre: string): Promise<void> => {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/genres/${encodeURIComponent(genre)}`, {
+    const res = await fetch(`${BACKEND_BASE_URL}/genres/${encodeURIComponent(genre)}`, {
       method: 'DELETE',
     });
     if (!res.ok) {

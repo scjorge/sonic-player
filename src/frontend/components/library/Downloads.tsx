@@ -47,7 +47,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
 
   const handleClearAll = async () => {
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/api/downloads`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/downloads`, {
         method: 'DELETE',
       });
       if (!res.ok) {
@@ -63,7 +63,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
 
   const handleDeleteItem = async (id: string) => {
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/api/downloads/${encodeURIComponent(id)}`, {
+      const res = await fetch(`${BACKEND_BASE_URL}/downloads/${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
       if (!res.ok) {
@@ -84,7 +84,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
         trackId: song.id,
         song: song,
       };
-      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/tidal`, {
+      const resp = await fetch(`${BACKEND_BASE_URL}/downloads/tidal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -105,7 +105,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
 
   const fetchDownloads = async () => {
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/api/downloads`);
+      const res = await fetch(`${BACKEND_BASE_URL}/downloads`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         showToast(`Erro ao buscar downloads: ${err.error || res.statusText}`, 'error');
@@ -132,7 +132,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
   const fetchCompleted = async () => {
     setLoadingCompleted(true);
     try {
-      const res = await fetch(`${BACKEND_BASE_URL}/api/downloads/completed`);
+      const res = await fetch(`${BACKEND_BASE_URL}/downloads/completed`);
       if (!res.ok) {
         setCompletedSongs([]);
         return;
@@ -165,7 +165,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
       songs.forEach(async (song) => {
         if (!song.path) return;
         try {
-          const coverRes = await fetch(`${BACKEND_BASE_URL}/api/downloads/completed-cover?path=${encodeURIComponent(song.path)}`);
+          const coverRes = await fetch(`${BACKEND_BASE_URL}/downloads/completed-cover?path=${encodeURIComponent(song.path)}`);
           if (!coverRes.ok) return;
           const coverJson = await coverRes.json();
           const cover = coverJson.cover;
@@ -317,7 +317,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
 
             (async () => {
               try {
-                const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
+                const resp = await fetch(`${BACKEND_BASE_URL}/downloads/metadata`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({

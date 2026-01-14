@@ -30,7 +30,7 @@ export const getSpotifyCredentials = async (): Promise<SpotifyCredentials> => {
   }
 
   try {
-    await fetch(`${BACKEND_BASE_URL}/api/spotify-settings`)
+    await fetch(`${BACKEND_BASE_URL}/spotify-settings`)
       .then((res) => (res.ok ? res.json() : Promise.reject(res)))
       .then((data) => {
         spotifyCreds.clientId = data.clientId || '';
@@ -71,7 +71,7 @@ export const saveSpotifyCredentials = async (creds: SpotifyCredentials) => {
     }
 
     // Persistir no backend (fire-and-forget)
-    await fetch(`${BACKEND_BASE_URL}/api/spotify-settings`, {
+    await fetch(`${BACKEND_BASE_URL}/spotify-settings`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ clientId, clientSecret, redirectUri, accessToken, refreshToken, expiresAt }),
@@ -86,7 +86,7 @@ export const deleteSpotifyCredentials = async () => {
     localStorage.removeItem(SPOTIFY_KEY);
     localStorage.removeItem(SPOTIFY_AUTH_KEY);
 
-    await fetch(`${BACKEND_BASE_URL}/api/spotify-settings`, {
+    await fetch(`${BACKEND_BASE_URL}/spotify-settings`, {
       method: 'DELETE',
     }).catch(() => {});
   } catch (e) {

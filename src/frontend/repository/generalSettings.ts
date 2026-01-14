@@ -5,13 +5,13 @@ export interface GeneralSettings {
 }
 
 export async function getGeneralSettings(): Promise<GeneralSettings> {
-  const res = await fetch(`${BACKEND_BASE_URL}/api/general-settings`);
+  const res = await fetch(`${BACKEND_BASE_URL}/general-settings`);
   if (!res.ok) throw new Error('Falha ao carregar configurações gerais');
   return res.json();
 }
 
 export async function saveGeneralSettings(settings: GeneralSettings): Promise<GeneralSettings> {
-  const res = await fetch(`${BACKEND_BASE_URL}/api/general-settings`, {
+  const res = await fetch(`${BACKEND_BASE_URL}/general-settings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ settings }),

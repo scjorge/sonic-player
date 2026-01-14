@@ -391,7 +391,7 @@ const App: React.FC = () => {
               .map(c => `comment=${encodeURIComponent(c)}`)
               .join('&');
             const offset = page * pageSize;
-            const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
+            const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
 
             if (!resp.ok) {
               const err = await resp.json().catch(() => ({}));
@@ -976,7 +976,7 @@ const App: React.FC = () => {
             .map(c => `comment=${encodeURIComponent(c)}`)
             .join('&');
           const offset = newPage * pageSize;
-          const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
+          const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
 
           if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
@@ -1062,7 +1062,7 @@ const App: React.FC = () => {
             const params = groupFilterSelection
               .map(c => `comment=${encodeURIComponent(c)}`)
               .join('&');
-            const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${newSize}&offset=0`);
+            const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${params}&limit=${newSize}&offset=0`);
 
             if (!resp.ok) {
               const err = await resp.json().catch(() => ({}));
@@ -1126,7 +1126,7 @@ const App: React.FC = () => {
             .map(c => `comment=${encodeURIComponent(c)}`)
             .join('&');
           const offset = page * pageSize;
-          const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
+          const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
 
           if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
@@ -1240,7 +1240,7 @@ const App: React.FC = () => {
     }
 
     try {
-      const resp = await fetch(`${BACKEND_BASE_URL}/api/downloads/metadata`, {
+      const resp = await fetch(`${BACKEND_BASE_URL}/downloads/metadata`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1323,7 +1323,7 @@ const App: React.FC = () => {
       }
 
       const queryString = queryParts.join('&');
-      const resp = await fetch(`${BACKEND_BASE_URL}/api/navidrome/search4?${queryString}&limit=${pageSize}&offset=0`);
+      const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${queryString}&limit=${pageSize}&offset=0`);
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
@@ -1457,7 +1457,7 @@ const App: React.FC = () => {
       return;
     }
 
-    const streamUrl = `${BACKEND_BASE_URL}/api/downloads/stream?id=${encodeURIComponent(song.id)}`;
+    const streamUrl = `${BACKEND_BASE_URL}/downloads/stream?id=${encodeURIComponent(song.id)}`;
 
     const playerTrack: PlayerTrack = {
       id: song.id,
