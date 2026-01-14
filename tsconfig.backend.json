@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Node",
+    "target": "es2016",
+    "module": "commonjs",
      "rootDir": "src",
     "outDir": "dist/backend",
     "experimentalDecorators": true,
