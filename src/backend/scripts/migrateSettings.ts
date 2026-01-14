@@ -284,10 +284,54 @@ async function migrateSettings() {
       console.error('Erro ao migrar general_settings:', error);
     }
 
+    // Migrar audio_editor_state
+    try {
+      console.log('Migrando audio_editor_state...');
+      
+      // Verifica se a coluna userId já existe
+      const audioEditorColumns = await queryRunner.query(
+        `PRAGMA table_info(audio_editor_state)`
+      );
+      const hasAudioEditorUserId = audioEditorColumns.some((col: any) => col.name === 'userId');
+
+      if (!hasAudioEditorUserId) {
+        // Criar nova tabela temporária
+        await queryRunner.query(`
+          CREATE TABLE audio_editor_state_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId VARCHAR(255) NOT NULL,
+            stateJson TEXT NOT NULL
+          )
+        `);
+
+        // Copiar dados existentes
+        await queryRunner.query(`
+          INSERT INTO audio_editor_state_new (id, userId, stateJson)
+          SELECT id, 'default-user-id', stateJson
+          FROM audio_editor_state
+        `);
+
+        // Remover tabela antiga e renomear
+        await queryRunner.query(`DROP TABLE audio_editor_state`);
+        await queryRunner.query(`ALTER TABLE audio_editor_state_new RENAME TO audio_editor_state`);
+
+        // Criar índice único
+        await queryRunner.query(`
+          CREATE UNIQUE INDEX IDX_audio_editor_state_userId ON audio_editor_state (userId)
+        `);
+
+        console.log('✅ audio_editor_state migrado com sucesso');
+      } else {
+        console.log('⏭️  audio_editor_state já possui coluna userId');
+      }
+    } catch (error) {
+      console.error('Erro ao migrar audio_editor_state:', error);
+    }
+
     await queryRunner.release();
     console.log('\n✅ Migração concluída com sucesso!');
     console.log('\n⚠️  IMPORTANTE: Se você tinha configurações anteriores, elas foram atribuídas a "default-user-id".');
-    console.log('   Você precisará reconfigurar as APIs do YouTube, Spotify, Navidrome, Tags, Gêneros e Template Navidrome para cada usuário.');
+    console.log('   Você precisará reconfigurar as APIs do YouTube, Spotify, Navidrome, Tags, Gêneros, Template Navidrome e Editor de Áudio para cada usuário.');
     
     await AppDataSource.destroy();
     process.exit(0);

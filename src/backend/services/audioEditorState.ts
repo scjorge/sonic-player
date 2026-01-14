@@ -2,10 +2,10 @@ import { AppDataSource } from '../utils/db';
 import { AudioEditorStateEntity } from '../entities/AudioEditorState';
 
 export const audioEditorStateService = {
-  async getState(): Promise<{ state: any | null; error: string | null }> {
+  async getState(userId: string): Promise<{ state: any | null; error: string | null }> {
     try {
       const repo = AppDataSource.getRepository(AudioEditorStateEntity);
-      const row = await repo.findOne({ where: {} });
+      const row = await repo.findOne({ where: { userId } });
       if (!row) {
         return { state: null, error: null };
       }
@@ -22,14 +22,14 @@ export const audioEditorStateService = {
     }
   },
 
-  async saveState(state: any): Promise<{ error: string | null }> {
+  async saveState(userId: string, state: any): Promise<{ error: string | null }> {
     try {
       const repo = AppDataSource.getRepository(AudioEditorStateEntity);
-      let row = await repo.findOne({ where: {} });
+      let row = await repo.findOne({ where: { userId } });
       const stateJson = JSON.stringify(state ?? null);
 
       if (!row) {
-        row = repo.create({ stateJson });
+        row = repo.create({ userId, stateJson });
       } else {
         row.stateJson = stateJson;
       }
