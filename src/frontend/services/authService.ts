@@ -100,6 +100,33 @@ class AuthService {
     }
   }
 
+  async updateProfile(username?: string, email?: string): Promise<{ token: string; user: User }> {
+    if (!this.token) {
+      throw new Error('Não autenticado');
+    }
+
+    const response = await fetch(`${API_URL}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: JSON.stringify({ username, email }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao atualizar perfil');
+    }
+
+    const result = await response.json();
+    
+    // Atualiza o token já que as informações do usuário mudaram
+    this.setToken(result.token);
+    
+    return result;
+  }
+
   async listUsers(): Promise<User[]> {
     if (!this.token) {
       throw new Error('Não autenticado');

@@ -110,3 +110,27 @@ export const toggleUserStatus = async (req: AuthRequest, res: Response) => {
     }
   }
 };
+
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Não autenticado' });
+    }
+
+    const { username, email } = req.body;
+
+    if (!username && !email) {
+      return res.status(400).json({ error: 'Forneça nome de usuário ou email para atualizar' });
+    }
+
+    const result = await authService.updateProfile(req.user.id, username, email);
+
+    res.json(result);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Erro ao atualizar perfil' });
+    }
+  }
+};

@@ -11,6 +11,7 @@ router.post('/login', authController.login);
 // Rotas protegidas
 router.get('/me', authMiddleware, authController.getCurrentUser);
 router.put('/password', authMiddleware, authController.updatePassword);
+router.put('/profile', authMiddleware, authController.updateProfile);
 
 // Rotas de administrador
 router.get('/users', authMiddleware, adminMiddleware, authController.listUsers);

@@ -161,6 +161,58 @@ export class AuthService {
     return { message: 'Senha atualizada com sucesso' };
   }
 
+  async updateProfile(userId: string, username?: string, email?: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    // Verifica se o nome de usuário já está em uso por outro usuário
+    if (username && username !== user.username) {
+      const existingUsername = await this.userRepository.findOne({
+        where: { username }
+      });
+
+      if (existingUsername) {
+        throw new Error('Nome de usuário já está em uso');
+      }
+
+      user.username = username;
+    }
+
+    // Verifica se o email já está em uso por outro usuário
+    if (email && email !== user.email) {
+      const existingEmail = await this.userRepository.findOne({
+        where: { email }
+      });
+
+      if (existingEmail) {
+        throw new Error('Email já está em uso');
+      }
+
+      user.email = email;
+    }
+
+    await this.userRepository.save(user);
+
+    // Gera um novo token com as informações atualizadas
+    const token = this.generateToken(user);
+
+    return {
+      message: 'Perfil atualizado com sucesso',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    };
+  }
+
   async listUsers() {
     const users = await this.userRepository.find({
       select: ['id', 'username', 'email', 'role', 'isActive', 'createdAt']

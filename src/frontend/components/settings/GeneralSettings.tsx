@@ -120,6 +120,44 @@ const GeneralSettings: React.FC = () => {
     }
   };
 
+  const handleSaveProfile = async () => {
+    if (!username.trim() || !email.trim()) {
+      showToast('Nome de usuário e email são obrigatórios', 'error');
+      return;
+    }
+
+    // Verifica se houve mudança
+    if (username === user?.username && email === user?.email) {
+      showToast('Nenhuma alteração detectada', 'info');
+      return;
+    }
+
+    setSavingAccount(true);
+    try {
+      const result = await authService.updateProfile(
+        username !== user?.username ? username : undefined,
+        email !== user?.email ? email : undefined
+      );
+      
+      // Atualiza o contexto com os novos dados do usuário
+      await refreshUser();
+      
+      showToast('Perfil atualizado com sucesso!', 'success');
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : 'Erro ao atualizar perfil',
+        'error'
+      );
+      // Reverte as mudanças em caso de erro
+      if (user) {
+        setUsername(user.username);
+        setEmail(user.email);
+      }
+    } finally {
+      setSavingAccount(false);
+    }
+  };
+
   const previewPath = buildPreview(form.navidromeSaveFormat || '');
 
   if (loading) {
@@ -253,15 +291,13 @@ const GeneralSettings: React.FC = () => {
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
                   placeholder="Seu nome de usuário"
-                  disabled
+                  disabled={savingAccount}
                 />
-                <p className="text-xs text-zinc-500 mt-1">
-                  Funcionalidade de alteração em desenvolvimento
-                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                <label className="block text-sm font-medium text-zinc-400 mb-2 flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
                   Email
                 </label>
                 <input
@@ -270,12 +306,18 @@ const GeneralSettings: React.FC = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
                   placeholder="seu@email.com"
-                  disabled
+                  disabled={savingAccount}
                 />
-                <p className="text-xs text-zinc-500 mt-1">
-                  Funcionalidade de alteração em desenvolvimento
-                </p>
               </div>
+
+              <button
+                onClick={handleSaveProfile}
+                disabled={savingAccount || (username === user?.username && email === user?.email)}
+                className="bg-green-600 hover:bg-green-500 disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-green-500/10 active:scale-95"
+              >
+                <Save className="w-4 h-4" />
+                {savingAccount ? 'Salvando...' : 'Salvar Alterações'}
+              </button>
             </div>
           </div>
 
