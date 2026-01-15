@@ -1,6 +1,7 @@
 import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist } from '../../types';
 import { MD5, sanitizeQuery } from '../../commons/tools';
 import { getNavidromeCredentials } from '../repository/navidrome';
+import { authService } from '../services/authService';
 
 const CLIENT = 'SonicTagPlayer';
 const VERSION = '1.16.1';
@@ -58,6 +59,17 @@ class NavidromeService {
       const message = e?.message || String(e);
       return { ok: false, message };
     }
+  }
+
+  async getUserFolderId(): Promise<Number> {
+    const userName = authService.getCurrentUserSync()?.username;
+    const data = await this.fetchData('getMusicFolders.view');
+    const musicFolders = data['subsonic-response'].musicFolders?.musicFolder || [];
+    const folders = musicFolders.filter((f: any) => f.name == userName);
+    if (folders.length === 0) {
+      return null;
+    }
+    return folders[0].id;
   }
 
   async getRandomSongs(size: number = 20): Promise<NaviSong[]> {
