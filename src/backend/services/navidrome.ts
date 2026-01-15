@@ -122,8 +122,8 @@ export const navidromeTrackService = {
     };
   },
 
-  get(comments: string[], genreList: string[], artistList: string[], yearList: string[], limit: number = 50, offset: number = 0) {
-    const rows = search4(comments, genreList, artistList, yearList, limit, offset);
+  get(comments: string[], genreList: string[], artistList: string[], yearList: string[], limit: number = 50, offset: number = 0, musicFolderId: string | number) {
+    const rows = search4(comments, genreList, artistList, yearList, limit, offset, musicFolderId);
     return this.toSubsonicSearchResult(rows);
   }
 }

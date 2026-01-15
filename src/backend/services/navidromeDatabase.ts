@@ -37,7 +37,7 @@ export async function getPathById(id: string): Promise<string | null> {
 }
 
 
-export function search4(comments: string[], genres: string[], artists: string[], years: string[], limit: number = 50, offset: number = 0): any {
+export function search4(comments: string[], genres: string[], artists: string[], years: string[], limit: number = 50, offset: number = 0, musicFolderId: string | number): any {
   if (!comments.length && !genres.length && !artists.length && !years.length) {
     return [];
   }
@@ -89,9 +89,10 @@ export function search4(comments: string[], genres: string[], artists: string[],
     FROM media_file
     WHERE
       (${whereParts.join(' AND ')})
+    AND library_id = ?
     LIMIT ? OFFSET ?
   `;
-  params.push(limit, offset);
+  params.push(musicFolderId, limit, offset);
 
   const rows = execQueryAll(sql, params);
   return rows;
