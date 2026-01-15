@@ -859,6 +859,35 @@ const App: React.FC = () => {
     }
   };
 
+  const handleMasterModeChange = () => {
+    // Refresh current view when master mode is toggled
+    if (viewMode === 'navi_songs') {
+      if (groupFilterSelection.length > 0) {
+        // Reload with group filter
+        handleApplyGroupFilter(groupFilterSelection, activeArtist, activeGenre, activeYear);
+      } else if (naviSearchQuery) {
+        // Reload with search query
+        handleSearch(naviSearchQuery);
+      } else if (activeQuickList) {
+        // Reload with quick list
+        fetchSongs(0, pageSize, activeArtist, activeGenre, activeYear, activeQuickList);
+      } else {
+        // Reload with current filters
+        fetchSongs(0, pageSize, activeArtist, activeGenre, activeYear, undefined);
+      }
+      setPage(0);
+    } else if (viewMode === 'navi_favorites') {
+      // Reload favorites
+      handleFavoritesClick();
+    } else if (viewMode === 'navi_playlist' && selectedPlaylistId) {
+      // Reload playlist
+      const playlist = naviPlaylists.find(p => p.id === selectedPlaylistId);
+      if (playlist) {
+        handlePlaylistClick(playlist);
+      }
+    }
+  };
+
   const handleSpotifyBrowseSearch = async (query: string, pageNum: number = 0, size: number = spotifyBrowsePageSize) => {
     setSpotifyBrowseSearchQuery(query);
     if (!query.trim()) {
@@ -1967,6 +1996,7 @@ const App: React.FC = () => {
             isNaviSongsView={viewMode === 'navi_songs'}
             isNaviPlaylistView={viewMode === 'navi_playlist'}
             onReorderNaviPlaylist={viewMode === 'navi_playlist' ? handleReorderNaviPlaylist : undefined}
+            onMasterModeChange={handleMasterModeChange}
           />
         </div>
       );

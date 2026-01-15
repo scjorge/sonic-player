@@ -66,6 +66,8 @@ interface SongTableProps {
     // Navidrome playlist-specific
     isNaviPlaylistView?: boolean;
     onReorderNaviPlaylist?: (fromIndex: number, toIndex: number) => void;
+    // Master mode
+    onMasterModeChange?: () => void;
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
@@ -141,6 +143,7 @@ const SongTable: React.FC<SongTableProps> = ({
   onAfterFinalize,
   isNaviPlaylistView,
   onReorderNaviPlaylist,
+  onMasterModeChange,
 }) => {
   // --- STATE ---
   const [columns, setColumns] = useState<ColumnConfig[]>(defaultColumns || NAVI_COLUMN_CONFIG);
@@ -159,6 +162,14 @@ const SongTable: React.FC<SongTableProps> = ({
     const saved = getUserState<any>('navi_songs');
     return saved?.masterMode ?? false;
   });
+  
+  // Initialize master mode on mount
+  useEffect(() => {
+    const saved = getUserState<any>('navi_songs');
+    const initialMode = saved?.masterMode ?? false;
+    navidromeService.setMasterMode(initialMode);
+  }, []);
+  
   const [convertState, setConvertState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
   const [deleteState, setDeleteState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
   const [uploadState, setUploadState] = useState<{ active: boolean; progress: number; totalFiles: number; }>(
@@ -1883,20 +1894,32 @@ const SongTable: React.FC<SongTableProps> = ({
         {isNavidromeLibraryTable && (
           <>
             <button
-              onClick={() => {
+              key={`master-mode-${isMasterMode}`}
+              onClick={async () => {
                 const newMode = !isMasterMode;
+
+                // Update state and service first
                 setIsMasterMode(newMode);
-                // Update the service with the new master mode state
                 navidromeService.setMasterMode(newMode);
+                setUserState('navi_songs', { masterMode: newMode });
+                
+                // Then notify parent to refresh data
+                if (onMasterModeChange) {
+                  // Small delay to ensure state is updated
+                  setTimeout(() => {
+                    onMasterModeChange();
+                  }, 50);
+                }
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isMasterMode
-                ? 'bg-purple-500/10 text-purple-300 border-purple-500/60'
-                : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
+                isMasterMode
+                  ? 'bg-purple-500/10 text-purple-300 border-purple-500/60'
+                  : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
               }`}
-              title="Modo Master - Filtrar apenas músicas da sua pasta de usuário"
+              title={`Biblioteca Master ${isMasterMode ? 'ATIVA' : 'INATIVA'}`}
             >
-              <Shield className="w-4 h-4" />
-              Master
+              <Shield className={`w-4 h-4 ${isMasterMode ? 'text-purple-300' : 'text-zinc-400'}`} />
+              Master {isMasterMode ? '(ON)' : '(OFF)'}
             </button>
             <button
               onClick={() => setIsTagEditMode(!isTagEditMode)}

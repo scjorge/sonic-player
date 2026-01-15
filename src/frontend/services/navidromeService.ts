@@ -20,7 +20,6 @@ class NavidromeService {
   private readonly MEDIA_AUTH_TTL = 5 * 60 * 1000; // 5 minutos
 
   private masterModeEnabled: boolean = false;
-  private userFolderId: number = null;
 
   // Method to enable/disable master mode
   public setMasterMode(enabled: boolean) {
@@ -106,7 +105,11 @@ class NavidromeService {
     try {
       const res = await fetch(originalUrl);
       if (!res.ok) throw new Error(`Failed to fetch ${endpoint}: ${res.statusText}`);
-      return res.json();
+      const result = await res.json();
+      if (result['subsonic-response'].status === 'failed') {
+        throw new Error(result['subsonic-response'].error?.message || 'Unknown error from Navidrome');
+      }
+      return result;
     } catch (error) {
       console.error(`Error fetching ${endpoint} via proxy:`, error);
       throw error;
