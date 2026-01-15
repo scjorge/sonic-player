@@ -3,15 +3,10 @@ import { MD5, sanitizeQuery } from '../../commons/tools';
 import { getNavidromeCredentials } from '../repository/navidrome';
 import { authService } from '../services/authService';
 import { NAVIDROME_MASTER_LIB } from '../../core/config';
-import { error } from 'console';
 
 const CLIENT = 'SonicTagPlayer';
 const VERSION = '1.16.1';
 
-interface NaviFolder {
-  master: number;
-  user: number;
-}
 
 class NavidromeService {
   private coverArtCache = new Map<string, string>();
@@ -76,7 +71,8 @@ class NavidromeService {
     }
   }
 
-  private async getUserFolder(): Promise<NaviFolder> {
+  public async getUserFolderId(): Promise<number> {
+    let id: number | null = null;
     const naviFolder = {master: null, user: null};
     const userName = authService.getCurrentUserSync()?.username;
     const data = await this.fetchDataUserFolder('getMusicFolders.view');
@@ -89,19 +85,19 @@ class NavidromeService {
     if (userFolder.length > 0) {
       naviFolder.user = userFolder[0].id;
     }
-    return naviFolder;
-  }
-
-  private async fetchData(endpoint: string, params: string = '') {
-    const naviFolder = await this.getUserFolder();
     if (this.masterModeEnabled && naviFolder.master) {
-      params += `&musicFolderId=${naviFolder.master}`;
+      id = naviFolder.master;
     } else if (!this.masterModeEnabled && naviFolder.user) {
-      params += `&musicFolderId=${naviFolder.user}`;
+      id = naviFolder.user;
     } else {
         throw new Error('No valid music folder found for the current mode.');
     }
+    return id;
+  }
 
+  private async fetchData(endpoint: string, params: string = '') {
+    const userFolderId = await this.getUserFolderId();
+    params += `&musicFolderId=${userFolderId}`;
     const originalUrl = this.getUrl(endpoint) + params;
     try {
       const res = await fetch(originalUrl);

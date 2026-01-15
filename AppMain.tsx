@@ -370,7 +370,7 @@ const App: React.FC = () => {
 
           // Clear the code from URL after processing
           window.history.replaceState({}, document.title, window.location.pathname);
-          return; // Do not proceed with normal data loading if it's a callback
+          //return; // Do not proceed with normal data loading if it's a callback
         }
 
         // Load filters options
@@ -393,7 +393,8 @@ const App: React.FC = () => {
               .map(c => `comment=${encodeURIComponent(c)}`)
               .join('&');
             const offset = page * pageSize;
-            const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
+            const userFolderId = await navidromeService.getUserFolderId();
+            const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?musicFolderId=${userFolderId}&${params}&limit=${pageSize}&offset=${offset}`);
 
             if (!resp.ok) {
               const err = await resp.json().catch(() => ({}));
@@ -1010,14 +1011,14 @@ const App: React.FC = () => {
     setPage(newPage);
     if (viewMode === 'navi_songs') {
       if (groupFilterSelection.length > 0) {
-        // Paginação usando o filtro de grupos (search4)
         setLoadingNavi(true);
         try {
           const params = groupFilterSelection
             .map(c => `comment=${encodeURIComponent(c)}`)
             .join('&');
           const offset = newPage * pageSize;
-          const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
+          const userFolderId = await navidromeService.getUserFolderId();
+          const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?musicFolderId=${userFolderId}&${params}&limit=${pageSize}&offset=${offset}`);
 
           if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
@@ -1103,7 +1104,8 @@ const App: React.FC = () => {
             const params = groupFilterSelection
               .map(c => `comment=${encodeURIComponent(c)}`)
               .join('&');
-            const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${params}&limit=${newSize}&offset=0`);
+            const userFolderId = await navidromeService.getUserFolderId();
+            const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?musicFolderId=${userFolderId}&${params}&limit=${newSize}&offset=0`);
 
             if (!resp.ok) {
               const err = await resp.json().catch(() => ({}));
@@ -1167,7 +1169,8 @@ const App: React.FC = () => {
             .map(c => `comment=${encodeURIComponent(c)}`)
             .join('&');
           const offset = page * pageSize;
-          const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${params}&limit=${pageSize}&offset=${offset}`);
+          const userFolderId = await navidromeService.getUserFolderId();
+          const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?musicFolderId=${userFolderId}&${params}&limit=${pageSize}&offset=${offset}`);
 
           if (!resp.ok) {
             const err = await resp.json().catch(() => ({}));
@@ -1364,7 +1367,8 @@ const App: React.FC = () => {
       }
 
       const queryString = queryParts.join('&');
-      const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?${queryString}&limit=${pageSize}&offset=0`);
+      const userFolderId = await navidromeService.getUserFolderId();
+      const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/search4?musicFolderId=${userFolderId}&${queryString}&limit=${pageSize}&offset=0`);
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
