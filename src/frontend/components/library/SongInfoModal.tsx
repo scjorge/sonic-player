@@ -167,7 +167,7 @@ const SongInfoModal: React.FC<SongInfoModalProps> = ({ song, onClose }) => {
                 <InfoRow icon={FileType} label="MIME Type" value={song.contentType} />
                 <InfoRow icon={Zap} label="Bitrate" value={song.bitRate ? `${song.bitRate} kbps` : undefined} />
                 <InfoRow icon={Activity} label="Sample Rate" value={song.samplingRate ? `${song.samplingRate} Hz` : undefined} />
-                <InfoRow icon={Folder} label="Caminho Completo" value={song.path} />
+                <InfoRow icon={Folder} label="Caminho" value={song.path} />
               </div>
             </div>
 
