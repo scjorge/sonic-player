@@ -343,7 +343,6 @@ const App: React.FC = () => {
     const init = async () => {
       // Register Spotify re-authentication callback
       spotifyService.setOnAuthenticationRequiredCallback(() => {
-        console.log("999999999999")
         setAuthMessage("Sua sessão do Spotify expirou. Por favor, autentique-se novamente.");
         setViewMode('settings');
         setActiveSettingsTab('spotify');
@@ -357,7 +356,6 @@ const App: React.FC = () => {
         const path = window.location.pathname;
 
         if (path === '/callback' && code) {
-          console.log("Código de autorização recebido em App.tsx:", code, 'state=', state);
           const success = await spotifyService.exchangeCodeForTokens(code);
           if (success) {
             setIsAuthenticated(true);
@@ -684,11 +682,13 @@ const App: React.FC = () => {
   };
 
   const handleCreatePlaylist = async (name: string, isPublic: boolean) => {
-    const success = await navidromeService.createPlaylist(name, isPublic);
+    const { success, error } = await navidromeService.createPlaylist(name, isPublic);
     if (success) {
       const playlists = await navidromeService.getPlaylists();
       setNaviPlaylists(playlists);
       setIsPlaylistsExpanded(true);
+    } else{
+      showToast(`Erro ao criar playlist: ${error}`, 'error');
     }
   };
 
@@ -698,11 +698,13 @@ const App: React.FC = () => {
       title: 'Excluir Playlist',
       message: `Tem certeza que deseja excluir a playlist "${playlistName}"? Esta ação não pode ser desfeita.`,
       onConfirm: async () => {
-        const success = await navidromeService.deletePlaylist(playlistId);
+        const { success, error } = await navidromeService.deletePlaylist(playlistId);
         if (success) {
           const playlists = await navidromeService.getPlaylists();
           setNaviPlaylists(playlists);
           if (selectedPlaylistId === playlistId) handleLibrarySongsClick();
+        } else {
+          showToast(`Erro ao excluir playlist: ${error}`, 'error');
         }
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
       }
@@ -710,17 +712,19 @@ const App: React.FC = () => {
   };
 
   const handleAddToPlaylist = async (targetPlaylistId: string) => {
-    const success = await navidromeService.addSongsToPlaylist(targetPlaylistId, selectedSongIds);
+    const { success, error} = await navidromeService.addSongsToPlaylist(targetPlaylistId, selectedSongIds);
     if (success) {
       setSelectedSongIds([]);
       setShowAddToPlaylistModal(false);
       const playlists = await navidromeService.getPlaylists();
       setNaviPlaylists(playlists);
+    } else {
+      showToast(`Erro adicionar músicas à playlist: ${error}`, 'error');
     }
   };
 
   const handleRemoveFromPlaylist = async (targetPlaylistId: string) => {
-    const success = await navidromeService.removeSongsFromPlaylist(targetPlaylistId, selectedSongIds);
+    const { success, error}  = await navidromeService.removeSongsFromPlaylist(targetPlaylistId, selectedSongIds);
     if (success) {
       setSelectedSongIds([]);
       setShowRemoveFromPlaylistModal(false);
@@ -730,6 +734,8 @@ const App: React.FC = () => {
       }
       const playlists = await navidromeService.getPlaylists();
       setNaviPlaylists(playlists);
+    } else {
+      showToast(`Erro remover músicas da playlist: ${error}`, 'error');
     }
   };
 
@@ -779,7 +785,7 @@ const App: React.FC = () => {
       title: 'Remover da Playlist',
       message: `Remover ${selectedSongIds.length} música(s) desta playlist?`,
       onConfirm: async () => {
-        const success = await navidromeService.removeSongsFromPlaylist(selectedPlaylistId, selectedSongIds);
+        const { success, error } = await navidromeService.removeSongsFromPlaylist(selectedPlaylistId, selectedSongIds);
         if (success) {
           setSelectedSongIds([]);
           const songs = await navidromeService.getPlaylist(selectedPlaylistId);
@@ -787,6 +793,8 @@ const App: React.FC = () => {
           setTotalSongs(songs.length);
           const playlists = await navidromeService.getPlaylists();
           setNaviPlaylists(playlists);
+        } else {
+          showToast(`Erro remover músicas da playlist: ${error}`, 'error');
         }
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
       }

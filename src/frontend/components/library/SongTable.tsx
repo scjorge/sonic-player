@@ -306,7 +306,6 @@ const SongTable: React.FC<SongTableProps> = ({
 
   const handleAddToEditor = async (song: NaviSong) => {
     try {
-      console.log(song)
       const currentState = await apiGetAudioEditorState();
 
       const baseState = currentState && Array.isArray(currentState.tracks)

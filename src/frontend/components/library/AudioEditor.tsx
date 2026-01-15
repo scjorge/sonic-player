@@ -1412,7 +1412,6 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
           />
           <button
             onClick={() => {
-              console.log('Botão Adicionar Faixas clicado');
               fileInputRef.current?.click();
             }}
             className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-indigo-500 text-indigo-300 hover:bg-indigo-500/20"

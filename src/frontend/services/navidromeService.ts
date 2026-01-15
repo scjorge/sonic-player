@@ -3,6 +3,7 @@ import { MD5, sanitizeQuery } from '../../commons/tools';
 import { getNavidromeCredentials } from '../repository/navidrome';
 import { authService } from '../services/authService';
 import { NAVIDROME_MASTER_LIB } from '../../core/config';
+import { error } from 'console';
 
 const CLIENT = 'SonicTagPlayer';
 const VERSION = '1.16.1';
@@ -199,13 +200,13 @@ class NavidromeService {
     return data['subsonic-response'].playlist?.entry || [];
   }
 
-  async createPlaylist(name: string, isPublic: boolean): Promise<boolean> {
+  async createPlaylist(name: string, isPublic: boolean): Promise<any> {
     try {
       // 1. Cria a playlist
       const data = await this.fetchData('createPlaylist.view', `&name=${encodeURIComponent(name)}`);
-          
+
       let playlistId = data['subsonic-response'].playlist?.id;
-          
+
       if (!playlistId && data['subsonic-response'].playlists?.playlist) {
         const arr = data['subsonic-response'].playlists.playlist;
         if (Array.isArray(arr) && arr.length > 0) playlistId = arr[0].id;
@@ -214,41 +215,40 @@ class NavidromeService {
       if (isPublic && playlistId) {
         await this.fetchData('updatePlaylist.view', `&playlistId=${playlistId}&public=true`);
       }
-          
-      return true;
+      return { success: true, error: null };
     } catch (e) {
       console.error("Failed to create playlist", e);
-      return false;
+      return { success: false, error: e.message || 'Unknown error' };
     }
   }
 
-  async deletePlaylist(id: string): Promise<boolean> {
+  async deletePlaylist(id: string): Promise<any> {
     try {
       const data = await this.fetchData('deletePlaylist.view', `&id=${id}`);
       if (data['subsonic-response'] && data['subsonic-response'].status === 'failed') {
         console.error("Delete playlist failed:", data['subsonic-response'].error);
-        return false;
+        return { success: false, error: data['subsonic-response'].error || 'Unknown error' };
       }
-      return true;
+      return { success: true, error: null };
     } catch (e) {
       console.error("Failed to delete playlist", e);
-      return false;
+      return { success: false, error: e.message || 'Unknown error' };
     }
   }
 
-  async addSongsToPlaylist(playlistId: string, songIds: string[]): Promise<boolean> {
+  async addSongsToPlaylist(playlistId: string, songIds: string[]): Promise<any> {
     try {
       // Subsonic updatePlaylist aceita múltiplos parâmetros songIdToAdd
       const params = songIds.map(id => `&songIdToAdd=${id}`).join('');
       await this.fetchData('updatePlaylist.view', `&playlistId=${playlistId}${params}`);
-      return true;
+      return { success: true, error: null };
     } catch (e) {
       console.error("Failed to add songs to playlist", e);
-      return false;
+      return { success: false, error: e.message || 'Unknown error' };
     }
   }
 
-  async removeSongsFromPlaylist(playlistId: string, songIds: string[]): Promise<boolean> {
+  async removeSongsFromPlaylist(playlistId: string, songIds: string[]): Promise<any> {
     try {
       // Para remover, precisamos dos ÍNDICES das músicas na playlist, não dos IDs.
       // 1. Busca a playlist atual
@@ -269,10 +269,10 @@ class NavidromeService {
 
       const params = indexesToRemove.map(idx => `&songIndexToRemove=${idx}`).join('');
       await this.fetchData('updatePlaylist.view', `&playlistId=${playlistId}${params}`);
-      return true;
+      return { success: true, error: null };
     } catch (e) {
       console.error("Failed to remove songs from playlist", e);
-      return false;
+      return { success: false, error: e.message || 'Unknown error' };
     }
   }
 
