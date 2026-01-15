@@ -55,6 +55,8 @@ interface SongTableProps {
     isTidalTable?: boolean;
     isYoutubeTable?: boolean;
     isNaviTableDownload?: boolean;
+    isNaviPlaylistView?: boolean;
+    isNaviFavoritesView?: boolean;
     navidromeExistenceMap?: Map<string, boolean>;
     onNavigateToLibraryQuery?: (query: string) => void;
     onSearchTidalByTitle?: (query: string) => void;
@@ -63,10 +65,7 @@ interface SongTableProps {
     navidromeConnected?: boolean | null;
     onOpenNavidromeSettings?: () => void;
     onAfterFinalize?: () => void;
-    // Navidrome playlist-specific
-    isNaviPlaylistView?: boolean;
     onReorderNaviPlaylist?: (fromIndex: number, toIndex: number) => void;
-    // Master mode
     onMasterModeChange?: () => void;
 }
 
@@ -142,6 +141,7 @@ const SongTable: React.FC<SongTableProps> = ({
   onOpenNavidromeSettings,
   onAfterFinalize,
   isNaviPlaylistView,
+  isNaviFavoritesView,
   onReorderNaviPlaylist,
   onMasterModeChange,
 }) => {
@@ -1890,7 +1890,7 @@ const SongTable: React.FC<SongTableProps> = ({
         </div>
 
         {/* COLUMNS BUTTON & TAG EDIT TOGGLE */}
-        {isNavidromeLibraryTable && (
+        {isNavidromeLibraryTable && !isNaviFavoritesView && !isNaviPlaylistView && (
           <>
             <button
               key={`master-mode-${isMasterMode}`}

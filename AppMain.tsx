@@ -2007,6 +2007,7 @@ const App: React.FC = () => {
             onOpenNavidromeSettings={() => { setViewMode('settings'); setActiveSettingsTab('navidrome'); }}
             isNaviSongsView={viewMode === 'navi_songs'}
             isNaviPlaylistView={viewMode === 'navi_playlist'}
+            isNaviFavoritesView={viewMode === 'navi_favorites'}
             onReorderNaviPlaylist={viewMode === 'navi_playlist' ? handleReorderNaviPlaylist : undefined}
             onMasterModeChange={handleMasterModeChange}
           />
