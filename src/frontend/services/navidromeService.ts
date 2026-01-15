@@ -2,10 +2,15 @@ import { NaviSong, NaviAlbum, NaviArtist, NaviPlaylist } from '../../types';
 import { MD5, sanitizeQuery } from '../../commons/tools';
 import { getNavidromeCredentials } from '../repository/navidrome';
 import { authService } from '../services/authService';
+import { NAVIDROME_MASTER_LIB } from '../../core/config';
 
 const CLIENT = 'SonicTagPlayer';
 const VERSION = '1.16.1';
 
+interface NaviFolder {
+  master: number;
+  user: number;
+}
 
 class NavidromeService {
   private coverArtCache = new Map<string, string>();
@@ -13,6 +18,17 @@ class NavidromeService {
   private mediaAuthParams: string | null = null;
   private mediaAuthTimestamp: number = 0;
   private readonly MEDIA_AUTH_TTL = 5 * 60 * 1000; // 5 minutos
+
+  private masterModeEnabled: boolean = false;
+  private userFolderId: number = null;
+
+  // Method to enable/disable master mode
+  public setMasterMode(enabled: boolean) {
+    if (this.masterModeEnabled !== enabled) {
+      this.masterModeEnabled = enabled;
+      this.clearMediaCache();
+    }
+  }
 
   private getAuthParams() {
     const creds = getNavidromeCredentials();
@@ -48,11 +64,45 @@ class NavidromeService {
     return `${base}/rest/${endpoint}?${this.getMediaAuthParams()}`;
   }
 
-  // Método auxiliar para realizar fetch via proxy (Backend Execution)
-  private async fetchData(endpoint: string, params: string = '') {
+  private async fetchDataUserFolder(endpoint: string, params: string = '') {
     const originalUrl = this.getUrl(endpoint) + params;
-    
-    // Tenta usar o proxy para evitar problemas de CORS
+    try {
+      const res = await fetch(originalUrl);
+      if (!res.ok) throw new Error(`Failed to fetch ${endpoint}: ${res.statusText}`);
+      return res.json();
+    } catch (error) {
+      console.error(`Error fetching ${endpoint} via proxy:`, error);
+      throw error;
+    }
+  }
+
+  private async getUserFolder(): Promise<NaviFolder> {
+    const naviFolder = {master: null, user: null};
+    const userName = authService.getCurrentUserSync()?.username;
+    const data = await this.fetchDataUserFolder('getMusicFolders.view');
+    const musicFolders = data['subsonic-response'].musicFolders?.musicFolder || [];
+    const masterFolder = musicFolders.filter((f: any) => f.name == NAVIDROME_MASTER_LIB);
+    const userFolder = musicFolders.filter((f: any) => f.name == userName);
+    if (masterFolder.length > 0) {
+      naviFolder.master = masterFolder[0].id;
+    }
+    if (userFolder.length > 0) {
+      naviFolder.user = userFolder[0].id;
+    }
+    return naviFolder;
+  }
+
+  private async fetchData(endpoint: string, params: string = '') {
+    const naviFolder = await this.getUserFolder();
+    if (this.masterModeEnabled && naviFolder.master) {
+      params += `&musicFolderId=${naviFolder.master}`;
+    } else if (!this.masterModeEnabled && naviFolder.user) {
+      params += `&musicFolderId=${naviFolder.user}`;
+    } else {
+        throw new Error('No valid music folder found for the current mode.');
+    }
+
+    const originalUrl = this.getUrl(endpoint) + params;
     try {
       const res = await fetch(originalUrl);
       if (!res.ok) throw new Error(`Failed to fetch ${endpoint}: ${res.statusText}`);
@@ -93,17 +143,6 @@ class NavidromeService {
       const message = e?.message || String(e);
       return { ok: false, message };
     }
-  }
-
-  async getUserFolderId(): Promise<Number> {
-    const userName = authService.getCurrentUserSync()?.username;
-    const data = await this.fetchData('getMusicFolders.view');
-    const musicFolders = data['subsonic-response'].musicFolders?.musicFolder || [];
-    const folders = musicFolders.filter((f: any) => f.name == userName);
-    if (folders.length === 0) {
-      return null;
-    }
-    return folders[0].id;
   }
 
   async getRandomSongs(size: number = 20): Promise<NaviSong[]> {

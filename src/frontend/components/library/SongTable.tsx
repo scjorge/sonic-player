@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NaviSong } from '../../../types';
-import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download, Trash2, Upload } from 'lucide-react';
+import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download, Trash2, Upload, Shield } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
@@ -9,6 +9,7 @@ import { sanitizeQuery } from '../../../commons/tools';
 import { BACKEND_BASE_URL } from '../../../core/config';
 import { getStoredGenres } from '../../repository/metadata';
 import { NAVI_COLUMN_CONFIG } from './NaviConstants';
+import { getUserState, setUserState } from '../../repository/userStates';
 
 interface SongTableProps {
     songs: NaviSong[];
@@ -154,6 +155,10 @@ const SongTable: React.FC<SongTableProps> = ({
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const [isTagEditMode, setIsTagEditMode] = useState(false);
+  const [isMasterMode, setIsMasterMode] = useState(() => {
+    const saved = getUserState<any>('navi_songs');
+    return saved?.masterMode ?? false;
+  });
   const [convertState, setConvertState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
   const [deleteState, setDeleteState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
   const [uploadState, setUploadState] = useState<{ active: boolean; progress: number; totalFiles: number; }>(
@@ -550,6 +555,15 @@ const SongTable: React.FC<SongTableProps> = ({
   // --- RENDER HELPERS ---
   const visibleColumns = columns.filter(c => c.visible);
   const isNavidromeLibraryTable = !isSpotifyTable && !isTidalTable && !isYoutubeTable && !isNaviTableDownload;
+
+  // Persist master mode state
+  useEffect(() => {
+    if (isNavidromeLibraryTable) {
+      setUserState('navi_songs', { masterMode: isMasterMode });
+      // Also update the service
+      navidromeService.setMasterMode(isMasterMode);
+    }
+  }, [isMasterMode, isNavidromeLibraryTable]);
 
   const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 0;
   const isLastPageDisabled = totalItems === 0 || page >= totalPages - 1;
@@ -1867,17 +1881,35 @@ const SongTable: React.FC<SongTableProps> = ({
 
         {/* COLUMNS BUTTON & TAG EDIT TOGGLE */}
         {isNavidromeLibraryTable && (
-          <button
-            onClick={() => setIsTagEditMode(!isTagEditMode)}
-            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isTagEditMode
-              ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/60'
-              : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-            }`}
-            title="Habilitar edição de tags diretamente na tabela"
-          >
-            <Tags className="w-4 h-4" />
-            Editar tags
-          </button>
+          <>
+            <button
+              onClick={() => {
+                const newMode = !isMasterMode;
+                setIsMasterMode(newMode);
+                // Update the service with the new master mode state
+                navidromeService.setMasterMode(newMode);
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isMasterMode
+                ? 'bg-purple-500/10 text-purple-300 border-purple-500/60'
+                : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+              }`}
+              title="Modo Master - Filtrar apenas músicas da sua pasta de usuário"
+            >
+              <Shield className="w-4 h-4" />
+              Master
+            </button>
+            <button
+              onClick={() => setIsTagEditMode(!isTagEditMode)}
+              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isTagEditMode
+                ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/60'
+                : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+              }`}
+              title="Habilitar edição de tags diretamente na tabela"
+            >
+              <Tags className="w-4 h-4" />
+              Editar tags
+            </button>
+          </>
         )}
         <div className="flex items-center gap-2">
           {isNaviTableDownload && (
