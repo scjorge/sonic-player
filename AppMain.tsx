@@ -869,7 +869,6 @@ const App: React.FC = () => {
   };
 
   const handleMasterModeChange = () => {
-    // Refresh current view when master mode is toggled
     if (viewMode === 'navi_songs') {
       if (groupFilterSelection.length > 0) {
         // Reload with group filter
@@ -885,15 +884,6 @@ const App: React.FC = () => {
         fetchSongs(0, pageSize, activeArtist, activeGenre, activeYear, undefined);
       }
       setPage(0);
-    } else if (viewMode === 'navi_favorites') {
-      // Reload favorites
-      handleFavoritesClick();
-    } else if (viewMode === 'navi_playlist' && selectedPlaylistId) {
-      // Reload playlist
-      const playlist = naviPlaylists.find(p => p.id === selectedPlaylistId);
-      if (playlist) {
-        handlePlaylistClick(playlist);
-      }
     }
   };
 
