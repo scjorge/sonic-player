@@ -67,6 +67,7 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = ({ onCredsChange }) 
     
     if (!validate()) return;
     saveNavidromeCredentials(finalCreds);
+    navidromeService.clearMediaCache(); // Limpa cache de URLs de mídia
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
     setTestResult(null);
@@ -76,6 +77,7 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = ({ onCredsChange }) 
   const handleDelete = () => {
     const empty = { baseUrl: '', user: '', password: '' };
     saveNavidromeCredentials(empty);
+    navidromeService.clearMediaCache(); // Limpa cache de URLs de mídia
     setCreds(empty);
     setErrors({});
     setSaved(false);
@@ -94,6 +96,7 @@ const NavidromeSettings: React.FC<NavidromeSettingsProps> = ({ onCredsChange }) 
     if (!validate()) return;
     // Save temporarily so service can pick up
     saveNavidromeCredentials(finalCreds);
+    navidromeService.clearMediaCache(); // Limpa cache de URLs de mídia
     try {
       const res = await navidromeService.ping();
       if (res.ok) {

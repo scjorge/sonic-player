@@ -8,6 +8,12 @@ const VERSION = '1.16.1';
 
 
 class NavidromeService {
+  private coverArtCache = new Map<string, string>();
+  private streamUrlCache = new Map<string, string>();
+  private mediaAuthParams: string | null = null;
+  private mediaAuthTimestamp: number = 0;
+  private readonly MEDIA_AUTH_TTL = 5 * 60 * 1000; // 5 minutos
+
   private getAuthParams() {
     const creds = getNavidromeCredentials();
     const salt = Math.random().toString(36).substring(2);
@@ -16,10 +22,30 @@ class NavidromeService {
     return `u=${encodeURIComponent(user)}&t=${token}&s=${salt}&v=${VERSION}&c=${CLIENT}&f=json`;
   }
 
+  // Para URLs de mídia (stream/coverart), usamos um salt fixo que dura 5 minutos
+  // para evitar regenerar URLs constantemente e causar reloads desnecessários
+  private getMediaAuthParams() {
+    const now = Date.now();
+    if (!this.mediaAuthParams || (now - this.mediaAuthTimestamp) > this.MEDIA_AUTH_TTL) {
+      this.mediaAuthParams = this.getAuthParams();
+      this.mediaAuthTimestamp = now;
+      // Limpa os caches quando regenera os parâmetros
+      this.coverArtCache.clear();
+      this.streamUrlCache.clear();
+    }
+    return this.mediaAuthParams;
+  }
+
   private getUrl(endpoint: string) {
     const creds = getNavidromeCredentials();
     const base = (creds.baseUrl || '').replace(/\/$/, '');
     return `${base}/rest/${endpoint}?${this.getAuthParams()}`;
+  }
+
+  private getMediaUrl(endpoint: string) {
+    const creds = getNavidromeCredentials();
+    const base = (creds.baseUrl || '').replace(/\/$/, '');
+    return `${base}/rest/${endpoint}?${this.getMediaAuthParams()}`;
   }
 
   // Método auxiliar para realizar fetch via proxy (Backend Execution)
@@ -40,11 +66,19 @@ class NavidromeService {
   // URLs de mídia (stream/capa) geralmente funcionam melhor diretamente
   // pois tags <audio> e <img> lidam melhor com cross-origin do que fetch/XHR
   public getStreamUrl(id: string) {
-    return this.getUrl('stream') + `&id=${id}`;
+    if (!this.streamUrlCache.has(id)) {
+      const url = this.getMediaUrl('stream') + `&id=${id}`;
+      this.streamUrlCache.set(id, url);
+    }
+    return this.streamUrlCache.get(id)!;
   }
 
   public getCoverArtUrl(id: string) {
-    return this.getUrl('getCoverArt') + `&id=${id}&size=300`;
+    if (!this.coverArtCache.has(id)) {
+      const url = this.getMediaUrl('getCoverArt') + `&id=${id}&size=300`;
+      this.coverArtCache.set(id, url);
+    }
+    return this.coverArtCache.get(id)!;
   }
 
   async ping(): Promise<{ ok: boolean; message?: string }> {
@@ -367,6 +401,14 @@ class NavidromeService {
       if (!isNaN(y)) songs = songs.filter(s => s.year === y);
     }
     return { songs, total: 0 }; 
+  }
+
+  // Método para limpar os caches (útil quando credenciais mudam)
+  public clearMediaCache() {
+    this.coverArtCache.clear();
+    this.streamUrlCache.clear();
+    this.mediaAuthParams = null;
+    this.mediaAuthTimestamp = 0;
   }
 }
 
