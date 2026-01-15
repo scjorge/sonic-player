@@ -242,7 +242,7 @@ class DownloadService {
   }
 
   private async buildNavidromeTargetPath(userId: string, meta: AudioMetadata, sourcePath: string) {
-    const ext = (path.extname(sourcePath).toLowerCase().replace('.', '') || 'mp3');
+    const ext = (path.extname(sourcePath).toLowerCase().replace('.', '') || 'bin');
 
     const genre = meta.genre || 'Unknown';
     const artist = meta.albumArtist || meta.artists || 'Unknown Artist';
@@ -262,7 +262,7 @@ class DownloadService {
     relative = relative.replace(/{track}/g, safe(trackStr));
     relative = relative.replace(/{title}/g, safe(title));
     relative = relative.replace(/{year}/g, safe(year.toString()));
-    relative = relative.replace(/{ext}/g, ext || 'mp3');
+    relative = relative.replace(/{ext}/g, ext);
 
     return path.join(NAVIDROME_MEDIA_PATH, relative);
   }
