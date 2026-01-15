@@ -1918,7 +1918,7 @@ const SongTable: React.FC<SongTableProps> = ({
               title={`Biblioteca Master ${isMasterMode ? 'ATIVA' : 'INATIVA'}`}
             >
               <Shield className={`w-4 h-4 ${isMasterMode ? 'text-purple-300' : 'text-zinc-400'}`} />
-              Master {isMasterMode ? '(ON)' : '(OFF)'}
+              Master
             </button>
             <button
               onClick={() => setIsTagEditMode(!isTagEditMode)}
