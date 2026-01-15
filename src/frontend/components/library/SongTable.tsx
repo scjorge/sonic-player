@@ -10,6 +10,7 @@ import { BACKEND_BASE_URL } from '../../../core/config';
 import { getStoredGenres } from '../../repository/metadata';
 import { NAVI_COLUMN_CONFIG } from './NaviConstants';
 import { getUserState, setUserState } from '../../repository/userStates';
+import { authService } from '../../services/authService';
 
 interface SongTableProps {
     songs: NaviSong[];
@@ -775,10 +776,11 @@ const SongTable: React.FC<SongTableProps> = ({
             onClick={async (e) => {
               e.stopPropagation();
               if (disabled || !song.path) return;
+              const token = authService.getToken();
               try {
                 const resp = await fetch(`${BACKEND_BASE_URL}/downloads/finalize`, {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                   body: JSON.stringify({ path: song.path }),
                 });
                 if (!resp.ok) {

@@ -5,6 +5,7 @@ import { execFile, spawn } from 'child_process';
 import { sanitizeQuery } from '../../commons/tools';
 import { tidalService } from '../../frontend/services/tidalService';
 import { NAVIDROME_MEDIA_PATH, PREPARATION_PATH } from '../config';
+import { NAVIDROME_MASTER_LIB } from '../../core/config';
 import { TIDAL_QUALITY } from '../../core/config';
 import { AudioMetadata, DownloadedCover } from '../types';
 import { audioTagger } from '../utils/tagger';
@@ -264,7 +265,7 @@ class DownloadService {
     relative = relative.replace(/{year}/g, safe(year.toString()));
     relative = relative.replace(/{ext}/g, ext);
 
-    return path.join(NAVIDROME_MEDIA_PATH, relative);
+    return path.join(NAVIDROME_MEDIA_PATH, NAVIDROME_MASTER_LIB, relative);
   }
 
   async finalizeDownload(userId: string, filePath: string) {
@@ -299,7 +300,6 @@ class DownloadService {
         status: 'moved',
         from: resolved,
         to: target,
-        relativePath: path.relative(NAVIDROME_MEDIA_PATH, target),
       };
     } catch (error) {
       console.error('Failed to finalize download', error);
