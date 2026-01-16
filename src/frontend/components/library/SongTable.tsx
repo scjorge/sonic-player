@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NaviSong } from '../../../types';
-import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download, Trash2, Upload, Shield } from 'lucide-react';
+import { Play, Pause, Clock, GripVertical, Settings2, Check, Image as ImageIcon, FileAudio, Disc, Activity, Zap, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CheckSquare, Square, AlignJustify, Heart, Info, Sparkles, TrendingUp, Star, Tags, Download, Trash2, Upload, Shield, Copy } from 'lucide-react';
 import { navidromeService } from '../../services/navidromeService';
 import { tidalService } from '../../services/tidalService';
 import showToast from '../utils/toast';
@@ -13,61 +13,61 @@ import { getUserState, setUserState } from '../../repository/userStates';
 import { authService } from '../../services/authService';
 
 interface SongTableProps {
-    songs: NaviSong[];
-    onPlay: (song: NaviSong) => void;
-    currentTrackId?: string | null;
-    isPlaying?: boolean;
-    // External data props
-    availableArtists?: string[];
-    availableGenres?: string[];
-    onFilter?: (artist: string, genre: string, year: string) => void;
-    // Pagination
-    page?: number;
-    pageSize?: number;
-    totalItems?: number;
-    onPageChange?: (page: number) => void;
-    onPageSizeChange?: (size: number) => void;
-    hasMore?: boolean;
-    // Active Filter State
-    activeArtist?: string;
-    activeGenre?: string;
-    activeYear?: string;
-    // Quick List Feature
-    activeQuickList?: 'newest' | 'recent' | 'frequent' | 'highest' | null;
-    onQuickListChange?: (type: 'newest' | 'recent' | 'frequent' | 'highest') => void;
-    // Search
-    onSearch?: (query: string) => void;
-    activeSearchQuery?: string;
-    // Selection
-    selectedIds?: string[];
-    onSelect?: (id: string, selected: boolean) => void;
-    onSelectAll?: (selected: boolean) => void;
-    // Actions
-    onToggleFavorite?: (song: NaviSong) => void;
-    onInfo?: (song: NaviSong) => void;
-    onSetRating?: (id: string, rating: number) => void;
-    onGroupEdit?: (song: NaviSong) => void; // Nova prop
-    onOpenGroupFilter?: () => void;
-    isGroupFilterActive?: boolean;
-    groupFilterSelection?: string[];
-    isNaviSongsView?: boolean;
-    defaultColumns?: ColumnConfig[];
-    isSpotifyTable?: boolean;
-    isTidalTable?: boolean;
-    isYoutubeTable?: boolean;
-    isNaviTableDownload?: boolean;
-    isNaviPlaylistView?: boolean;
-    isNaviFavoritesView?: boolean;
-    navidromeExistenceMap?: Map<string, boolean>;
-    onNavigateToLibraryQuery?: (query: string) => void;
-    onSearchTidalByTitle?: (query: string) => void;
-    onSearchTidalByISRC?: (isrc: string) => void;
-    autoFocusSearch?: boolean;
-    navidromeConnected?: boolean | null;
-    onOpenNavidromeSettings?: () => void;
-    onAfterFinalize?: () => void;
-    onReorderNaviPlaylist?: (fromIndex: number, toIndex: number) => void;
-    onMasterModeChange?: () => void;
+  songs: NaviSong[];
+  onPlay: (song: NaviSong) => void;
+  currentTrackId?: string | null;
+  isPlaying?: boolean;
+  // External data props
+  availableArtists?: string[];
+  availableGenres?: string[];
+  onFilter?: (artist: string, genre: string, year: string) => void;
+  // Pagination
+  page?: number;
+  pageSize?: number;
+  totalItems?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  hasMore?: boolean;
+  // Active Filter State
+  activeArtist?: string;
+  activeGenre?: string;
+  activeYear?: string;
+  // Quick List Feature
+  activeQuickList?: 'newest' | 'recent' | 'frequent' | 'highest' | null;
+  onQuickListChange?: (type: 'newest' | 'recent' | 'frequent' | 'highest') => void;
+  // Search
+  onSearch?: (query: string) => void;
+  activeSearchQuery?: string;
+  // Selection
+  selectedIds?: string[];
+  onSelect?: (id: string, selected: boolean) => void;
+  onSelectAll?: (selected: boolean) => void;
+  // Actions
+  onToggleFavorite?: (song: NaviSong) => void;
+  onInfo?: (song: NaviSong) => void;
+  onSetRating?: (id: string, rating: number) => void;
+  onGroupEdit?: (song: NaviSong) => void; // Nova prop
+  onOpenGroupFilter?: () => void;
+  isGroupFilterActive?: boolean;
+  groupFilterSelection?: string[];
+  isNaviSongsView?: boolean;
+  defaultColumns?: ColumnConfig[];
+  isSpotifyTable?: boolean;
+  isTidalTable?: boolean;
+  isYoutubeTable?: boolean;
+  isNaviTableDownload?: boolean;
+  isNaviPlaylistView?: boolean;
+  isNaviFavoritesView?: boolean;
+  navidromeExistenceMap?: Map<string, boolean>;
+  onNavigateToLibraryQuery?: (query: string) => void;
+  onSearchTidalByTitle?: (query: string) => void;
+  onSearchTidalByISRC?: (isrc: string) => void;
+  autoFocusSearch?: boolean;
+  navidromeConnected?: boolean | null;
+  onOpenNavidromeSettings?: () => void;
+  onAfterFinalize?: () => void;
+  onReorderNaviPlaylist?: (fromIndex: number, toIndex: number) => void;
+  onMasterModeChange?: () => void;
 }
 
 // Removido 'play' dos IDs de coluna e adicionado 'userRating'
@@ -76,11 +76,11 @@ export type ColumnId = 'select' | 'index' | 'cover' | 'track' | 'title' | 'combi
 type RowDensity = 'compact' | 'normal' | 'relaxed';
 
 export interface ColumnConfig {
-    id: ColumnId;
-    label: string;
-    width: number;
-    visible: boolean;
-    minWidth: number;
+  id: ColumnId;
+  label: string;
+  width: number;
+  visible: boolean;
+  minWidth: number;
 }
 
 const formatTime = (seconds?: number) => {
@@ -163,14 +163,14 @@ const SongTable: React.FC<SongTableProps> = ({
     const saved = getUserState<any>('navi_songs');
     return saved?.masterMode ?? false;
   });
-  
+
   // Initialize master mode on mount
   useEffect(() => {
     const saved = getUserState<any>('navi_songs');
     const initialMode = saved?.masterMode ?? false;
     navidromeService.setMasterMode(initialMode);
   }, []);
-  
+
   const [convertState, setConvertState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
   const [deleteState, setDeleteState] = useState<{ open: boolean; song: NaviSong | null; loading: boolean }>({ open: false, song: null, loading: false });
   const [uploadState, setUploadState] = useState<{ active: boolean; progress: number; totalFiles: number; }>(
@@ -359,11 +359,11 @@ const SongTable: React.FC<SongTableProps> = ({
 
   // Context Menu State
   const [contextMenu, setContextMenu] = useState<{
-        visible: boolean;
-        x: number;
-        y: number;
-        song: NaviSong | null;
-    }>({ visible: false, x: 0, y: 0, song: null });
+    visible: boolean;
+    x: number;
+    y: number;
+    song: NaviSong | null;
+  }>({ visible: false, x: 0, y: 0, song: null });
 
   // Drag & drop de linhas (somente playlist Navidrome)
   const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null);
@@ -669,7 +669,7 @@ const SongTable: React.FC<SongTableProps> = ({
             </div>
           );
         }
-        if (song.artist){
+        if (song.artist) {
           return (
             <div className="flex flex-col leading-tight">
               <span className={`font-medium ${titleColor}`}>{song.title}</span>
@@ -708,7 +708,7 @@ const SongTable: React.FC<SongTableProps> = ({
                   className={`w-3.5 h-3.5 cursor-pointer transition-colors ${star <= rating
                     ? 'fill-yellow-500 text-yellow-500'
                     : 'text-zinc-700 hover:text-yellow-500/50'
-                  }`}
+                    }`}
                 />
               </button>
             ))}
@@ -798,7 +798,7 @@ const SongTable: React.FC<SongTableProps> = ({
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${disabled
               ? 'border-zinc-700 text-zinc-600 cursor-not-allowed bg-zinc-900'
               : 'border-indigo-500 text-indigo-300 hover:bg-indigo-500 hover:text-black'
-            }`}
+              }`}
             title={disabled ? 'Defina o gênero antes de finalizar' : 'Mover para a pasta do Navidrome'}
           >
             Finalizar
@@ -1355,6 +1355,15 @@ const SongTable: React.FC<SongTableProps> = ({
       )}
 
       {/* Context Menu Portal/Div */}
+      {contextMenu.visible && contextMenu.song && (() => {
+        console.log('Context Menu State:', {
+          isNavidromeLibraryTable,
+          isMasterMode,
+          selectedIds: selectedIds.length,
+          song: contextMenu.song.title
+        });
+        return null;
+      })()}
       {contextMenu.visible && contextMenu.song && (
         <div
           className="fixed z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl py-1 min-w-[200px]"
@@ -1468,6 +1477,71 @@ const SongTable: React.FC<SongTableProps> = ({
                   <Heart className="w-4 h-4" /> Adicionar aos Favoritos
                 </>
               )}
+            </button>
+          )}
+
+          {/* Option to copy songs to user directory when Master Mode is active */}
+          {isNavidromeLibraryTable && isMasterMode && (
+            <button
+              onClick={async () => {
+                setContextMenu({ ...contextMenu, visible: false });
+                const songsToSend = selectedIds.length > 0
+                  ? songs.filter(s => selectedIds.includes(s.id))
+                  : [contextMenu.song!];
+
+                console.log('Copiando músicas:', {
+                  isNavidromeLibraryTable,
+                  isMasterMode,
+                  selectedCount: selectedIds.length,
+                  songsToSend: songsToSend.length
+                });
+
+                try {
+                  showToast(`Copiando ${songsToSend.length} música(s) para o diretório do usuário...`, 'warning');
+
+                  const token = authService.getToken();
+                  const headers: HeadersInit = {
+                    'Content-Type': 'application/json',
+                  };
+
+                  if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                  }
+
+                  const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/copy-to-user`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                      songIds: songsToSend.map(s => s.id),
+                    }),
+                  });
+
+                  if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    showToast(`Erro ao copiar músicas: ${err.error || resp.statusText}`, 'error');
+                    return;
+                  }
+
+                  const result = await resp.json();
+                  if (result.errors) {
+                    for (const msg of result.errors || []) {
+                      showToast(msg, 'error');
+                    }
+                    return;
+                  }
+                  showToast(`${result.copied || 0} música(s) copiada(s) com sucesso!`, 'success');
+
+                } catch (e: any) {
+                  showToast(`Erro ao copiar músicas: ${e?.message || String(e)}`, 'error');
+                }
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-green-300 hover:bg-green-900/40 hover:text-green-200 flex items-center gap-2"
+            >
+              <Copy className="w-4 h-4" />
+              {selectedIds.length > 0
+                ? `Copiar para Minha Biblioteca (${selectedIds.length})`
+                : 'Copiar para Minha Biblioteca'
+              }
             </button>
           )}
 
@@ -1670,7 +1744,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     throw new Error(err.error || 'Failed to queue download');
                   }
                   showToast(`Download Finalizado: ${contextMenu.song.title}`, 'success');
-                } catch (e){
+                } catch (e) {
                   console.error('TIDAL download request failed', e);
                   showToast('Falha ao iniciar download no servidor: ' + (e?.message || String(e)), 'error');
                 }
@@ -1702,7 +1776,7 @@ const SongTable: React.FC<SongTableProps> = ({
                     throw new Error(err.error || 'Failed to queue download');
                   }
                   showToast(`Download Finalizado: ${contextMenu.song.title}`, 'success');
-                } catch (e){
+                } catch (e) {
                   console.error('TIDAL download request failed', e);
                   showToast('Falha ao iniciar download no servidor: ' + (e?.message || String(e)), 'error');
                 }
@@ -1832,7 +1906,7 @@ const SongTable: React.FC<SongTableProps> = ({
                   className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isAnyFilterActive
                     ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
                     : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-                  }`}
+                    }`}
                   title="Filtrar por grupos (comentários DJ)"
                 >
                   <Tags className="w-4 h-4" />
@@ -1846,9 +1920,9 @@ const SongTable: React.FC<SongTableProps> = ({
                 className={`
                             flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border
                             ${activeQuickList === 'frequent'
-              ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
-              : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-            }
+                    ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
+                    : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                  }
                         `}
                 title="Mais Tocadas"
               >
@@ -1862,9 +1936,9 @@ const SongTable: React.FC<SongTableProps> = ({
                 className={`
                             flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border
                             ${activeQuickList === 'recent'
-              ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
-              : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-            }
+                    ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
+                    : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                  }
                         `}
                 title="Tocadas Recentemente"
               >
@@ -1878,9 +1952,9 @@ const SongTable: React.FC<SongTableProps> = ({
                 className={`
                             flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border
                             ${activeQuickList === 'newest'
-              ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
-              : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-            }
+                    ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/50'
+                    : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                  }
                         `}
                 title="Adicionadas Recentemente"
               >
@@ -1903,7 +1977,7 @@ const SongTable: React.FC<SongTableProps> = ({
                 setIsMasterMode(newMode);
                 navidromeService.setMasterMode(newMode);
                 setUserState('navi_songs', { masterMode: newMode });
-                
+
                 // Then notify parent to refresh data
                 if (onMasterModeChange) {
                   // Small delay to ensure state is updated
@@ -1912,11 +1986,10 @@ const SongTable: React.FC<SongTableProps> = ({
                   }, 50);
                 }
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${
-                isMasterMode
-                  ? 'bg-purple-500/10 text-purple-300 border-purple-500/60'
-                  : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-              }`}
+              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isMasterMode
+                ? 'bg-purple-500/10 text-purple-300 border-purple-500/60'
+                : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
+                }`}
               title={`Biblioteca Master ${isMasterMode ? 'ATIVA' : 'INATIVA'}`}
             >
               <Shield className={`w-4 h-4 ${isMasterMode ? 'text-purple-300' : 'text-zinc-400'}`} />
@@ -1927,7 +2000,7 @@ const SongTable: React.FC<SongTableProps> = ({
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border ${isTagEditMode
                 ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/60'
                 : 'text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 border-zinc-700'
-              }`}
+                }`}
               title="Habilitar edição de tags diretamente na tabela"
             >
               <Tags className="w-4 h-4" />
@@ -2180,20 +2253,20 @@ const SongTable: React.FC<SongTableProps> = ({
                   )}
                   {visibleColumns.map(col => {
                     const isEditable =
-                                            (isNaviTableDownload && editableTidalColumns.includes(col.id)) ||
-                                            (isNavidromeLibraryTable && isTagEditMode && editableNavidromeColumns.includes(col.id));
+                      (isNaviTableDownload && editableTidalColumns.includes(col.id)) ||
+                      (isNavidromeLibraryTable && isTagEditMode && editableNavidromeColumns.includes(col.id));
 
                     const shouldEditOnClick = isNavidromeLibraryTable && isTagEditMode;
                     const shouldEditOnDoubleClick = isNaviTableDownload;
                     const isEditingThisCell =
-                                            !!editingCell &&
-                                            editingCell.songId === song.id &&
-                                            editingCell.field === col.id;
+                      !!editingCell &&
+                      editingCell.songId === song.id &&
+                      editingCell.field === col.id;
 
                     const showGenreSuggestions =
-                                            isEditingThisCell &&
-                                            col.id === 'genre' &&
-                                            genreSuggestions.length > 0;
+                      isEditingThisCell &&
+                      col.id === 'genre' &&
+                      genreSuggestions.length > 0;
 
                     const filteredSuggestions = showGenreSuggestions
                       ? genreSuggestions

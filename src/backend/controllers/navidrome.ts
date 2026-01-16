@@ -1,6 +1,9 @@
 import { Response, Request } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { navidromeSettingsService, navidromeTrackService } from '../services/navidrome';
+import * as fs from 'fs';
+import * as path from 'path';
+import { NAVIDROME_MEDIA_PATH } from '../config';
 
 export const getNavidromeSettings = async (req: AuthRequest, res: Response) => {
   if (!req.user) {
@@ -47,3 +50,25 @@ export const search4 = async (req: Request, res: Response) => {
   const tracks = navidromeTrackService.get(commentList, genreList, artistList, yearList, lim, off, String(musicFolderId));
   return res.json(tracks);
 }
+
+export const copyToUserDirectory = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  const { songIds } = req.body;
+
+  if (!songIds || !Array.isArray(songIds) || songIds.length === 0) {
+    return res.status(400).json({ error: 'songIds é obrigatório e deve ser um array' });
+  }
+
+  try {
+    const result = navidromeTrackService.copyToUserDirectory(req.user.username, songIds);
+    if (result.errors && result.errors.length > 0) {
+      return res.status(500).json(result.errors);
+    }
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Erro ao copiar músicas' });
+  }
+};

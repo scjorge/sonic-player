@@ -36,6 +36,14 @@ export async function getPathById(id: string): Promise<string | null> {
   return fullPath;
 }
 
+export function getByIds(ids: string[]): any[] {
+  if (!db || ids.length === 0) return [];
+  
+  const placeholders = ids.map(() => '?').join(',');
+  const sql = `SELECT * FROM media_file WHERE id IN (${placeholders})`;
+  return execQueryAll(sql, ids);
+}
+
 
 export function search4(comments: string[], genres: string[], artists: string[], years: string[], limit: number = 50, offset: number = 0, musicFolderId: string | number): any {
   if (!comments.length && !genres.length && !artists.length && !years.length) {

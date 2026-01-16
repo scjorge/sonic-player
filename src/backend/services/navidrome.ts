@@ -1,6 +1,9 @@
 import { AppDataSource } from '../utils/db';
 import { NavidromeSetting } from '../entities/Navidrome';
-import { search4 } from './navidromeDatabase';
+import { search4, getByIds } from './navidromeDatabase';
+import { NAVIDROME_MEDIA_PATH } from '../config';
+import * as fs from 'fs';
+import * as path from 'path';
 
 
 export const navidromeSettingsService = {
@@ -13,7 +16,7 @@ export const navidromeSettingsService = {
   async save(userId: string, baseUrl: string, user: string, password: string) {
     const repo = AppDataSource.getRepository(NavidromeSetting);
     let setting = await repo.findOne({ where: { userId } });
-    
+
     if (!setting) {
       setting = repo.create({ userId, baseUrl, user, password });
     } else {
@@ -51,7 +54,7 @@ export const navidromeTrackService = {
   },
 
   hashCover() {
-    return '693eecc3'; 
+    return '693eecc3';
   },
 
 
@@ -67,7 +70,7 @@ export const navidromeTrackService = {
           song: rows.map(row => {
             const tags = this.safeJson(row.tags);
             const participants = this.safeJson(row.participants);
-            const genres = (tags.genre || []).map((g: any) => ({name: g.value}));
+            const genres = (tags.genre || []).map((g: any) => ({ name: g.value }));
             return {
               id: row.id,
               parent: row.album_id,
@@ -125,5 +128,61 @@ export const navidromeTrackService = {
   get(comments: string[], genreList: string[], artistList: string[], yearList: string[], limit: number = 50, offset: number = 0, musicFolderId: string | number) {
     const rows = search4(comments, genreList, artistList, yearList, limit, offset, musicFolderId);
     return this.toSubsonicSearchResult(rows);
+  },
+
+  copyToUserDirectory(username: string, songIds: string[]) {
+    const userDirectory = path.join(NAVIDROME_MEDIA_PATH, username);
+
+    // Create user directory if it doesn't exist
+    if (!fs.existsSync(userDirectory)) {
+      fs.mkdirSync(userDirectory, { recursive: true });
+    }
+
+    let copiedCount = 0;
+    const errors: string[] = [];
+
+    // Get song paths from database
+    for (const songId of songIds) {
+      try {
+        const tracks = getByIds([songId]);
+
+        if (tracks.length === 0) {
+          errors.push(`Música não encontrada: ${songId}`);
+          continue;
+        }
+
+        const track = tracks[0];
+        const sourcePath = path.join(NAVIDROME_MEDIA_PATH, track.path);
+
+        if (!fs.existsSync(sourcePath)) {
+          errors.push(`Arquivo não encontrado: ${path.basename(sourcePath)}`);
+          continue;
+        }
+
+        const fileName = path.basename(sourcePath);
+        const destPath = path.join(userDirectory, fileName);
+
+        // Check if file already exists
+        if (fs.existsSync(destPath)) {
+          console.log(`Arquivo já existe, pulando: ${fileName}`);
+          continue;
+        }
+
+        // Copy file
+        fs.copyFileSync(sourcePath, destPath);
+        copiedCount++;
+        console.log(`Arquivo copiado: ${fileName}`);
+      } catch (err: any) {
+        console.error(`Erro ao copiar música ${songId}:`, err);
+        errors.push(`Erro ao copiar: ${err.message}`);
+      }
+    }
+
+    return {
+      copied: copiedCount,
+      total: songIds.length,
+      errors: errors.length > 0 ? errors : undefined,
+    }
   }
+
 }
