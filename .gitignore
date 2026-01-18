@@ -1,6 +1,8 @@
 downloads/
 downloads_navidrome/
 navidrome_database/
+navidrome_media/
+preparation/
 database.sqlite
 sonicplayer.db
 

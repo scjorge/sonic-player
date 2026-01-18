@@ -524,9 +524,15 @@ class DownloadService {
   async convertDownload(pathOrId: string, song: any, targetFormat: 'mp3' | 'flac') {
     let item: any | undefined;
     let progressTimer: NodeJS.Timeout | undefined;
-
+  console.log('Song metadata:', song);
     try {
-      const inputPath = this.resolveDownloadPath(pathOrId);
+      let inputPath: string | undefined;
+      if (song.contentType === 'audio/preparation'){
+        inputPath = this.resolveDownloadPath(pathOrId);
+      } else {
+        inputPath = await getPathById(pathOrId);
+      }
+      console.log('Input path for conversion:', inputPath);
       if (!inputPath) {
         throw new Error('Caminho de arquivo inválido para conversão');
       }
@@ -536,6 +542,7 @@ class DownloadService {
       const dir = path.dirname(inputPath);
       const targetExt = targetFormat === 'mp3' ? '.mp3' : '.flac';
       const outputPath = path.join(dir, `${baseName}${targetExt}`);
+      console.log(`Starting conversion of ${inputPath} to ${targetFormat} at ${outputPath}`);
 
       // Cria item na fila de downloads para acompanhar conversão
       const displayTitle = song?.title || baseName;

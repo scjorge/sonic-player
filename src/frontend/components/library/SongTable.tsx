@@ -1248,11 +1248,17 @@ const SongTable: React.FC<SongTableProps> = ({
                       let errorCount = 0;
 
                       for (const song of songsToConvert) {
+                        const songPayload = {
+                          id: song.id,
+                          title: song.title,
+                          artist: song.artist,
+                          contentType: song.contentType,
+                        }
                         try {
                           const resp = await fetch(`${BACKEND_BASE_URL}/downloads/convert`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ path: song.path, format: 'mp3' }),
+                            body: JSON.stringify({ path: song.path, format: 'mp3', song: songPayload }),
                           });
                           if (!resp.ok) {
                             const err = await resp.json().catch(() => ({}));
@@ -1307,11 +1313,17 @@ const SongTable: React.FC<SongTableProps> = ({
                       let errorCount = 0;
 
                       for (const song of songsToConvert) {
+                        const songPayload = {
+                          id: song.id,
+                          title: song.title,
+                          artist: song.artist,
+                          contentType: song.contentType,
+                        }
                         try {
                           const resp = await fetch(`${BACKEND_BASE_URL}/downloads/convert`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ path: song.path, format: 'flac' }),
+                            body: JSON.stringify({ path: song.path, format: 'flac', song: songPayload }),
                           });
                           if (!resp.ok) {
                             const err = await resp.json().catch(() => ({}));
