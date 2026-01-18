@@ -164,6 +164,10 @@ const SongTable: React.FC<SongTableProps> = ({
     return saved?.masterMode ?? false;
   });
 
+  // Get current user to check admin status
+  const currentUser = authService.getCurrentUserSync();
+  const isAdmin = currentUser?.role === 'admin';
+
   // Initialize master mode on mount
   useEffect(() => {
     const saved = getUserState<any>('navi_songs');
@@ -1610,8 +1614,8 @@ const SongTable: React.FC<SongTableProps> = ({
             </button>
           )}
 
-          {/* Option to convert songs when Master Mode is disabled */}
-          {isNavidromeLibraryTable && !isMasterMode && contextMenu.song?.path && (
+          {/* Option to convert songs when Master Mode is disabled, or when enabled but user is admin */}
+          {isNavidromeLibraryTable && (!isMasterMode || (isMasterMode && isAdmin)) && contextMenu.song?.path && (
             <button
               onClick={() => {
                 // Se há seleções, converte todas; senão, converte apenas a música do context menu
