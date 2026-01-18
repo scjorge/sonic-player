@@ -1195,7 +1195,7 @@ const SongTable: React.FC<SongTableProps> = ({
         </div>
       )}
 
-      {/* Convert Modal for Downloads (Preparo) */}
+      {/* Convert Modal for Downloads (Preparo) and Navidrome Library */}
       {convertState.open && convertState.song && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
           <div className="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-full max-w-sm flex flex-col">
@@ -1203,7 +1203,10 @@ const SongTable: React.FC<SongTableProps> = ({
               <div>
                 <h2 className="text-sm font-semibold text-white">Converter arquivo</h2>
                 <p className="text-[11px] text-zinc-500 mt-0.5 truncate">
-                  {convertState.song.title} — {convertState.song.artist}
+                  {selectedIds.length > 1
+                    ? `${selectedIds.length} músicas selecionadas`
+                    : `${convertState.song.title} — ${convertState.song.artist}`
+                  }
                 </p>
               </div>
               <button
@@ -1216,27 +1219,61 @@ const SongTable: React.FC<SongTableProps> = ({
             </div>
 
             <div className="p-4 space-y-3 text-xs text-zinc-200">
-              <p>Escolha o formato para conversão. A música será convertida na pasta de preparo.</p>
+              <p>
+                {selectedIds.length > 1
+                  ? 'Escolha o formato para conversão. As músicas serão convertidas na pasta de preparo.'
+                  : 'Escolha o formato para conversão. A música será convertida na pasta de preparo.'
+                }
+              </p>
               <div className="flex flex-col gap-2">
                 <button
                   disabled={convertState.loading}
                   onClick={async () => {
-                    if (!convertState.song?.path) return;
                     setConvertState(prev => ({ ...prev, loading: true }));
                     try {
-                      showToast('Convertendo para MP3 320 kbps...', 'warning');
-                      const resp = await fetch(`${BACKEND_BASE_URL}/downloads/convert`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ path: convertState.song.path, format: 'mp3' }),
-                      });
-                      if (!resp.ok) {
-                        const err = await resp.json().catch(() => ({}));
-                        showToast(`Erro ao converter para MP3: ${err.error || resp.statusText}`, 'error');
-                      } else {
-                        showToast('Conversão para MP3 concluída. Atualizando lista de preparo...', 'success');
-                        if (onAfterFinalize) onAfterFinalize();
+                      // Se há múltiplas seleções, converte todas
+                      const songsToConvert = selectedIds.length > 1
+                        ? songs.filter(s => selectedIds.includes(s.id) && s.path)
+                        : convertState.song?.path ? [convertState.song] : [];
+
+                      if (songsToConvert.length === 0) {
+                        showToast('Nenhuma música com caminho válido para converter.', 'error');
+                        setConvertState({ open: false, song: null, loading: false });
+                        return;
                       }
+
+                      showToast(`Convertendo ${songsToConvert.length} música(s) para MP3 320 kbps...`, 'warning');
+                      
+                      let successCount = 0;
+                      let errorCount = 0;
+
+                      for (const song of songsToConvert) {
+                        try {
+                          const resp = await fetch(`${BACKEND_BASE_URL}/downloads/convert`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: song.path, format: 'mp3' }),
+                          });
+                          if (!resp.ok) {
+                            const err = await resp.json().catch(() => ({}));
+                            console.error(`Erro ao converter ${song.title}:`, err.error || resp.statusText);
+                            errorCount++;
+                          } else {
+                            successCount++;
+                          }
+                        } catch (e: any) {
+                          console.error(`Erro ao converter ${song.title}:`, e?.message || String(e));
+                          errorCount++;
+                        }
+                      }
+
+                      if (errorCount > 0) {
+                        showToast(`${successCount} música(s) convertida(s) para MP3. ${errorCount} erro(s).`, 'warning');
+                      } else {
+                        showToast(`${successCount} música(s) convertida(s) para MP3 com sucesso.`, 'success');
+                      }
+                      
+                      if (onAfterFinalize) onAfterFinalize();
                     } catch (e: any) {
                       showToast(`Erro ao converter para MP3: ${e?.message || String(e)}`, 'error');
                     } finally {
@@ -1251,22 +1288,51 @@ const SongTable: React.FC<SongTableProps> = ({
                 <button
                   disabled={convertState.loading}
                   onClick={async () => {
-                    if (!convertState.song?.path) return;
                     setConvertState(prev => ({ ...prev, loading: true }));
                     try {
-                      showToast('Convertendo para FLAC...', 'warning');
-                      const resp = await fetch(`${BACKEND_BASE_URL}/downloads/convert`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ path: convertState.song.path, format: 'flac' }),
-                      });
-                      if (!resp.ok) {
-                        const err = await resp.json().catch(() => ({}));
-                        showToast(`Erro ao converter para FLAC: ${err.error || resp.statusText}`, 'error');
-                      } else {
-                        showToast('Conversão para FLAC concluída. Atualizando lista de preparo...', 'success');
-                        if (onAfterFinalize) onAfterFinalize();
+                      // Se há múltiplas seleções, converte todas
+                      const songsToConvert = selectedIds.length > 1
+                        ? songs.filter(s => selectedIds.includes(s.id) && s.path)
+                        : convertState.song?.path ? [convertState.song] : [];
+
+                      if (songsToConvert.length === 0) {
+                        showToast('Nenhuma música com caminho válido para converter.', 'error');
+                        setConvertState({ open: false, song: null, loading: false });
+                        return;
                       }
+
+                      showToast(`Convertendo ${songsToConvert.length} música(s) para FLAC...`, 'warning');
+                      
+                      let successCount = 0;
+                      let errorCount = 0;
+
+                      for (const song of songsToConvert) {
+                        try {
+                          const resp = await fetch(`${BACKEND_BASE_URL}/downloads/convert`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: song.path, format: 'flac' }),
+                          });
+                          if (!resp.ok) {
+                            const err = await resp.json().catch(() => ({}));
+                            console.error(`Erro ao converter ${song.title}:`, err.error || resp.statusText);
+                            errorCount++;
+                          } else {
+                            successCount++;
+                          }
+                        } catch (e: any) {
+                          console.error(`Erro ao converter ${song.title}:`, e?.message || String(e));
+                          errorCount++;
+                        }
+                      }
+
+                      if (errorCount > 0) {
+                        showToast(`${successCount} música(s) convertida(s) para FLAC. ${errorCount} erro(s).`, 'warning');
+                      } else {
+                        showToast(`${successCount} música(s) convertida(s) para FLAC com sucesso.`, 'success');
+                      }
+                      
+                      if (onAfterFinalize) onAfterFinalize();
                     } catch (e: any) {
                       showToast(`Erro ao converter para FLAC: ${e?.message || String(e)}`, 'error');
                     } finally {
@@ -1529,6 +1595,31 @@ const SongTable: React.FC<SongTableProps> = ({
                 ? `Copiar para Minha Biblioteca (${selectedIds.length})`
                 : 'Copiar para Minha Biblioteca'
               }
+            </button>
+          )}
+
+          {/* Option to convert songs when Master Mode is disabled */}
+          {isNavidromeLibraryTable && !isMasterMode && contextMenu.song?.path && (
+            <button
+              onClick={() => {
+                // Se há seleções, converte todas; senão, converte apenas a música do context menu
+                const songsToConvert = selectedIds.length > 0
+                  ? songs.filter(s => selectedIds.includes(s.id) && s.path)
+                  : [contextMenu.song!];
+
+                if (songsToConvert.length === 0) {
+                  showToast('Nenhuma música com caminho válido selecionada.', 'error');
+                  setContextMenu({ ...contextMenu, visible: false });
+                  return;
+                }
+                // Usa a primeira música como referência no modal, mas converte todas
+                setConvertState({ open: true, song: songsToConvert[0], loading: false });
+                setContextMenu({ ...contextMenu, visible: false });
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              {selectedIds.length > 0 ? `Converter (${selectedIds.length})` : 'Converter'}
             </button>
           )}
 
