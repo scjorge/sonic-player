@@ -76,6 +76,10 @@ class NavidromeService {
     const naviFolder = {master: null, user: null};
     const userName = authService.getCurrentUserSync()?.username;
     const data = await this.fetchDataUserFolder('getMusicFolders.view');
+    const error = data['subsonic-response'].error?.message;
+    if (error) {
+      throw new Error(`Error fetching music folders: ${error}`);
+    }
     const musicFolders = data['subsonic-response'].musicFolders?.musicFolder || [];
     const masterFolder = musicFolders.filter((f: any) => f.name == NAVIDROME_MASTER_LIB);
     const userFolder = musicFolders.filter((f: any) => f.name == userName);
@@ -90,7 +94,7 @@ class NavidromeService {
     } else if (!this.masterModeEnabled && naviFolder.user) {
       id = naviFolder.user;
     } else {
-        throw new Error('No valid music folder found for the current mode.');
+        throw new Error('No valid music folder found for the current user.');
     }
     return id;
   }

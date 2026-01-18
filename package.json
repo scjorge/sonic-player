@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev:frontend": "vite",
-    "dev:backend": "npx tsx src/backend/app.ts",
+    "dev:backend": "DATABASE_PATH=/app/database.sqlite npm run create-admin && DATABASE_PATH=/app/database.sqlite npx tsx src/backend/app.ts",
     "build:frontend": "vite build",
     "build:backend": "tsc -p tsconfig.backend.json",
     "build": "vite build && npm run build:backend",

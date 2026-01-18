@@ -1356,12 +1356,6 @@ const SongTable: React.FC<SongTableProps> = ({
 
       {/* Context Menu Portal/Div */}
       {contextMenu.visible && contextMenu.song && (() => {
-        console.log('Context Menu State:', {
-          isNavidromeLibraryTable,
-          isMasterMode,
-          selectedIds: selectedIds.length,
-          song: contextMenu.song.title
-        });
         return null;
       })()}
       {contextMenu.visible && contextMenu.song && (
@@ -1488,13 +1482,6 @@ const SongTable: React.FC<SongTableProps> = ({
                 const songsToSend = selectedIds.length > 0
                   ? songs.filter(s => selectedIds.includes(s.id))
                   : [contextMenu.song!];
-
-                console.log('Copiando músicas:', {
-                  isNavidromeLibraryTable,
-                  isMasterMode,
-                  selectedCount: selectedIds.length,
-                  songsToSend: songsToSend.length
-                });
 
                 try {
                   showToast(`Copiando ${songsToSend.length} música(s) para o diretório do usuário...`, 'warning');
