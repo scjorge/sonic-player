@@ -1373,7 +1373,10 @@ const SongTable: React.FC<SongTableProps> = ({
               <div>
                 <h2 className="text-sm font-semibold text-white">Excluir arquivo de preparo</h2>
                 <p className="text-[11px] text-zinc-500 mt-0.5 truncate">
-                  {deleteState.song.title} — {deleteState.song.artist}
+                  {selectedIds.length > 1
+                    ? `${selectedIds.length} músicas selecionadas`
+                    : `${deleteState.song.title} — ${deleteState.song.artist}`
+                  }
                 </p>
               </div>
               <button
@@ -1387,11 +1390,16 @@ const SongTable: React.FC<SongTableProps> = ({
 
             <div className="p-4 space-y-3 text-xs text-zinc-200">
               <p>
-                Tem certeza que deseja excluir este arquivo da pasta de preparo?
+                {selectedIds.length > 1
+                  ? `Tem certeza que deseja excluir ${selectedIds.length} arquivos da pasta de preparo?`
+                  : 'Tem certeza que deseja excluir este arquivo da pasta de preparo?'
+                }
               </p>
-              <p className="text-[11px] text-zinc-500 break-all">
-                Arquivo: {getFileName(deleteState.song.path)}
-              </p>
+              {selectedIds.length <= 1 && (
+                <p className="text-[11px] text-zinc-500 break-all">
+                  Arquivo: {getFileName(deleteState.song.path)}
+                </p>
+              )}
 
               <div className="flex justify-end gap-2 mt-2">
                 <button
@@ -1404,24 +1412,49 @@ const SongTable: React.FC<SongTableProps> = ({
                 <button
                   disabled={deleteState.loading}
                   onClick={async () => {
-                    const song = deleteState.song;
-                    if (!song?.path) return;
                     setDeleteState(prev => ({ ...prev, loading: true }));
                     try {
-                      const resp = await fetch(`${BACKEND_BASE_URL}/downloads/delete-preparation`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ path: song.path }),
-                      });
-                      if (!resp.ok) {
-                        const err = await resp.json().catch(() => ({}));
-                        showToast(`Erro ao excluir arquivo de preparo: ${err.error || resp.statusText}`, 'error');
-                      } else {
-                        showToast('Arquivo excluído da pasta de preparo.', 'success');
-                        if (onAfterFinalize) onAfterFinalize();
+                      // Se há múltiplas seleções, exclui todas
+                      const songsToDelete = selectedIds.length > 1
+                        ? songs.filter(s => selectedIds.includes(s.id) && s.path)
+                        : deleteState.song?.path ? [deleteState.song] : [];
+
+                      if (songsToDelete.length === 0) {
+                        songsToDelete.push(deleteState.song);
                       }
+
+                      let successCount = 0;
+                      let errorCount = 0;
+
+                      for (const song of songsToDelete) {
+                        try {
+                          const resp = await fetch(`${BACKEND_BASE_URL}/downloads/delete-preparation`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: song.path }),
+                          });
+                          if (!resp.ok) {
+                            const err = await resp.json().catch(() => ({}));
+                            console.error(`Erro ao excluir ${song.title}:`, err.error || resp.statusText);
+                            errorCount++;
+                          } else {
+                            successCount++;
+                          }
+                        } catch (e: any) {
+                          console.error(`Erro ao excluir ${song.title}:`, e?.message || String(e));
+                          errorCount++;
+                        }
+                      }
+                      selectedIds.length = 0; // Limpa seleção após exclusão
+                      if (errorCount > 0) {
+                        showToast(`${successCount} arquivo(s) excluído(s). ${errorCount} erro(s).`, 'warning');
+                      } else {
+                        showToast(`${successCount} arquivo(s) excluído(s) com sucesso.`, 'success');
+                      }
+
+                      if (onAfterFinalize) onAfterFinalize();
                     } catch (e: any) {
-                      showToast(`Erro ao excluir arquivo de preparo: ${e?.message || String(e)}`, 'error');
+                      showToast(`Erro ao excluir arquivos: ${e?.message || String(e)}`, 'error');
                     } finally {
                       setDeleteState({ open: false, song: null, loading: false });
                     }
@@ -1776,7 +1809,15 @@ const SongTable: React.FC<SongTableProps> = ({
               {isNaviTableDownload && (
                 <button
                   onClick={() => {
-                    setDeleteState({ open: true, song: contextMenu.song!, loading: false });
+                    const songsToDelete = selectedIds.length > 0
+                      ? songs.filter(s => selectedIds.includes(s.id) && s.path)
+                      : [contextMenu.song!];
+                    if (songsToDelete.length === 0) {
+                      showToast('Nenhuma música com caminho válido selecionada.', 'error');
+                      setContextMenu({ ...contextMenu, visible: false });
+                      return;
+                    }
+                    setDeleteState({ open: true, song: songsToDelete[0], loading: false });
                     setContextMenu({ ...contextMenu, visible: false });
                   }}
                   className="w-full text-left px-3 py-2 text-sm text-red-300 hover:bg-red-900/40 hover:text-red-200 flex items-center gap-2"
