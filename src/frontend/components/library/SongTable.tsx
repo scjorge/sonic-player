@@ -780,7 +780,6 @@ const SongTable: React.FC<SongTableProps> = ({
             onClick={async (e) => {
               e.stopPropagation();
               if (disabled || !song.path) return;
-              console.log(song)
               if (['mp3', 'flac'].includes(song.suffix) === false) {
                 showToast('Apenas arquivos MP3 ou FLAC podem ser finalizados.', 'error');
                 return;
