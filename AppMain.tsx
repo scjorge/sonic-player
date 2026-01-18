@@ -868,7 +868,20 @@ const App: React.FC = () => {
     }
   };
 
-  const handleMasterModeChange = () => {
+  const handleMasterModeChange = async () => {
+    // Reload filter options
+    try {
+      const genres = await navidromeService.getGenres();
+      setAvailableGenres(genres);
+
+      const artists = await navidromeService.getArtists();
+      setNaviArtists(artists);
+      setAvailableArtistNames(artists.map(a => a.name).sort());
+    } catch (e) {
+      console.error('Failed to reload filter options', e);
+    }
+
+    // Reload current view
     if (viewMode === 'navi_songs') {
       if (groupFilterSelection.length > 0) {
         // Reload with group filter
