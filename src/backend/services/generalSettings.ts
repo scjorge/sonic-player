@@ -4,15 +4,14 @@ import { NAVIDROME_SAVE_FORMAT_DEFAULT } from '../../core/config';
 
 
 export const generalSettingsService = {
-  async getGeneralSettings(userId: string): Promise<any> {
+  async getGeneralSettings(): Promise<any> {
     try {
       const repo = AppDataSource.getRepository(GeneralSettingsEntity);
-      let settings = await repo.findOne({ where: { userId } });
+      let settings = await repo.findOne({ where: {} });
 
       // Set default if not exists
       if (!settings) {
         settings = repo.create({
-          userId,
           navidromeSaveFormat: NAVIDROME_SAVE_FORMAT_DEFAULT
         });
         await repo.save(settings);
@@ -25,13 +24,12 @@ export const generalSettingsService = {
     }
   },
 
-  async saveGeneralSettings(userId: string, navidromeSaveFormat: string) {
+  async saveGeneralSettings(navidromeSaveFormat: string) {
     try {
       const repo = AppDataSource.getRepository(GeneralSettingsEntity);
-      let settings = await repo.findOne({ where: { userId } });
+      let settings = await repo.findOne({ where: {} });
       if (!settings) {
         settings = repo.create({
-          userId,
           navidromeSaveFormat: navidromeSaveFormat
         });
       } else {

@@ -10,7 +10,7 @@ export async function getGeneralSettings(req: AuthRequest, res: Response) {
   }
 
   try {
-    const result = await generalSettingsService.getGeneralSettings(req.user.id);
+    const result = await generalSettingsService.getGeneralSettings();
     if (result.error) {
       return res.status(500).json({ error: result.error });
     }
@@ -25,6 +25,11 @@ export async function saveGeneralSettings(req: AuthRequest, res: Response) {
     return res.status(401).json({ error: 'Não autenticado' });
   }
 
+  // Apenas admin pode salvar configurações gerais
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem editar configurações gerais' });
+  }
+
   const body = req.body || {};
   if (!body.settings) {
     return res.status(400).json({ error: 'settings é obrigatório' });
@@ -35,7 +40,7 @@ export async function saveGeneralSettings(req: AuthRequest, res: Response) {
     : NAVIDROME_SAVE_FORMAT_DEFAULT;
 
   try {
-    const result = await generalSettingsService.saveGeneralSettings(req.user.id, navidromeSaveFormat);
+    const result = await generalSettingsService.saveGeneralSettings(navidromeSaveFormat);
     if (result.error) {
       return res.status(500).json({ error: result.error });
     }

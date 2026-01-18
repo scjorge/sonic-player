@@ -46,6 +46,8 @@ const GeneralSettings: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [savingAccount, setSavingAccount] = useState(false);
 
+  const isAdmin = user?.role === 'admin';
+
   useEffect(() => {
     (async () => {
       try {
@@ -72,16 +74,23 @@ const GeneralSettings: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!isAdmin) {
+      showToast('Apenas administradores podem editar configurações gerais', 'error');
+      return;
+    }
+
     setError(null);
     setSaving(true);
     try {
       const savedSettings = await saveGeneralSettings(form);
       setForm(savedSettings);
       setSaved(true);
+      showToast('Configurações salvas com sucesso', 'success');
       setTimeout(() => setSaved(false), 3000);
     } catch (e: any) {
       console.error(e);
       setError(e?.message || 'Falha ao salvar configurações');
+      showToast(e?.message || 'Falha ao salvar configurações', 'error');
     } finally {
       setSaving(false);
     }
@@ -202,6 +211,12 @@ const GeneralSettings: React.FC = () => {
 
       {activeTab === 'templates' && (
         <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-8 space-y-6">
+          {!isAdmin && (
+            <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-yellow-400 text-sm">
+              <Lock className="w-4 h-4 shrink-0" />
+              <span>Apenas administradores podem editar as configurações gerais. As configurações são compartilhadas entre todos os usuários.</span>
+            </div>
+          )}
           <div className="space-y-2">
             <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
               Template de caminho
@@ -214,7 +229,8 @@ const GeneralSettings: React.FC = () => {
               value={form.navidromeSaveFormat}
               onChange={(e) => handleChangeFormat(e.target.value)}
               rows={1}
-              className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors font-mono text-sm resize-y"
+              disabled={!isAdmin}
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors font-mono text-sm resize-y disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -240,7 +256,7 @@ const GeneralSettings: React.FC = () => {
           <div className="pt-4 flex flex-wrap items-center gap-4">
             <button
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || !isAdmin}
               className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-indigo-500/10 active:scale-95"
             >
               <Save className="w-4 h-4" />
