@@ -1262,13 +1262,13 @@ const SongTable: React.FC<SongTableProps> = ({
                           });
                           if (!resp.ok) {
                             const err = await resp.json().catch(() => ({}));
-                            console.error(`Erro ao converter ${song.title}:`, err.error || resp.statusText);
+                            showToast(`Erro ao converter ${song.title}: ${err.error || resp.statusText}`, 'error');
                             errorCount++;
                           } else {
                             successCount++;
                           }
                         } catch (e: any) {
-                          console.error(`Erro ao converter ${song.title}:`, e?.message || String(e));
+                          showToast(`Erro ao converter ${song.title}: ${e?.message || String(e)}`, 'error');
                           errorCount++;
                         }
                       }
@@ -1327,13 +1327,13 @@ const SongTable: React.FC<SongTableProps> = ({
                           });
                           if (!resp.ok) {
                             const err = await resp.json().catch(() => ({}));
-                            console.error(`Erro ao converter ${song.title}:`, err.error || resp.statusText);
+                            showToast(`Erro ao converter ${song.title}: ${err.error || resp.statusText}`, 'error');
                             errorCount++;
                           } else {
                             successCount++;
                           }
                         } catch (e: any) {
-                          console.error(`Erro ao converter ${song.title}:`, e?.message || String(e));
+                          showToast(`Erro ao converter ${song.title}: ${e?.message || String(e)}`, 'error');
                           errorCount++;
                         }
                       }

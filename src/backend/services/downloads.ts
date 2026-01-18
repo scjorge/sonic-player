@@ -530,11 +530,11 @@ class DownloadService {
       if (song.contentType === 'audio/preparation'){
         inputPath = this.resolveDownloadPath(pathOrId);
       } else {
-        inputPath = await getPathById(pathOrId);
+        inputPath = await getPathById(song.id);
       }
       console.log('Input path for conversion:', inputPath);
-      if (!inputPath) {
-        throw new Error('Caminho de arquivo inválido para conversão');
+      if (!fs.existsSync(inputPath)) {
+        throw new Error('Arquivo de áudio não encontrado para conversão');
       }
 
       const ext = path.extname(inputPath).toLowerCase();

@@ -22,17 +22,28 @@ function execQueryAll(sql: string, params: any[] = []): any[] {
 
 
 export async function getPathById(id: string): Promise<string | null> {
-  const sql = 'SELECT path FROM media_file WHERE id = ?';
+  const sql = 'SELECT path, library_id FROM media_file WHERE id = ?';
   const rows = execQueryAll(sql, [id]);
   if (rows.length === 0) {
     return null;
   }
   const trackPath = rows[0].path as string;
+  const trackLibraryID = rows[0].library_id as string;
   if (!trackPath) {
     throw new Error('Media file path not found in Navidrome database');
   }
 
-  const fullPath = path.join(NAVIDROME_MEDIA_PATH, trackPath);
+  const sqlLibrary = 'SELECT path FROM library WHERE id = ?';
+  const rowsLibrary = execQueryAll(sqlLibrary, [trackLibraryID]);
+  if (rowsLibrary.length === 0) {
+    return null;
+  }
+  let libraryPath = rowsLibrary[0].path as string;
+  if (!libraryPath) {
+    throw new Error('Media file path not found in Navidrome database');
+  }
+  libraryPath = libraryPath.replace(/\/music/,'');
+  const fullPath = path.join(NAVIDROME_MEDIA_PATH, libraryPath, trackPath);
   return fullPath;
 }
 
