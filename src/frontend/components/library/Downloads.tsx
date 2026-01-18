@@ -37,6 +37,7 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
   const [groupModalSong, setGroupModalSong] = useState<NaviSong | null>(null);
   const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -298,6 +299,15 @@ export const NaviDownloads: React.FC<DownloadsProps> = ({ onPlayDownload, curren
               isNaviTableDownload={true}
               onGroupEdit={(song) => setGroupModalSong(song)}
               onAfterFinalize={fetchCompleted}
+              selectedIds={selectedIds}
+              onSelect={(id, selected) => {
+                setSelectedIds(prev => 
+                  selected ? [...prev, id] : prev.filter(sid => sid !== id)
+                );
+              }}
+              onSelectAll={(selected) => {
+                setSelectedIds(selected ? completedSongs.map(s => s.id) : []);
+              }}
             />
           )}
         </div>
