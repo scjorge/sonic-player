@@ -151,7 +151,6 @@ export const navidromeTrackService = {
         const destPath = path.join(userDirectory, fileName);
 
         if (!fs.existsSync(sourcePath)) {
-          console.error(`File not found: ${sourcePath}  || ${destPath}`);
           errors.push(`Arquivo não encontrado: ${path.basename(sourcePath)}`);
           continue;
         }
