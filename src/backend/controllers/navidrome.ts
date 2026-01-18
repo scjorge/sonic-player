@@ -63,9 +63,9 @@ export const copyToUserDirectory = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const result = navidromeTrackService.copyToUserDirectory(req.user.username, songIds);
+    const result = await navidromeTrackService.copyToUserDirectory(req.user.username, songIds);
     if (result.errors && result.errors.length > 0) {
-      return res.status(500).json(result.errors);
+      return res.status(200).json({ errors: result.errors });
     }
     return res.json(result);
   } catch (error: any) {

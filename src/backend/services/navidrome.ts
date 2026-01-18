@@ -1,6 +1,6 @@
 import { AppDataSource } from '../utils/db';
 import { NavidromeSetting } from '../entities/Navidrome';
-import { search4, getByIds } from './navidromeDatabase';
+import { search4, getByIds, getPathById } from './navidromeDatabase';
 import { NAVIDROME_MEDIA_PATH } from '../config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -130,7 +130,7 @@ export const navidromeTrackService = {
     return this.toSubsonicSearchResult(rows);
   },
 
-  copyToUserDirectory(username: string, songIds: string[]) {
+  async copyToUserDirectory(username: string, songIds: string[]) {
     const userDirectory = path.join(NAVIDROME_MEDIA_PATH, username);
 
     // Create user directory if it doesn't exist
@@ -152,7 +152,8 @@ export const navidromeTrackService = {
         }
 
         const track = tracks[0];
-        const sourcePath = path.join(NAVIDROME_MEDIA_PATH, track.path);
+
+        const sourcePath = await getPathById(track.id);
 
         if (!fs.existsSync(sourcePath)) {
           errors.push(`Arquivo não encontrado: ${path.basename(sourcePath)}`);
