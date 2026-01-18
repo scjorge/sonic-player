@@ -165,16 +165,13 @@ export const navidromeTrackService = {
 
         // Check if file already exists
         if (fs.existsSync(destPath)) {
-          console.log(`Arquivo já existe, pulando: ${fileName}`);
           continue;
         }
 
         // Copy file
         fs.copyFileSync(sourcePath, destPath);
         copiedCount++;
-        console.log(`Arquivo copiado: ${fileName}`);
       } catch (err: any) {
-        console.error(`Erro ao copiar música ${songId}:`, err);
         errors.push(`Erro ao copiar: ${err.message}`);
       }
     }
