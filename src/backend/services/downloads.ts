@@ -242,7 +242,7 @@ class DownloadService {
     }
   }
 
-  private async buildNavidromeTargetPath(userId: string, meta: AudioMetadata, sourcePath: string) {
+  private async buildNavidromeTargetPath(meta: AudioMetadata, sourcePath: string) {
     const ext = (path.extname(sourcePath).toLowerCase().replace('.', '') || 'bin');
 
     const genre = meta.genre || 'Unknown';
@@ -255,7 +255,7 @@ class DownloadService {
 
     const safe = (value: string) => sanitizeQuery(value || '').replace(/^\.+$/, '') || 'Unknown';
 
-    const generalSetting = await generalSettingsService.getGeneralSettings(userId);
+    const generalSetting = await generalSettingsService.getGeneralSettings();
     let relative = generalSetting.navidromeSaveFormat;
     relative = relative.replace(/{genre}/g, safe(genre));
     relative = relative.replace(/{artist}/g, safe(artist));
@@ -268,7 +268,7 @@ class DownloadService {
     return path.join(NAVIDROME_MEDIA_PATH, NAVIDROME_MASTER_LIB, relative);
   }
 
-  async finalizeDownload(userId: string, filePath: string) {
+  async finalizeDownload(filePath: string) {
     try {
       const resolved = this.resolveDownloadPath(filePath);
       if (!resolved) {
@@ -280,7 +280,7 @@ class DownloadService {
         throw new Error('Gênero é obrigatório para finalizar o download');
       }
 
-      let target = await this.buildNavidromeTargetPath(userId, meta, resolved);
+      let target = await this.buildNavidromeTargetPath(meta, resolved);
       const targetDir = path.dirname(target);
       await fs.promises.mkdir(targetDir, { recursive: true });
 
