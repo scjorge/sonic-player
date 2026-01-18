@@ -1629,10 +1629,18 @@ const SongTable: React.FC<SongTableProps> = ({
                     for (const msg of result.errors || []) {
                       showToast(msg, 'error');
                     }
-                    return;
                   }
-                  showToast(`${result.copied || 0} música(s) copiada(s) com sucesso!`, 'success');
-
+                  if (result.warns) {
+                    for (const msg of result.warns || []) {
+                      showToast(msg, 'warning');
+                    }
+                  }
+                  if (result.success) {
+                    for (const msg of result.success || []) {
+                      showToast(msg, 'success');
+                    }
+                  }
+                  showToast(`${result.copied || 0} música(s) copiada(s) com sucesso!`, 'info');
                 } catch (e: any) {
                   showToast(`Erro ao copiar músicas: ${e?.message || String(e)}`, 'error');
                 }

@@ -1,6 +1,6 @@
 import { AppDataSource } from '../utils/db';
 import { NavidromeSetting } from '../entities/Navidrome';
-import { search4, getByIds, getPathById } from './navidromeDatabase';
+import { search4, getPathById } from './navidromeDatabase';
 import { NAVIDROME_MEDIA_PATH } from '../config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -140,36 +140,31 @@ export const navidromeTrackService = {
 
     let copiedCount = 0;
     const errors: string[] = [];
+    const warns: string[] = [];
+    const success: string[] = [];
 
     // Get song paths from database
     for (const songId of songIds) {
       try {
-        const tracks = getByIds([songId]);
-
-        if (tracks.length === 0) {
-          errors.push(`Música não encontrada: ${songId}`);
-          continue;
-        }
-
-        const track = tracks[0];
-
-        const sourcePath = await getPathById(track.id);
+        const sourcePath = await getPathById(songId);
+        const fileName = path.basename(sourcePath);
+        const destPath = path.join(userDirectory, fileName);
 
         if (!fs.existsSync(sourcePath)) {
+          console.error(`File not found: ${sourcePath}  || ${destPath}`);
           errors.push(`Arquivo não encontrado: ${path.basename(sourcePath)}`);
           continue;
         }
 
-        const fileName = path.basename(sourcePath);
-        const destPath = path.join(userDirectory, fileName);
-
         // Check if file already exists
         if (fs.existsSync(destPath)) {
+          warns.push(`Arquivo já existe: ${fileName}`);
           continue;
         }
 
         // Copy file
         fs.copyFileSync(sourcePath, destPath);
+        success.push(`Arquivo copiado com sucesso: ${destPath}`);
         copiedCount++;
       } catch (err: any) {
         errors.push(`Erro ao copiar: ${err.message}`);
@@ -180,6 +175,8 @@ export const navidromeTrackService = {
       copied: copiedCount,
       total: songIds.length,
       errors: errors.length > 0 ? errors : undefined,
+      warns: warns.length > 0 ? warns : undefined,
+      success: success.length > 0 ? success : undefined
     }
   }
 

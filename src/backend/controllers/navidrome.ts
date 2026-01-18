@@ -1,9 +1,6 @@
 import { Response, Request } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { navidromeSettingsService, navidromeTrackService } from '../services/navidrome';
-import * as fs from 'fs';
-import * as path from 'path';
-import { NAVIDROME_MEDIA_PATH } from '../config';
 
 export const getNavidromeSettings = async (req: AuthRequest, res: Response) => {
   if (!req.user) {
