@@ -8,10 +8,11 @@ interface GroupFilterModalProps {
   initialArtist?: string;
   initialGenre?: string;
   initialYear?: string;
+  initialExtension?: string;
   availableArtists?: string[];
   availableGenres?: string[];
   onClose: () => void;
-  onApply: (selectedComments: string[], artist: string, genre: string, year: string) => void;
+  onApply: (selectedComments: string[], artist: string, genre: string, year: string, extension: string) => void;
 }
 
 const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
@@ -20,6 +21,7 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
   initialArtist = '',
   initialGenre = '',
   initialYear = '',
+  initialExtension = '',
   availableArtists = [],
   availableGenres = [],
   onClose,
@@ -29,6 +31,7 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
   const [artistFilter, setArtistFilter] = useState<string>(initialArtist);
   const [genreFilter, setGenreFilter] = useState<string>(initialGenre);
   const [yearFilter, setYearFilter] = useState<string>(initialYear);
+  const [extensionFilter, setExtensionFilter] = useState<string>(initialExtension);
 
   const toggleItem = (group: TagGroup, item: string) => {
     const key = `${group.prefix}=${item}`;
@@ -42,7 +45,7 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
   };
 
   const handleApply = () => {
-    onApply(Array.from(selected), artistFilter, genreFilter, yearFilter);
+    onApply(Array.from(selected), artistFilter, genreFilter, yearFilter, extensionFilter);
     onClose();
   };
 
@@ -110,6 +113,19 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
                   placeholder="AAAA"
                 />
               </div>
+
+              <div className="flex flex-col gap-1 min-w-[120px]">
+                <label className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">Extensão</label>
+                <select
+                  value={extensionFilter}
+                  onChange={(e) => setExtensionFilter(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer"
+                >
+                  <option value="">Todas</option>
+                  <option value="mp3">MP3</option>
+                  <option value="flac">FLAC</option>
+                </select>
+              </div>
             </div>
 
             {/* Group List */}
@@ -173,7 +189,8 @@ const GroupFilterModal: React.FC<GroupFilterModalProps> = ({
               setArtistFilter('');
               setGenreFilter('');
               setYearFilter('');
-              onApply([], '', '', '');
+              setExtensionFilter('');
+              onApply([], '', '', '', '');
               onClose();
             }}
             className="px-6 py-2.5 text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg font-medium text-sm transition-colors"

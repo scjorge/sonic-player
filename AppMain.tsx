@@ -66,6 +66,10 @@ const App: React.FC = () => {
     const saved = getUserState<any>('navi_songs');
     return saved?.activeYear ?? '';
   });
+  const [activeExtension, setActiveExtension] = useState<string>(() => {
+    const saved = getUserState<any>('navi_songs');
+    return saved?.activeExtension ?? '';
+  });
   const [activeQuickList, setActiveQuickList] = useState<QuickListType>(() => {
     const saved = getUserState<any>('navi_songs');
     return (saved?.activeQuickList ?? null) as QuickListType;
@@ -198,13 +202,14 @@ const App: React.FC = () => {
       activeArtist,
       activeGenre,
       activeYear,
+      activeExtension,
       activeQuickList,
       searchQuery: naviSearchQuery,
       page,
       pageSize,
       groupFilterSelection,
     });
-  }, [activeArtist, activeGenre, activeYear, activeQuickList, naviSearchQuery, page, pageSize, groupFilterSelection]);
+  }, [activeArtist, activeGenre, activeYear, activeExtension, activeQuickList, naviSearchQuery, page, pageSize, groupFilterSelection]);
 
   // Persist Navidrome favorites (somente paginação)
   useEffect(() => {
@@ -1322,11 +1327,13 @@ const App: React.FC = () => {
     artistFilter: string,
     genreFilter: string,
     yearFilter: string,
+    extensionFilter: string,
   ) => {
     setGroupFilterSelection(selectedComments);
     setActiveArtist(artistFilter || '');
     setActiveGenre(genreFilter || '');
     setActiveYear(yearFilter || '');
+    setActiveExtension(extensionFilter || '');
     setActiveQuickList(null);
     setNaviSearchQuery('');
 
@@ -1334,7 +1341,8 @@ const App: React.FC = () => {
       selectedComments.length > 0 ||
       !!artistFilter ||
       !!genreFilter ||
-      !!yearFilter;
+      !!yearFilter ||
+      !!extensionFilter;
 
     // Sem nenhum filtro: volta para a visão padrão da biblioteca
     if (!hasAnyFilter) {
@@ -1367,6 +1375,10 @@ const App: React.FC = () => {
 
       if (yearFilter) {
         queryParts.push(`year=${encodeURIComponent(yearFilter)}`);
+      }
+
+      if (extensionFilter) {
+        queryParts.push(`extension=${encodeURIComponent(extensionFilter)}`);
       }
 
       const queryString = queryParts.join('&');
@@ -2501,6 +2513,7 @@ const App: React.FC = () => {
           initialArtist={activeArtist}
           initialGenre={activeGenre}
           initialYear={activeYear}
+          initialExtension={activeExtension}
           availableArtists={availableArtistNames}
           availableGenres={availableGenres}
           onClose={() => setShowGroupFilterModal(false)}

@@ -37,14 +37,15 @@ export const clearNavidromeSettings = async (req: AuthRequest, res: Response) =>
 };
 
 export const search4 = async (req: Request, res: Response) => {
-  const { comment, genre, artist, year, limit, offset, musicFolderId } = req.query;
+  const { comment, genre, artist, year, extension, limit, offset, musicFolderId } = req.query;
   const commentList: string[] = comment === undefined ? [] : Array.isArray(comment) ? comment.map(c => String(c)) : [String(comment)];
   const genreList: string[] = genre === undefined ? [] : Array.isArray(genre) ? genre.map(g => String(g)) : [String(genre)];
   const artistList: string[] = artist === undefined ? [] : Array.isArray(artist) ? artist.map(a => String(a)) : [String(artist)];
   const yearList: string[] = year === undefined ? [] : Array.isArray(year) ? year.map(y => String(y)) : [String(year)];
+  const extensionList: string[] = extension === undefined ? [] : Array.isArray(extension) ? extension.map(e => String(e)) : [String(extension)];
   const lim = limit ? parseInt(limit as string, 10) : 50;
   const off = offset ? parseInt(offset as string, 10) : 0;
-  const tracks = navidromeTrackService.get(commentList, genreList, artistList, yearList, lim, off, String(musicFolderId));
+  const tracks = navidromeTrackService.get(commentList, genreList, artistList, yearList, extensionList, lim, off, String(musicFolderId));
   return res.json(tracks);
 }
 

@@ -56,8 +56,8 @@ export function getByIds(ids: string[]): any[] {
 }
 
 
-export function search4(comments: string[], genres: string[], artists: string[], years: string[], limit: number = 50, offset: number = 0, musicFolderId: string | number): any {
-  if (!comments.length && !genres.length && !artists.length && !years.length) {
+export function search4(comments: string[], genres: string[], artists: string[], years: string[], extensions: string[], limit: number = 50, offset: number = 0, musicFolderId: string | number): any {
+  if (!comments.length && !genres.length && !artists.length && !years.length && !extensions.length) {
     return [];
   }
 
@@ -100,6 +100,14 @@ export function search4(comments: string[], genres: string[], artists: string[],
     whereParts.push(`(${genreWhere})`);
     whereParts[whereParts.length - 1] = `(${whereParts[whereParts.length - 1]})`;
     params.push(...genres.map(g => `%${g}%`));
+  }
+
+  if (extensions.length) {
+    whereParts.push(
+      extensions.map(() => `CAST(suffix AS TEXT) = ?`).join(' OR ')
+    );
+    whereParts[whereParts.length - 1] = `(${whereParts[whereParts.length - 1]})`;
+    params.push(...extensions);
   }
 
   const sql = `
