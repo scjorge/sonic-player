@@ -890,7 +890,7 @@ const App: React.FC = () => {
     if (viewMode === 'navi_songs') {
       if (groupFilterSelection.length > 0) {
         // Reload with group filter
-        handleApplyGroupFilter(groupFilterSelection, activeArtist, activeGenre, activeYear);
+        handleApplyGroupFilter(groupFilterSelection, activeArtist, activeGenre, activeYear, null);
       } else if (naviSearchQuery) {
         // Reload with search query
         handleSearch(naviSearchQuery);
