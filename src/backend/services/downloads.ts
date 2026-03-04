@@ -524,7 +524,7 @@ class DownloadService {
   async convertDownload(pathOrId: string, song: any, targetFormat: 'mp3' | 'flac') {
     let item: any | undefined;
     let progressTimer: NodeJS.Timeout | undefined;
-  console.log('Song metadata:', song);
+
     try {
       let inputPath: string | undefined;
       if (song.contentType === 'audio/preparation'){
@@ -532,7 +532,7 @@ class DownloadService {
       } else {
         inputPath = await getPathById(song.id);
       }
-      console.log('Input path for conversion:', inputPath);
+
       if (!fs.existsSync(inputPath)) {
         throw new Error('Arquivo de áudio não encontrado para conversão');
       }
@@ -542,7 +542,6 @@ class DownloadService {
       const dir = path.dirname(inputPath);
       const targetExt = targetFormat === 'mp3' ? '.mp3' : '.flac';
       const outputPath = path.join(dir, `${baseName}${targetExt}`);
-      console.log(`Starting conversion of ${inputPath} to ${targetFormat} at ${outputPath}`);
 
       // Cria item na fila de downloads para acompanhar conversão
       const displayTitle = song?.title || baseName;

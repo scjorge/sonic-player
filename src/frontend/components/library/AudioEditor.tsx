@@ -1294,7 +1294,7 @@ const AudioEditor: React.FC<AudioEditorProps> = ({ onNavigateToLibrary }) => {
         showToast(`Espaço insuficiente. Precisa de ${formatTime(clipboard.duration)}, mas há apenas ${formatTime(remainingSpace)}`, 'error');
         return;
       }
-      console.log(clipboard)
+
       const updatedTrack: AudioTrack = {
         ...targetTrack,
         name: `${targetTrack.name} - Com Áudio`,
