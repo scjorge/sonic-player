@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs",
+     "rootDir": "src",
+    "outDir": "dist/backend",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/backend/**/*.ts",
+    "src/core/**/*.ts",
+    "src/commons/**/*.ts",
+    "src/types.ts"
+  ]
+}

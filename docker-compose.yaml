@@ -1,13 +1,18 @@
 version: "3.9"
 
 services:
-  app:
+  sonic-player:
     container_name: sonic-player
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      NODE_ENV: production
     restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PREPARATION_PATH: /media_preparations
+      DATABASE_PATH: /database/sonicplayer.db
+      NAVIDROME_MEDIA_PATH: /navidrome_media
+      NAVIDROME_DATABASE_SQLITE_PATH: /navidrome_database/navidrome.db
+    volumes:
+       - ./media_preparations:/media_preparations:rw
+       - ./database:/database:rw
+       - ./navidrome_media:/navidrome_media:rw
+       - ./navidrome_database:/navidrome_database:ro

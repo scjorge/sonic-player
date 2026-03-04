@@ -1,0 +1,27 @@
+import { Router } from 'express';
+import authRouter from './auth';
+import downloadsRouter from './downloads';
+import navidromeRouter from './navidrome';
+import spotifySettingsRouter from './spotifySettings';
+import tagGroupsRouter from './tagGroups';
+import genresRouter from './genres';
+import shazamRouter from './shazam';
+import youtubeSettingsRouter from './youtubeSettings';
+import generalSettingsRouter from './generalSettings';
+import audioEditorStateRouter from './audioEditorState';
+
+const router = Router();
+
+router.use('/auth', authRouter);
+router.use('/downloads', downloadsRouter);
+router.use('/navidrome', navidromeRouter);
+router.use('/spotify-settings', spotifySettingsRouter);
+router.use('/tag-groups', tagGroupsRouter);
+router.use('/genres', genresRouter);
+router.use('/shazam', shazamRouter);
+router.use('/youtube-settings', youtubeSettingsRouter);
+router.use('/general-settings', generalSettingsRouter);
+router.use('/audio-editor-state', audioEditorStateRouter);
+
+export default router;
+
