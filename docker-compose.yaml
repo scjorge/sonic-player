@@ -21,6 +21,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.sonicplayer.rule=Host(`sonicplayer.thezion.top`)"
       - "traefik.http.routers.sonicplayer.entrypoints=https"
-      - "traefik.http.services.sonicplayer.loadbalancer.server.port=3000"
+      - "traefik.http.services.sonicplayer.loadbalancer.server.port=3001"
       - "traefik.http.middlewares.sonicplayer-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
       - "traefik.http.routers.sonicplayer.middlewares=sonicplayer-headers"
