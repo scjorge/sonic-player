@@ -704,11 +704,56 @@ const App: React.FC = () => {
       title: 'Excluir Playlist',
       message: `Tem certeza que deseja excluir a playlist "${playlistName}"? Esta ação não pode ser desfeita.`,
       onConfirm: async () => {
+        let playlistSongs: NaviSong[] = [];
+        try {
+          playlistSongs = await navidromeService.getPlaylist(playlistId);
+        } catch (e) {
+          console.error('Erro ao carregar músicas da playlist antes de excluir:', e);
+        }
+
         const { success, error } = await navidromeService.deletePlaylist(playlistId);
         if (success) {
           const playlists = await navidromeService.getPlaylists();
           setNaviPlaylists(playlists);
           if (selectedPlaylistId === playlistId) handleLibrarySongsClick();
+
+          if (playlistSongs.length > 0) {
+            const playlistNameToUse = playlistName;
+
+            for (const song of playlistSongs) {
+              const stateSong = naviSongs.find(s => s.id === song.id);
+              const baseSong = stateSong || song;
+              const currentComments = baseSong.comment;
+              const newComments = removePlaylistComment(currentComments, playlistNameToUse);
+
+              if (newComments === (currentComments || '')) continue;
+
+              const path = baseSong.path || song.path;
+              if (path) {
+                try {
+                  const resp = await fetch(`${BACKEND_BASE_URL}/downloads/metadata`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      id: baseSong.id,
+                      source: 'navidrome',
+                      path,
+                      metadata: { comments: newComments },
+                    }),
+                  });
+                  if (!resp.ok) {
+                    // Falha ao salvar tags desta faixa específica; segue para as próximas
+                  }
+                } catch {
+                  // Ignora erro individual de escrita de tags
+                }
+              }
+
+              setNaviSongs(prev => prev.map(s =>
+                s.id === baseSong.id ? { ...s, comment: newComments } : s
+              ));
+            }
+          }
         } else {
           showToast(`Erro ao excluir playlist: ${error}`, 'error');
         }
@@ -720,7 +765,7 @@ const App: React.FC = () => {
   const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   const addPlaylistComment = (current: string | undefined, playlistName: string): string => {
-    const wrapperName = 'DJ';
+    const wrapperName = 'Playlist';
     const prefix = 'plt';
     const localComments = current || '';
     const wrapperRegex = new RegExp(`(${wrapperName}\\()(.*?)(\\))`);
@@ -744,7 +789,7 @@ const App: React.FC = () => {
   };
 
   const removePlaylistComment = (current: string | undefined, playlistName: string): string => {
-    const wrapperName = 'DJ';
+    const wrapperName = 'Playlist';
     const prefix = 'plt';
     const localComments = current || '';
     const wrapperRegex = new RegExp(`(${wrapperName}\\()(.*?)(\\))`);
