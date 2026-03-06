@@ -1,8 +1,9 @@
 version: "3.9"
 
 services:
-  sonic-player:
-    container_name: sonic-player
+  sonicplayer:
+    image: scjorge/sonicplayer:latest
+    container_name: sonicplayer
     restart: unless-stopped
     ports:
       - "3001:3001"

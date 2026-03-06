@@ -161,8 +161,8 @@ export const navidromeTrackService = {
           continue;
         }
 
-        // Copy file
-        fs.copyFileSync(sourcePath, destPath);
+        // Hard Link file
+        fs.linkSync(sourcePath, destPath);
         success.push(`Arquivo copiado com sucesso: ${destPath}`);
         copiedCount++;
       } catch (err: any) {

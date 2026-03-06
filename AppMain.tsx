@@ -717,9 +717,103 @@ const App: React.FC = () => {
     });
   };
 
+  const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const addPlaylistComment = (current: string | undefined, playlistName: string): string => {
+    const wrapperName = 'DJ';
+    const prefix = 'plt';
+    const localComments = current || '';
+    const wrapperRegex = new RegExp(`(${wrapperName}\\()(.*?)(\\))`);
+    const match = localComments.match(wrapperRegex);
+    const itemStr = `${prefix}=${playlistName}`;
+
+    if (match) {
+      const fullMatch = match[0];
+      const content = match[2];
+      const items = content.split(',').map(i => i.trim()).filter(i => i.length > 0);
+      if (items.includes(itemStr)) {
+        return localComments;
+      }
+      const newWrapper = `${match[1]}${[...items, itemStr].join(', ')}${match[3]}`;
+      return localComments.replace(fullMatch, newWrapper);
+    }
+
+    const newWrapper = `${wrapperName}(${itemStr})`;
+    const separator = localComments.trim().length > 0 ? ' ' : '';
+    return localComments + separator + newWrapper;
+  };
+
+  const removePlaylistComment = (current: string | undefined, playlistName: string): string => {
+    const wrapperName = 'DJ';
+    const prefix = 'plt';
+    const localComments = current || '';
+    const wrapperRegex = new RegExp(`(${wrapperName}\\()(.*?)(\\))`);
+    const match = localComments.match(wrapperRegex);
+    const itemStr = `${prefix}=${playlistName}`;
+
+    if (!match) {
+      return localComments;
+    }
+
+    const fullMatch = match[0];
+    const content = match[2];
+    let items = content.split(',').map(i => i.trim()).filter(i => i.length > 0);
+
+    if (!items.includes(itemStr)) {
+      return localComments;
+    }
+
+    items = items.filter(i => i !== itemStr);
+
+    if (items.length === 0) {
+      const removeRegex = new RegExp(`\\s*${escapeRegExp(fullMatch)}`);
+      const removed = localComments.replace(removeRegex, '');
+      if (removed !== localComments) {
+        return removed.trim();
+      }
+      return localComments.replace(fullMatch, '').trim();
+    }
+
+    const newWrapper = `${match[1]}${items.join(', ')}${match[3]}`;
+    return localComments.replace(fullMatch, newWrapper);
+  };
+
   const handleAddToPlaylist = async (targetPlaylistId: string) => {
     const { success, error} = await navidromeService.addSongsToPlaylist(targetPlaylistId, selectedSongIds);
     if (success) {
+      const playlist = naviPlaylists.find(p => p.id === targetPlaylistId);
+      const playlistName = playlist?.name || targetPlaylistId;
+
+      const songsToUpdate = naviSongs.filter(s => selectedSongIds.includes(s.id));
+      for (const song of songsToUpdate) {
+        const newComments = addPlaylistComment(song.comment, playlistName);
+        if (newComments === (song.comment || '')) continue;
+
+        if (song.path) {
+          try {
+            const resp = await fetch(`${BACKEND_BASE_URL}/downloads/metadata`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: song.id,
+                source: 'navidrome',
+                path: song.path,
+                metadata: { comments: newComments },
+              }),
+            });
+            if (!resp.ok) {
+              // Falha ao salvar tags desta faixa específica; segue para as próximas
+            }
+          } catch {
+            // Ignora erro individual de escrita de tags
+          }
+        }
+
+        setNaviSongs(prev => prev.map(s =>
+          s.id === song.id ? { ...s, comment: newComments } : s
+        ));
+      }
+
       setSelectedSongIds([]);
       setShowAddToPlaylistModal(false);
       const playlists = await navidromeService.getPlaylists();
@@ -732,6 +826,40 @@ const App: React.FC = () => {
   const handleRemoveFromPlaylist = async (targetPlaylistId: string) => {
     const { success, error}  = await navidromeService.removeSongsFromPlaylist(targetPlaylistId, selectedSongIds);
     if (success) {
+      const playlist = naviPlaylists.find(p => p.id === targetPlaylistId);
+      const playlistName = playlist?.name || targetPlaylistId;
+
+      const songsToUpdate = naviSongs.filter(s => selectedSongIds.includes(s.id));
+
+      for (const song of songsToUpdate) {
+        const newComments = removePlaylistComment(song.comment, playlistName);
+        if (newComments === (song.comment || '')) continue;
+
+        if (song.path) {
+          try {
+            const resp = await fetch(`${BACKEND_BASE_URL}/downloads/metadata`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: song.id,
+                source: 'navidrome',
+                path: song.path,
+                metadata: { comments: newComments },
+              }),
+            });
+            if (!resp.ok) {
+              // Falha ao salvar tags desta faixa específica; segue para as próximas
+            }
+          } catch {
+            // Ignora erro individual de escrita de tags
+          }
+        }
+
+        setNaviSongs(prev => prev.map(s =>
+          s.id === song.id ? { ...s, comment: newComments } : s
+        ));
+      }
+
       setSelectedSongIds([]);
       setShowRemoveFromPlaylistModal(false);
       if (viewMode === 'navi_playlist' && selectedPlaylistId === targetPlaylistId) {

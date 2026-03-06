@@ -17,5 +17,5 @@ if docker manifest inspect $IMAGE_NAME:$TAG > /dev/null 2>&1; then
 fi
 
 docker build --platform linux/amd64 -t $IMAGE_NAME:$TAG -t $IMAGE_NAME:latest ./
-#docker push $IMAGE_NAME:$TAG
-#docker push $IMAGE_NAME:latest
+docker push $IMAGE_NAME:$TAG
+docker push $IMAGE_NAME:latest
