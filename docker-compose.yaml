@@ -13,7 +13,14 @@ services:
       NAVIDROME_MEDIA_PATH: /navidrome_media
       NAVIDROME_DATABASE_SQLITE_PATH: /navidrome_database/navidrome.db
     volumes:
-       - ./media_preparations:/media_preparations:rw
-       - ./database:/database:rw
-       - ./navidrome_media:/navidrome_media:rw
-       - ./navidrome_database:/navidrome_database:ro
+       - ${STORAGE}/sonicplayer/media_preparations:/media_preparations:rw
+       - ${APPS}/sonicplayer/database:/database:rw
+       - ${STORAGE}/navidrome/music:/navidrome_media:rw
+       - ${APPS}/navidrome/data:/navidrome_database:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonicplayer.rule=Host(`sonicplayer.thezion.top`)"
+      - "traefik.http.routers.sonicplayer.entrypoints=https"
+      - "traefik.http.services.sonicplayer.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.sonicplayer-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.sonicplayer.middlewares=sonicplayer-headers"
