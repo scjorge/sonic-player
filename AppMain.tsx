@@ -765,7 +765,7 @@ const App: React.FC = () => {
   const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   const addPlaylistComment = (current: string | undefined, playlistName: string): string => {
-    const wrapperName = 'Playlist';
+    const wrapperName = 'DJ';
     const prefix = 'plt';
     const localComments = current || '';
     const wrapperRegex = new RegExp(`(${wrapperName}\\()(.*?)(\\))`);
@@ -789,7 +789,7 @@ const App: React.FC = () => {
   };
 
   const removePlaylistComment = (current: string | undefined, playlistName: string): string => {
-    const wrapperName = 'Playlist';
+    const wrapperName = 'DJ';
     const prefix = 'plt';
     const localComments = current || '';
     const wrapperRegex = new RegExp(`(${wrapperName}\\()(.*?)(\\))`);
