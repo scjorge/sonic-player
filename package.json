@@ -10,8 +10,8 @@
     "build": "vite build && npm run build:backend",
     "start": "npm run create-admin && node dist/backend/backend/app.js",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
-    "create-admin": "npx tsx src/backend/scripts/createAdmin.ts",
-    "migrate-settings": "npx tsx src/backend/scripts/migrateSettings.ts"
+    "create-admin": "npx tsx dist/backend/backend/scripts/createAdmin.js",
+    "migrate-settings": "npx tsx dist/backend/backend/scripts/migrateSettings.js"
   },
   "dependencies": {
     "@google/genai": "^1.33.0",
