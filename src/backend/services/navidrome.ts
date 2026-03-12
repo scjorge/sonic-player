@@ -177,6 +177,35 @@ export const navidromeTrackService = {
       warns: warns.length > 0 ? warns : undefined,
       success: success.length > 0 ? success : undefined
     }
-  }
+  },
 
+  async removeFiles(username: string, songIds: string[]) {
+    let removedCount = 0;
+    const errors: string[] = [];
+    const warns: string[] = [];
+    const success: string[] = [];
+
+    // Get song paths from database
+    for (const songId of songIds) {
+      try {
+        const sourcePath = await getPathById(songId);
+
+        if (fs.existsSync(sourcePath)) {
+          fs.unlinkSync(sourcePath);
+          success.push(`Arquivo removido com sucesso: ${sourcePath}`);
+          removedCount++;
+        }
+      } catch (err: any) {
+        errors.push(`Erro ao remover: ${err.message}`);
+      }
+    }
+
+    return {
+      removed: removedCount,
+      total: songIds.length,
+      errors: errors.length > 0 ? errors : undefined,
+      warns: warns.length > 0 ? warns : undefined,
+      success: success.length > 0 ? success : undefined
+    }
+  }
 }

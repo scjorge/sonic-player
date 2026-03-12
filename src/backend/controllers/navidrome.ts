@@ -70,3 +70,25 @@ export const copyToUserDirectory = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ error: error.message || 'Erro ao copiar músicas' });
   }
 };
+
+export const removeFiles = async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  const { songIds } = req.body;
+
+  if (!songIds || !Array.isArray(songIds) || songIds.length === 0) {
+    return res.status(400).json({ error: 'songIds é obrigatório e deve ser um array' });
+  }
+
+  try {
+    const result = await navidromeTrackService.removeFiles(req.user.username, songIds);
+    if (result.errors && result.errors.length > 0) {
+      return res.status(200).json({ errors: result.errors });
+    }
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Erro ao remover músicas' });
+  }
+};

@@ -1684,6 +1684,72 @@ const SongTable: React.FC<SongTableProps> = ({
             </button>
           )}
 
+          {/* Option to remove songs to user directory when Master Mode is not active jorge */}
+          {isNavidromeLibraryTable && (!isMasterMode || (isMasterMode && isAdmin)) && contextMenu.song?.path && (
+            <button
+              onClick={async () => {
+                setContextMenu({ ...contextMenu, visible: false });
+                const songsToSend = selectedIds.length > 0
+                  ? songs.filter(s => selectedIds.includes(s.id))
+                  : [contextMenu.song!];
+
+                try {
+                  showToast(`Removendo ${songsToSend.length} música(s)...`, 'warning');
+
+                  const token = authService.getToken();
+                  const headers: HeadersInit = {
+                    'Content-Type': 'application/json',
+                  };
+
+                  if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                  }
+
+                  const resp = await fetch(`${BACKEND_BASE_URL}/navidrome/remove-files`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                      songIds: songsToSend.map(s => s.id),
+                    }),
+                  });
+
+                  if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    showToast(`Erro ao remover músicas: ${err.error || resp.statusText}`, 'error');
+                    return;
+                  }
+
+                  const result = await resp.json();
+                  if (result.errors) {
+                    for (const msg of result.errors || []) {
+                      showToast(msg, 'error');
+                    }
+                  }
+                  if (result.warns) {
+                    for (const msg of result.warns || []) {
+                      showToast(msg, 'warning');
+                    }
+                  }
+                  if (result.success) {
+                    for (const msg of result.success || []) {
+                      showToast(msg, 'success');
+                    }
+                  }
+                  showToast(`${result.removed || 0} música(s) removidas(s) com sucesso!`, 'info');
+                } catch (e: any) {
+                  showToast(`Erro ao copiar músicas: ${e?.message || String(e)}`, 'error');
+                }
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-red-300 hover:bg-red-900/40 hover:text-red-200 flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              {selectedIds.length > 0
+                ? `Remover da Minha Biblioteca (${selectedIds.length})`
+                : 'Remover da Minha Biblioteca'
+              }
+            </button>
+          )}
+
           {/* Option to open Group Tag Editor */}
           {onGroupEdit && (!isNavidromeLibraryTable || isTagEditMode) && (
             <button
