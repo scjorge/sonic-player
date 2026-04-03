@@ -1,7 +1,7 @@
 {
   "name": "sonictag-ai",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.8",
   "scripts": {
     "dev:frontend": "vite",
     "dev:backend": "DATABASE_PATH=/app/database.sqlite npm run create-admin && DATABASE_PATH=/app/database.sqlite npx tsx src/backend/app.ts",

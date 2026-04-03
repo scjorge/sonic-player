@@ -2358,14 +2358,14 @@ const App: React.FC = () => {
                     <ListMusic className="w-4 h-4 flex-shrink-0" />
                     {!isSidebarCollapsed && <span>Músicas</span>}
                   </button>
-                  <button onClick={() => { setViewMode('navi_albums'); setSelectedPlaylistId(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'navi_albums' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>
+                  {/* <button onClick={() => { setViewMode('navi_albums'); setSelectedPlaylistId(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'navi_albums' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>
                     <Library className="w-4 h-4 flex-shrink-0" />
                     {!isSidebarCollapsed && <span>Álbuns</span>}
                   </button>
                   <button onClick={() => { setViewMode('navi_artists'); setSelectedPlaylistId(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'navi_artists' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>
                     <Mic2 className="w-4 h-4 flex-shrink-0" />
                     {!isSidebarCollapsed && <span>Artistas</span>}
-                  </button>
+                  </button> */}
                   <button onClick={handleFavoritesClick} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSidebarCollapsed ? 'justify-center' : ''} ${viewMode === 'navi_favorites' ? 'bg-indigo-500/10 text-indigo-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}>
                     <Heart className="w-4 h-4 flex-shrink-0" />
                     {!isSidebarCollapsed && <span>Favoritos</span>}
