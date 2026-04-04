@@ -15,7 +15,6 @@ class AudioTagger {
     }
 
     const ext = path.extname(filePath).toLowerCase();
-    metadata.comments = metadata.comments || 'DJ()';
 
     switch (ext) {
       case '.mp3':
