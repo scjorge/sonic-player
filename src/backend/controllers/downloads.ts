@@ -7,6 +7,7 @@ import { downloadService } from '../services/downloads';
 
 export async function downloadTrackFromTidal(req: Request, res: Response) {
   let result: any
+  let resultConvert: any = {};
   const { trackId, creds, song, format } = req.body;
   if (!trackId || !creds || !song) return res.status(400).json({ error: 'trackId creds and song are required' });
 
@@ -20,17 +21,16 @@ export async function downloadTrackFromTidal(req: Request, res: Response) {
   }
 
   try {
-    await downloadService.writeMetadata(result.path, song);
-  } catch (e: any) {
-    return res.status(500).json({ error: e?.message || 'failed to write metadata' });
+    const resultConvert = await downloadService.convertDownload(result.path, song, format || 'flac');
+    song.contentType = 'audio/preparation';
+  } catch (err) {
+    throw new Error('Conversion to MP3 after Tidal download failed:' + (err instanceof Error ? err.message : String(err)));
   }
 
-  if (format == 'mp3') {
-    try {
-      await downloadService.convertDownload(result.path, song, format);
-    } catch (err) {
-      throw new Error('Conversion to MP3 after Tidal download failed:' + (err instanceof Error ? err.message : String(err)));
-    }
+  try {
+    await downloadService.writeMetadata(resultConvert.to, song);
+  } catch (e: any) {
+    return res.status(500).json({ error: e?.message || 'failed to write metadata' });
   }
 
   return res.json(result);
