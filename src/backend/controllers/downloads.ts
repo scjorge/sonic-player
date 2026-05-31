@@ -21,7 +21,7 @@ export async function downloadTrackFromTidal(req: Request, res: Response) {
   }
 
   try {
-    const resultConvert = await downloadService.convertDownload(result.path, song, format || 'flac');
+    resultConvert = await downloadService.convertDownload(result.path, song, format || 'flac');
     song.contentType = 'audio/preparation';
   } catch (err) {
     throw new Error('Conversion to MP3 after Tidal download failed:' + (err instanceof Error ? err.message : String(err)));
